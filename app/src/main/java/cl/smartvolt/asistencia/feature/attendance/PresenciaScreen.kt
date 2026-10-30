@@ -47,6 +47,7 @@ import cl.smartvolt.asistencia.native.bluetooth.BeaconScanStatus
 import cl.smartvolt.asistencia.native.location.LocationStatus
 import cl.smartvolt.asistencia.native.permissions.PermissionChecker
 import cl.smartvolt.asistencia.native.permissions.PermissionStatus
+import java.util.Locale
 
 @Composable
 fun PresenciaScreen(
@@ -56,6 +57,22 @@ fun PresenciaScreen(
     val estado by presenciaViewModel.uiState.collectAsState()
     val contexto = LocalContext.current
     val actividad = contexto as? Activity
+
+    // Las notificaciones se solicitan por separado: no son requisito para
+    // registrar asistencia y su rechazo no debe bloquear la marcación.
+    val lanzadorNotificaciones = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) {
+        // El registro funciona igual aunque el usuario no acepte las notificaciones.
+    }
+
+    val solicitarNotificaciones: () -> Unit = {
+        PermissionChecker.notificationPermission()?.let { permiso ->
+            if (!PermissionChecker.isGranted(contexto, permiso)) {
+                lanzadorNotificaciones.launch(permiso)
+            }
+        }
+    }
 
     val lanzadorPermisos = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -72,6 +89,7 @@ fun PresenciaScreen(
 
         if (concedidos) {
             presenciaViewModel.onVerificarPresencia()
+            solicitarNotificaciones()
         }
     }
 
@@ -123,7 +141,8 @@ fun PresenciaScreen(
                         if (ubicacion.status == LocationStatus.READY) {
                             val latitud = ubicacion.latitude ?: 0.0
                             val longitud = ubicacion.longitude ?: 0.0
-                            "Lat ${"%.5f".format(latitud)} · Lon ${"%.5f".format(longitud)}"
+                            "Lat ${String.format(Locale.ROOT, "%.5f", latitud)} · " +
+                                "Lon ${String.format(Locale.ROOT, "%.5f", longitud)}"
                         } else {
                             null
                         }
@@ -180,6 +199,7 @@ fun PresenciaScreen(
                                 denegadoPermanente = false
                             )
                             presenciaViewModel.onVerificarPresencia()
+                            solicitarNotificaciones()
                         } else {
                             lanzadorPermisos.launch(permisos)
                         }
