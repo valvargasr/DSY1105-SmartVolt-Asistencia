@@ -1,5 +1,6 @@
 package cl.smartvolt.asistencia.native.notifications
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -22,6 +23,9 @@ class AttendanceNotifier(
 
     private var channelCreated = false
 
+    // El permiso se comprueba en canNotify() antes de llegar aquí y el notify va
+    // dentro de runCatching: si el usuario lo revoca en medio, no se cierra la app.
+    @SuppressLint("MissingPermission")
     fun notifyCheckInSaved() {
         if (!canNotify()) return
 
@@ -30,7 +34,7 @@ class AttendanceNotifier(
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("Entrada registrada")
-            .setContentText("Guardada en este dispositivo. Se sincronizará cuando haya conexión.")
+            .setContentText("Guardada en este dispositivo. Pendiente de sincronización.")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
             .build()
