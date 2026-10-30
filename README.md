@@ -1,125 +1,208 @@
 # SmartVolt Asistencia
 
-Aplicación móvil Android para el registro y la consulta de asistencia en faenas de construcción y servicios de ingeniería.
+Aplicación móvil Android para el registro de asistencia en faenas, con verificación de
+ubicación GPS y proximidad mediante una baliza Bluetooth Low Energy (BLE).
 
 ## 1. Información general
 
 - **Asignatura:** DSY1105 — Desarrollo de Aplicaciones Móviles
 - **Evaluación:** Evaluación Parcial 2 (EP2)
-- **Organización de referencia:** Smart-Volt SpA
-- **Tipo de proyecto:** Producto mínimo viable (MVP) académico
-- **Estado:** Preparación del entorno y planificación de la implementación.
+- **Organización de referencia:** Servicio de Ingeniería Smart-Volt SpA (caso académico)
+- **Tipo de proyecto:** MVP académico. No es un sistema productivo.
+- **Paquete de la aplicación:** `cl.smartvolt.asistencia`
 
-## 2. Descripción del proyecto
-
-SmartVolt Asistencia es una propuesta de aplicación móvil orientada a facilitar el registro y la consulta de asistencia del personal en faenas. Busca reducir los errores asociados al registro manual mediante la captura de información de ubicación, datos de dispositivos Bluetooth Low Energy (BLE) y marcas temporales.
-
-El desarrollo se realizará de manera incremental, priorizando una versión mínima funcional y la integración progresiva de sus componentes.
-
-## 3. Objetivos
-
-### 3.1. Objetivo general
-
-Desarrollar una aplicación móvil que permita registrar y consultar la asistencia del personal en faenas, incorporando mecanismos de verificación y almacenamiento local.
-
-### 3.2. Objetivos específicos
-
-- Diseñar una interfaz de usuario clara y accesible.
-- Implementar el registro de entrada y salida.
-- Capturar información de ubicación y señales BLE, de acuerdo con los permisos disponibles.
-- Validar los datos antes de registrar una asistencia.
-- Permitir la consulta del historial de marcajes.
-- Incorporar persistencia local para escenarios sin conexión.
-- Preparar la integración y sincronización con un servicio remoto, según el alcance definido para el MVP.
-
-## 4. Equipo y responsabilidades
+## 2. Equipo y responsabilidades
 
 | Integrante | Área | Responsabilidades |
 |---|---|---|
-| Valentina Vargas | Área A | Diseño de interfaz, experiencia de usuario y desarrollo de pantallas. |
-| Julián Silva | Área B | Lógica de negocio, almacenamiento local y gestión de datos. |
-| Joaquín Rojas | Área C | Recursos nativos de Android e integración de funcionalidades. |
+| Valentina Vargas | Área A | Diseño de interfaz, experiencia de usuario y pantallas. |
+| Julián Silva | Área B | Lógica de negocio, validaciones, almacenamiento local y gestión de datos. |
+| Joaquín Rojas | Área C | Recursos nativos de Android (GPS, BLE, permisos, notificaciones) e integración. |
 
-## 5. Tecnologías y herramientas
+Tablero de tareas: Trello **DSY1105 - SmartVolt Asistencia**.
 
-Las siguientes tecnologías corresponden a la planificación técnica y deberán confirmarse en la configuración definitiva del proyecto.
+## 3. Estado de implementación
 
-- **Lenguaje de programación:** Kotlin.
-- **Plataforma:** Android.
-- **Entorno de desarrollo:** Android Studio.
-- **Sistema de construcción:** Gradle.
-- **Interfaz de usuario:** Jetpack Compose y Material 3, sujeto a la estructura acordada.
-- **Persistencia local:** Room y SQLite.
-- **Control de versiones:** Git y GitHub.
-- **Gestión de tareas:** Trello.
+Estado verificado en la rama `feature/location-permissions`. Compila y sus pruebas
+unitarias pasan. **El GPS y el BLE todavía no se han probado en un teléfono físico.**
 
-La integración con servicios web mediante API REST y herramientas como Retrofit se abordará de acuerdo con las prioridades y los requisitos de la etapa correspondiente.
+### Implementado
 
-## 6. Funcionalidades previstas
-
-El alcance propuesto para el MVP contempla:
-
-1. Registro de entrada y salida del personal.
-2. Captura de coordenadas GPS y datos de dispositivos BLE.
-3. Registro de fecha y hora de los marcajes.
-4. Validación de la información antes de almacenarla.
-5. Consulta del historial de asistencia.
-6. Almacenamiento local de registros para escenarios sin conexión.
-7. Preparación de mecanismos de sincronización con un servicio remoto.
-8. Interfaces adaptadas a los perfiles de usuario considerados en el alcance del proyecto.
-
-Estas funcionalidades representan objetivos de implementación. Su disponibilidad y correcto funcionamiento deberán comprobarse mediante pruebas.
-
-## 7. Arquitectura y organización técnica
-
-La aplicación se organizará de forma modular, separando la interfaz de usuario, la lógica de negocio y el acceso a los datos.
-
-La implementación deberá facilitar el desarrollo paralelo, la integración entre áreas y las pruebas funcionales. La arquitectura definitiva se ajustará a los requisitos académicos y a los acuerdos técnicos del equipo.
-
-## 8. Seguridad y tratamiento de datos
-
-Durante el desarrollo y las pruebas se deberán considerar las siguientes medidas:
-
-- Utilizar datos ficticios, anonimizados o de prueba.
-- Solicitar los permisos necesarios para acceder a la ubicación y a Bluetooth.
-- Validar la información recibida antes de almacenarla.
-- Gestionar los escenarios sin conexión y los posibles errores de captura.
-- Evitar la inclusión de contraseñas, tokens, claves y datos personales reales en el repositorio.
-
-## 9. Estado de avance
-
-### Completado
-
-- Repositorio de GitHub creado.
-- Distribución inicial de responsabilidades del equipo.
-- Documentación inicial de requisitos y planificación.
-- Preparación inicial del entorno de desarrollo.
+- Pantalla de bienvenida y pantalla de acceso con validación por campo
+  (correo con formato válido y contraseña no vacía), errores junto al campo.
+- Navegación entre pantallas con Navigation Compose.
+- Pantalla de marcación (`PresenciaScreen`) con estados de permisos, GPS y baliza.
+- Solicitud de permisos en contexto con explicación y manejo de rechazo, incluido el
+  rechazo permanente con acceso directo a los ajustes de la aplicación.
+- Lectura real de ubicación con `LocationManager`: latitud, longitud, precisión,
+  instante de la lectura y señal de ubicación simulada.
+- Escaneo BLE real con `BluetoothLeScanner`, filtrado por UUID de servicio, con ventana
+  de escaneo acotada y reporte de RSSI.
+- Detección y mensaje para: permiso denegado, ubicación apagada, Bluetooth apagado,
+  hardware sin BLE, baliza no encontrada y errores del sistema.
+- Guardado local de la marcación con identificador único y estado `PENDING_SYNC`.
+- Contador de marcaciones pendientes de sincronización.
+- Notificación local al guardar una marcación, con solicitud del permiso
+  `POST_NOTIFICATIONS` en Android 13 y posteriores.
+- Reglas de presencia en Kotlin puro (`PresenceEvaluator`), separadas de la interfaz.
+- 15 pruebas unitarias de esas reglas.
 
 ### Pendiente
 
-- Crear e integrar el proyecto Android en el repositorio.
-- Implementar las primeras pantallas.
-- Desarrollar la lógica de registro de asistencia.
-- Incorporar la persistencia local.
-- Integrar los recursos nativos y los permisos necesarios.
-- Ejecutar pruebas funcionales y de integración.
-- Preparar el APK para la evaluación.
+- Pruebas en dispositivo físico (GPS y baliza). Ver `docs/pruebas-area-c.md`.
+- Registro de salida (check-out), historial y persistencia con Room (Área B).
+- Panel de supervisor, autorización de horas extra y calendario de feriados.
+- Activación con doble factor, sesión persistente y vinculación del dispositivo.
+- Sincronización con API REST (Retrofit, Hilt y Spring Boot), etapa posterior.
+- APK release firmado: requiere generar el keystore (ver sección 9).
 
-El estado de esta sección deberá actualizarse a medida que las tareas se completen y sus resultados sean verificados.
+## 4. Requisitos del entorno
 
-## 10. Gestión del desarrollo
+- Android Studio Rabbit 1 (2026.2.1).
+- **JDK 17.** El proyecto no compila con JDK 24.
+- Android SDK Platform **android-37.0** y Build-Tools **37.0.0**.
+- Gradle **9.6.0**, incluido mediante el wrapper del repositorio (`gradlew`).
+  No es necesario instalar Gradle por separado.
+- Variables de entorno `JAVA_HOME` apuntando al JDK 17 y `ANDROID_HOME` al SDK.
 
-GitHub se utilizará para el control de versiones y la colaboración sobre el código fuente. Trello se utilizará para organizar las tareas, registrar avances y coordinar el trabajo entre las áreas.
+Versiones declaradas: AGP 9.4.1, Kotlin 2.2.10, Compose BOM 2026.02.01,
+`compileSdk` 37, `targetSdk` 37, `minSdk` 24.
 
-La integración se realizará de forma incremental, procurando mantener una versión compilable y verificable durante el desarrollo.
+No actualizar estas versiones de forma independiente: se revisan en conjunto con el equipo.
+
+## 5. Cómo compilar
+
+Desde la raíz del proyecto, en Windows (PowerShell):
+
+```powershell
+$env:JAVA_HOME = "C:\ruta\al\jdk-17"
+$env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
+
+# Compila la aplicación de depuración
+.\gradlew.bat assembleDebug
+
+# Ejecuta las pruebas unitarias
+.\gradlew.bat testDebugUnitTest
+
+# Compila la variante release (sin firmar si no hay keystore.properties)
+.\gradlew.bat assembleRelease
+```
+
+El APK de depuración queda en `app/build/outputs/apk/debug/app-debug.apk`.
+
+También se puede abrir la carpeta del proyecto en Android Studio, esperar la
+sincronización de Gradle y usar **Run** sobre un dispositivo conectado.
+
+## 6. Cómo ejecutar la demostración
+
+1. Instalar el APK en un teléfono Android con GPS y Bluetooth.
+2. Abrir la aplicación y presionar **Comenzar**.
+3. En el acceso, presionar **Entrar como OP-001 — demo**. Este botón es solo para la
+   demostración: no representa una autenticación real.
+4. Presionar **Verificar presencia** y conceder los permisos solicitados.
+5. Revisar el estado de la ubicación y de la baliza.
+6. Con ambos disponibles, presionar **Registrar entrada**.
+
+### Baliza de prueba
+
+La aplicación busca el UUID de servicio definido en
+`native/bluetooth/BeaconConfig.kt`:
+
+```
+6f1b2c3d-4e5f-4a6b-8c9d-0e1f2a3b4c5d
+```
+
+**Es un UUID provisional de laboratorio, no uno entregado por la empresa.** Mientras no
+exista una baliza autorizada, se puede usar un segundo teléfono con una aplicación emisora
+(por ejemplo nRF Connect) anunciando ese UUID como Service UUID.
+
+Si no hay ningún emisor, la aplicación informa «No se detectó la baliza autorizada» y no
+habilita el registro. Ese comportamiento es el esperado, no un error.
+
+## 7. Arquitectura y organización
+
+MVVM con Jetpack Compose, estado expuesto con `StateFlow` y reglas de negocio separadas
+de la interfaz.
+
+```
+cl.smartvolt.asistencia
+├── MainActivity.kt                 Navegación, bienvenida y acceso
+├── LoginViewModel.kt               Estado y validación del acceso
+├── ui/theme/                       Tema Material 3
+├── feature/attendance/
+│   ├── PresenciaScreen.kt          Pantalla de marcación
+│   ├── PresenciaViewModel.kt       Orquestación y estado observable
+│   ├── PresenciaUiState.kt         Estado inmutable de la pantalla
+│   └── PresenceEvaluator.kt        Reglas puras, sin dependencias de Android
+├── data/local/
+│   ├── LocalAttendanceEvent.kt     Modelo de la marcación
+│   ├── AttendanceLocalStore.kt     Puerto de persistencia
+│   └── SharedPreferencesAttendanceStore.kt
+└── native/
+    ├── location/                   LocationProvider y AndroidLocationProvider
+    ├── bluetooth/                  BeaconScanner, AndroidBeaconScanner, BeaconConfig
+    ├── permissions/                PermissionChecker y PermissionStatus
+    └── notifications/              AttendanceNotifier
+```
+
+Los puertos (`LocationProvider`, `BeaconScanner`, `AttendanceLocalStore`) declaran que no
+lanzan excepciones: devuelven un objeto de resultado con estado y código de error. Esto
+permite sustituirlos por implementaciones de prueba.
+
+## 8. Pruebas
+
+```powershell
+.\gradlew.bat testDebugUnitTest
+```
+
+`PresenceEvaluatorTest` cubre 15 casos: ausencia de lecturas, GPS disponible, baliza
+detectada, baliza ausente, permiso denegado, ubicación apagada, Bluetooth apagado, tiempo
+de espera agotado, precisión informada, ubicación simulada y mensajes de sincronización.
+
+La matriz de pruebas en dispositivo físico y su bitácora están en `docs/pruebas-area-c.md`.
+
+## 9. Firma del APK release
+
+El keystore y sus contraseñas **no se suben al repositorio** (están en `.gitignore`).
+
+1. Copiar `keystore.properties.example` como `keystore.properties` en la raíz del proyecto.
+2. Generar el keystore:
+
+   ```
+   keytool -genkeypair -v -keystore smartvolt-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias smartvolt
+   ```
+
+3. Completar las contraseñas en `keystore.properties`.
+4. Ejecutar `.\gradlew.bat assembleRelease`.
+
+Sin `keystore.properties` la compilación sigue funcionando y genera un APK sin firmar,
+que no se puede instalar.
+
+## 10. Privacidad y tratamiento de datos
+
+- Se usan identificadores ficticios: `OP-001` y `FAENA-DEMO-01`. No hay nombres, RUT,
+  correos ni datos personales reales.
+- La aplicación no declara el permiso `INTERNET`: las marcaciones quedan en el teléfono.
+- El respaldo automático está deshabilitado (`allowBackup="false"`) y las preferencias con
+  marcaciones se excluyen de las reglas de respaldo y transferencia.
+- La ubicación simulada se informa como una señal de revisión, no como una acusación de
+  fraude. No se promete una detección infalible.
+- No se guardan contraseñas, tokens ni claves en el repositorio.
 
 ## 11. Alcance y limitaciones
 
-SmartVolt Asistencia corresponde a un proyecto académico de tipo MVP. La descripción de las funcionalidades no implica que estas se encuentren implementadas, validadas o disponibles para uso productivo.
-
-Las decisiones técnicas y los requisitos pendientes deberán revisarse con el equipo y contrastarse con las indicaciones oficiales de la asignatura.
+- El registro exige ubicación disponible y baliza detectada, pero **todavía no compara la
+  posición con un perímetro de faena ni exige una precisión o un RSSI mínimo**. Esos
+  umbrales dependen de decisiones pendientes con el profesor y la contraparte.
+- No hay validación de presencia en servidor. El estado `PENDING_SYNC` significa guardado
+  local pendiente de sincronizar, nunca validado por un backend.
+- El UUID de la baliza es provisional y clonable: no constituye una prueba criptográfica
+  de identidad.
+- La persistencia actual usa `SharedPreferences` con JSON. La migración a Room corresponde
+  al Área B.
+- El acceso de demostración no implementa autenticación ni doble factor.
 
 ---
 
-**Asignatura:** DSY1105 — Desarrollo de Aplicaciones Móviles  
+**Asignatura:** DSY1105 — Desarrollo de Aplicaciones Móviles
 **Proyecto:** SmartVolt Asistencia

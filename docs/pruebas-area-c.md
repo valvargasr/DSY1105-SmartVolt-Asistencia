@@ -166,9 +166,10 @@ como pide el ERS, y nunca como veredicto.
 
 ## 6. Limitaciones conocidas
 
-1. **No hay baliza física autorizada.** El escaneo está probado con un emisor simulado. La
-   lectura BLE real contra una baliza de la empresa queda pendiente de que la contraparte
-   entregue el dispositivo y su UUID de prueba.
+1. **No hay baliza física autorizada.** El escaneo todavía no se ha ejecutado en un
+   dispositivo. El procedimiento previsto usa un segundo teléfono con nRF Connect como
+   emisor. La lectura BLE real contra una baliza de la empresa queda pendiente de que la
+   contraparte entregue el dispositivo y su UUID de prueba.
 2. **Emulador no sirve para BLE.** El emulador de Android no emite ni recibe Bluetooth LE real,
    así que la prueba de PT-07 tiene que ser en teléfono físico.
 3. **Sin sincronización remota.** El evento queda local. Retrofit y el backend son fase
@@ -194,3 +195,37 @@ como pide el ERS, y nunca como veredicto.
 
 Estas consultas deben quedar también como tarjetas en la lista **Bloqueado / consultar** del
 tablero Trello, con responsable y fecha.
+
+---
+
+## 8. Correcciones aplicadas tras la revisión de código (29-10-2026)
+
+Se revisó el módulo completo y se corrigieron los siguientes puntos. Compilación y pruebas
+unitarias verificadas después de los cambios.
+
+| Corrección | Motivo |
+|---|---|
+| `AndroidBeaconScanner`: captura de cualquier excepción de `startScan`, no solo `SecurityException`, y `stopScan` siempre al terminar | Un fallo del adaptador ya no cierra la aplicación ni deja la radio encendida |
+| `AndroidBeaconScanner`: al vencer la ventana se comprueba el adaptador | Si apagan el Bluetooth a mitad del escaneo se informa `BLUETOOTH_OFF`, no «baliza no detectada» |
+| `AndroidLocationProvider`: la cancelación se vuelve a lanzar | `CancellationException` no se trata como un error de ubicación |
+| `AndroidLocationProvider`: limpieza del listener antes de registrar proveedores y al fallar el registro | Evita dejar el GPS escuchando si `requestLocationUpdates` lanza una excepción |
+| `AndroidLocationProvider`: la última ubicación conocida se descarta si tiene más de 2 minutos | Una lectura vieja ya no se presenta como actual. Límite técnico provisional, no regla de negocio aprobada |
+| `PresenciaViewModel`: el contador se carga en `Dispatchers.IO` | La lectura de disco ya no se hace en el hilo principal al crear la pantalla |
+| `PresenciaViewModel`: `try/catch/finally` en verificación y guardado | `isChecking` e `isSaving` siempre vuelven a `false` y el usuario recibe un mensaje si algo falla |
+| `PresenciaScreen`: se solicita `POST_NOTIFICATIONS` en un lanzador independiente | En Android 13+ la notificación puede aparecer, y negarla no bloquea el registro |
+| Manifest: se eliminó `neverForLocation` de `BLUETOOTH_SCAN` | La baliza sí se usa para acreditar presencia física y ese flag filtra anuncios BLE |
+| Manifest: `allowBackup="false"` y exclusión de `smartvolt_attendance` en las reglas de respaldo | Las coordenadas guardadas no salen del teléfono en respaldos ni transferencias |
+| `MainActivity`: `popUpTo("login")` al entrar a la marcación | Volver atrás ya no regresa al formulario con la contraseña escrita |
+| `MainActivity`: desplazamiento y `imePadding` en bienvenida y acceso | El teclado ya no tapa los botones |
+| `.gitignore`: exclusión de `*.jks`, `*.keystore` y `keystore.properties` | Las llaves de firma no pueden subirse por accidente |
+| `app/build.gradle.kts`: configuración de firma release opcional | Permite generar el APK firmado sin romper el build de quien no tiene el keystore |
+
+### Lo que sigue pendiente después de la revisión
+
+- La validación de presencia no compara coordenadas con un perímetro ni exige precisión o
+  RSSI mínimos. No se agregaron umbrales inventados: siguen siendo decisiones abiertas.
+- La ubicación simulada se advierte pero no bloquea el registro, y no existe una cola de
+  revisión real. El texto de la interfaz lo presenta como una marca sujeta a revisión.
+- El instante guardado en el evento es el del guardado, no el del fix de GPS. El contrato
+  `LocationResult` sí conserva `capturedAtMillis` para cuando el Área B lo necesite.
+- Las pruebas PT-06 a PT-13 continúan pendientes hasta contar con teléfono y baliza.
