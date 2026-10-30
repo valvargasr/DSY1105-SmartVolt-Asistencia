@@ -80,7 +80,7 @@ class AndroidBeaconScanner(
             .build()
 
         val found = withTimeoutOrNull(BeaconConfig.SCAN_WINDOW_MILLIS) {
-            suspendCancellableCoroutine { continuation ->
+            suspendCancellableCoroutine<BeaconScanResult> { continuation ->
                 val callback = object : ScanCallback() {
 
                     override fun onScanResult(callbackType: Int, result: ScanResult) {
@@ -118,9 +118,16 @@ class AndroidBeaconScanner(
                     }
                 }
 
+                // Se registra antes de iniciar el escaneo: si startScan falla o la
+                // corrutina se cancela, la radio queda apagada igual.
+                continuation.invokeOnCancellation {
+                    runCatching { scanner.stopScan(callback) }
+                }
+
                 try {
                     scanner.startScan(filters, settings, callback)
                 } catch (security: SecurityException) {
+                    runCatching { scanner.stopScan(callback) }
                     if (continuation.isActive) {
                         continuation.resume(
                             BeaconScanResult(
@@ -129,19 +136,37 @@ class AndroidBeaconScanner(
                             )
                         )
                     }
-                    return@suspendCancellableCoroutine
-                }
-
-                continuation.invokeOnCancellation {
+                } catch (error: Exception) {
+                    // startScan también puede lanzar IllegalStateException o
+                    // IllegalArgumentException si el adaptador cambia de estado.
                     runCatching { scanner.stopScan(callback) }
+                    if (continuation.isActive) {
+                        continuation.resume(
+                            BeaconScanResult(
+                                status = BeaconScanStatus.ERROR,
+                                errorCode = "SCAN_START_FAILED_${error.javaClass.simpleName}"
+                            )
+                        )
+                    }
                 }
             }
         }
 
-        return found ?: BeaconScanResult(
-            status = BeaconScanStatus.NOT_FOUND,
-            errorCode = "BEACON_NOT_FOUND"
-        )
+        if (found != null) return found
+
+        // La ventana terminó sin coincidencia. Se distingue haber apagado el
+        // Bluetooth a mitad del escaneo de la simple ausencia de la baliza.
+        return if (!adapter.isEnabled) {
+            BeaconScanResult(
+                status = BeaconScanStatus.BLUETOOTH_OFF,
+                errorCode = "BLUETOOTH_OFF_DURING_SCAN"
+            )
+        } else {
+            BeaconScanResult(
+                status = BeaconScanStatus.NOT_FOUND,
+                errorCode = "BEACON_NOT_FOUND"
+            )
+        }
     }
 
     private fun hasScanPermission(): Boolean {

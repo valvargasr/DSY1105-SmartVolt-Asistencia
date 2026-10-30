@@ -12,6 +12,8 @@ import android.os.Bundle
 import android.os.Looper
 import androidx.core.content.ContextCompat
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -87,6 +89,10 @@ class AndroidLocationProvider(
 
         val freshLocation = try {
             awaitFirstLocation(manager, enabledProviders)
+        } catch (cancelled: CancellationException) {
+            // La cancelación no es un error de ubicación: se propaga para que
+            // viewModelScope pueda cerrar la corrutina correctamente.
+            throw cancelled
         } catch (security: SecurityException) {
             return LocationResult(
                 status = LocationStatus.PERMISSION_DENIED,
@@ -99,7 +105,8 @@ class AndroidLocationProvider(
             )
         }
 
-        val location = freshLocation ?: lastKnownLocation(manager, enabledProviders)
+        val location = freshLocation
+            ?: lastKnownLocation(manager, enabledProviders)?.takeIf { isRecent(it) }
 
         if (location == null) {
             return LocationResult(
@@ -154,21 +161,35 @@ class AndroidLocationProvider(
                     override fun onProviderDisabled(provider: String) = Unit
                 }
 
-                providers.forEach { provider ->
-                    manager.requestLocationUpdates(
-                        provider,
-                        0L,
-                        0f,
-                        listener,
-                        Looper.getMainLooper()
-                    )
-                }
-
+                // Se instala antes de pedir lecturas: si el registro de un
+                // proveedor falla, los listeners ya agregados igual se limpian.
                 continuation.invokeOnCancellation {
                     runCatching { manager.removeUpdates(listener) }
                 }
+
+                try {
+                    providers.forEach { provider ->
+                        manager.requestLocationUpdates(
+                            provider,
+                            0L,
+                            0f,
+                            listener,
+                            Looper.getMainLooper()
+                        )
+                    }
+                } catch (error: Exception) {
+                    runCatching { manager.removeUpdates(listener) }
+                    if (continuation.isActive) {
+                        continuation.resumeWithException(error)
+                    }
+                }
             }
         }
+
+    private fun isRecent(location: Location): Boolean {
+        val ageMillis = System.currentTimeMillis() - location.time
+        return ageMillis in 0..MAX_LAST_KNOWN_AGE_MILLIS
+    }
 
     private fun mockSignalOf(location: Location): MockSignal {
         val isMock = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -183,5 +204,14 @@ class AndroidLocationProvider(
     private companion object {
         /** Tiempo máximo de espera de una lectura nueva antes de usar la última conocida. */
         const val TIMEOUT_MILLIS = 15_000L
+
+        /**
+         * Antigüedad máxima aceptada para la última ubicación conocida.
+         *
+         * Es un límite técnico provisional para no presentar una lectura vieja
+         * como si fuera actual. No es una regla de negocio aprobada y puede
+         * ajustarse cuando el equipo defina la política de evidencia.
+         */
+        const val MAX_LAST_KNOWN_AGE_MILLIS = 120_000L
     }
 }
