@@ -7,10 +7,10 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <!-- Bluetooth: en Android 12+ se pide BLUETOOTH_SCAN.
-         neverForLocation indica que el escaneo no se usa para inferir ubicación. -->
+         NO se usa neverForLocation: la baliza sí se usa para acreditar presencia
+         física en la faena y ese flag haría que el sistema filtre anuncios BLE. -->
     <uses-permission
         android:name="android.permission.BLUETOOTH_SCAN"
-        android:usesPermissionFlags="neverForLocation"
         tools:targetApi="s" />
     <uses-permission
         android:name="android.permission.BLUETOOTH"
@@ -27,9 +27,17 @@
     <uses-feature
         android:name="android.hardware.bluetooth_le"
         android:required="false" />
+    <uses-feature
+        android:name="android.hardware.bluetooth"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location.gps"
+        android:required="false" />
 
+    <!-- Las marcas guardadas contienen coordenadas: no deben salir del teléfono
+         en un respaldo automático ni en una transferencia a otro dispositivo. -->
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
