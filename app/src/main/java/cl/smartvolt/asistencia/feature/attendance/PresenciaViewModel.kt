@@ -68,11 +68,12 @@ class PresenciaViewModel(
                     location = location,
                     beacon = beacon,
                     permissionState = when {
+                        // Si hubo lectura, el permiso está concedido sin importar lo que
+                        // se haya registrado antes (por ejemplo, si se habilitó en ajustes).
+                        location.status == LocationStatus.READY ->
+                            PermissionStatus.GRANTED
                         location.status == LocationStatus.PERMISSION_DENIED ->
                             PermissionStatus.DENIED
-                        state.permissionState == PermissionStatus.NOT_REQUESTED ||
-                            state.permissionState == PermissionStatus.DENIED ->
-                            PermissionStatus.GRANTED
                         else -> state.permissionState
                     }
                 )

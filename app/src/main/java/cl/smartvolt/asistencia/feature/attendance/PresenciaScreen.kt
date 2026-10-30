@@ -163,45 +163,55 @@ fun PresenciaScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                if (!estado.needsSettings) {
-                    Button(
-                        onClick = {
-                            val permisos = PermissionChecker.presencePermissions()
-                            val yaConcedidos = permisos.all { permiso ->
-                                PermissionChecker.isGranted(contexto, permiso)
-                            }
-
-                            if (yaConcedidos) {
-                                presenciaViewModel.onVerificarPresencia()
-                            } else {
-                                lanzadorPermisos.launch(permisos)
-                            }
-                        },
-                        enabled = !estado.isChecking,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(54.dp)
-                    ) {
-                        if (estado.isChecking) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("Verificando presencia...")
-                        } else {
-                            Text(
-                                text = if (estado.location == null && estado.beacon == null) {
-                                    "Verificar presencia"
-                                } else {
-                                    "Verificar de nuevo"
-                                },
-                                fontSize = 16.sp
-                            )
+                // El botón de verificar se muestra siempre. Si el permiso quedó bloqueado
+                // igual se puede volver a intentar después de concederlo en los ajustes.
+                Button(
+                    onClick = {
+                        val permisos = PermissionChecker.presencePermissions()
+                        val yaConcedidos = permisos.all { permiso ->
+                            PermissionChecker.isGranted(contexto, permiso)
                         }
+
+                        if (yaConcedidos) {
+                            // Si el permiso se concedió desde los ajustes del sistema,
+                            // este aviso actualiza la tarjeta antes de volver a verificar.
+                            presenciaViewModel.onPermisosResultado(
+                                concedidos = true,
+                                denegadoPermanente = false
+                            )
+                            presenciaViewModel.onVerificarPresencia()
+                        } else {
+                            lanzadorPermisos.launch(permisos)
+                        }
+                    },
+                    enabled = !estado.isChecking,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(54.dp)
+                ) {
+                    if (estado.isChecking) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Verificando presencia...")
+                    } else {
+                        Text(
+                            text = if (estado.location == null && estado.beacon == null) {
+                                "Verificar presencia"
+                            } else {
+                                "Verificar de nuevo"
+                            },
+                            fontSize = 16.sp
+                        )
                     }
-                } else {
+                }
+
+                if (estado.needsSettings) {
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     OutlinedButton(
                         onClick = {
                             val intent = Intent(
