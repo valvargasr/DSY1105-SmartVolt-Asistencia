@@ -12,6 +12,8 @@
 
 # Package Files #
 *.jar
+# El wrapper de Gradle debe versionarse: sin este jar nadie puede compilar el proyecto clonado
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.nar
 *.ear
