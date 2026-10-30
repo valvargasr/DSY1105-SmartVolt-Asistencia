@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -35,6 +36,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import cl.smartvolt.asistencia.feature.attendance.PresenciaScreen
 import cl.smartvolt.asistencia.ui.theme.SmartVoltAsistenciaTheme
 
 class MainActivity : ComponentActivity() {
@@ -74,7 +76,19 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
         }
 
         composable("login") {
-            PantallaLogin()
+            PantallaLogin(
+                onEntrarDemo = {
+                    navController.navigate("presencia")
+                }
+            )
+        }
+
+        composable("presencia") {
+            PresenciaScreen(
+                onVolver = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
@@ -148,6 +162,7 @@ fun PantallaBienvenida(
 
 @Composable
 fun PantallaLogin(
+    onEntrarDemo: () -> Unit = {},
     loginViewModel: LoginViewModel = viewModel()
 ) {
     val estado by loginViewModel.uiState.collectAsState()
@@ -256,6 +271,20 @@ fun PantallaLogin(
                         text = estado.mensaje,
                         color = MaterialTheme.colorScheme.primary,
                         textAlign = TextAlign.Center
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedButton(
+                    onClick = onEntrarDemo,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                ) {
+                    Text(
+                        text = "Entrar como OP-001 — demo",
+                        fontSize = 16.sp
                     )
                 }
             }
