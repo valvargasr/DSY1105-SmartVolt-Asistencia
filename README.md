@@ -46,12 +46,21 @@ unitarias pasan. **El GPS y el BLE todavía no se han probado en un teléfono f�
   `POST_NOTIFICATIONS` en Android 13 y posteriores.
 - Reglas de presencia en Kotlin puro (`PresenceEvaluator`), separadas de la interfaz.
 - 15 pruebas unitarias de esas reglas.
+- **Área B (Julián):** Persistencia local con Room/SQLite (entidad, DAO, base de datos, store).
+- **Área B (Julián):** Modelos de dominio (AttendanceEvent, WorkerProfile, Worksite, OvertimeApproval, HolidayCalendar).
+- **Área B (Julián):** Validaciones desacopladas (`AttendanceValidator`) con 21 pruebas unitarias.
+- **Área B (Julián):** Historial de marcas (`HistoryScreen` + `HistoryViewModel`).
+- **Área B (Julián):** Registro de salida (check-out) con validación de entrada previa.
+- **Área B (Julián):** Clasificador de puntualidad/ausencia configurable (`AttendanceClassifier`).
+- **Área B (Julián):** Gestión de horas extra (`OvertimeViewModel`) con persistencia en Room.
+- **Área B (Julián):** Calendario de feriados de Chile (`HolidayCalendar`).
+- **Área B (Julián):** Panel de supervisor con resumen operativo (`SupervisorViewModel`).
+- **Área B (Julián):** 21 pruebas unitarias adicionales (AttendanceValidator, HolidayCalendar, AttendanceClassifier).
 
 ### Pendiente
 
 - Pruebas en dispositivo físico (GPS y baliza). Ver `docs/pruebas-area-c.md`.
-- Registro de salida (check-out), historial y persistencia con Room (Área B).
-- Panel de supervisor, autorización de horas extra y calendario de feriados.
+- Panel de supervisor, autorización de horas extra y calendario de feriados (UI pendiente; lógica de datos implementada en Área B).
 - Activación con doble factor, sesión persistente y vinculación del dispositivo.
 - Sincronización con API REST (Retrofit, Hilt y Spring Boot), etapa posterior.
 - APK release firmado: requiere generar el keystore (ver sección 9).

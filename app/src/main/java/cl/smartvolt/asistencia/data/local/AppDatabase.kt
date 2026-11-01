@@ -9,10 +9,11 @@ import androidx.room.RoomDatabase
  * Persiste las marcas de asistencia y permite operar en modo offline.
  */
 @Database(
-    entities = [AttendanceEventEntity::class],
-    version = 1,
+    entities = [AttendanceEventEntity::class, OvertimeApprovalEntity::class],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun attendanceDao(): AttendanceDao
+    abstract fun overtimeApprovalDao(): OvertimeApprovalDao
 }
