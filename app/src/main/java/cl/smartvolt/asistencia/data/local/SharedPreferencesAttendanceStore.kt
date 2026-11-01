@@ -26,6 +26,9 @@ class SharedPreferencesAttendanceStore(
     }
 
     @Synchronized
+    override fun all(): List<LocalAttendanceEvent> = readEvents()
+
+    @Synchronized
     override fun pending(): List<LocalAttendanceEvent> =
         readEvents().filter { it.syncState == LocalAttendanceEvent.PENDING_SYNC }
 

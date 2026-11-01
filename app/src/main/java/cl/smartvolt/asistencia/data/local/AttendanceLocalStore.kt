@@ -14,6 +14,9 @@ interface AttendanceLocalStore {
     /** Devuelve las marcas aún no sincronizadas. */
     fun pending(): List<LocalAttendanceEvent>
 
+    /** Devuelve todas las marcas guardadas localmente. */
+    fun all(): List<LocalAttendanceEvent>
+
     /** Cantidad de marcas pendientes de sincronizar. */
     fun count(): Int
 }

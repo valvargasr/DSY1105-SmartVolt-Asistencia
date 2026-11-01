@@ -40,6 +40,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import cl.smartvolt.asistencia.feature.attendance.PresenciaScreen
+import cl.smartvolt.asistencia.feature.history.HistoryScreen
+import cl.smartvolt.asistencia.feature.history.HistoryViewModel
 import cl.smartvolt.asistencia.ui.theme.SmartVoltAsistenciaTheme
 
 class MainActivity : ComponentActivity() {
@@ -95,7 +97,23 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
             PresenciaScreen(
                 onVolver = {
                     navController.popBackStack()
+                },
+                onVerHistorial = {
+                    navController.navigate("historial")
                 }
+            )
+        }
+
+        composable("historial") {
+            val store = cl.smartvolt.asistencia.data.local.RoomAttendanceStore(
+                androidx.compose.ui.platform.LocalContext.current
+            )
+            val historyViewModel = androidx.lifecycle.viewmodel.compose.viewModel<HistoryViewModel>(
+                factory = HistoryViewModel.factory(store)
+            )
+            HistoryScreen(
+                viewModel = historyViewModel,
+                onVolver = { navController.popBackStack() }
             )
         }
     }

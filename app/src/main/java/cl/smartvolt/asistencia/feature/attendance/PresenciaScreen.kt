@@ -52,6 +52,7 @@ import java.util.Locale
 @Composable
 fun PresenciaScreen(
     onVolver: () -> Unit = {},
+    onVerHistorial: () -> Unit = {},
     presenciaViewModel: PresenciaViewModel = viewModel(factory = PresenciaViewModel.Factory)
 ) {
     val estado by presenciaViewModel.uiState.collectAsState()
@@ -267,6 +268,25 @@ fun PresenciaScreen(
                     )
                 }
 
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedButton(
+                    onClick = presenciaViewModel::onRegistrarSalida,
+                    enabled = estado.canRegister && !estado.isSaving,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(54.dp)
+                ) {
+                    Text(
+                        text = if (estado.isSaving) {
+                            "Guardando..."
+                        } else {
+                            "Registrar salida"
+                        },
+                        fontSize = 16.sp
+                    )
+                }
+
                 if (!estado.canRegister) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -327,6 +347,15 @@ fun PresenciaScreen(
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
+
+                OutlinedButton(
+                    onClick = onVerHistorial,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Ver historial de marcas")
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedButton(
                     onClick = onVolver,

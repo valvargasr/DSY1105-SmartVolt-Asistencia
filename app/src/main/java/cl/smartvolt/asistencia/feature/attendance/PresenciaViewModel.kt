@@ -8,7 +8,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import cl.smartvolt.asistencia.data.local.AttendanceLocalStore
 import cl.smartvolt.asistencia.data.local.LocalAttendanceEvent
-import cl.smartvolt.asistencia.data.local.SharedPreferencesAttendanceStore
+import cl.smartvolt.asistencia.data.local.RoomAttendanceStore
+import cl.smartvolt.asistencia.domain.validation.AttendanceValidator
 import cl.smartvolt.asistencia.native.bluetooth.AndroidBeaconScanner
 import cl.smartvolt.asistencia.native.bluetooth.BeaconScanner
 import cl.smartvolt.asistencia.native.location.AndroidLocationProvider
@@ -173,6 +174,90 @@ class PresenciaViewModel(
         }
     }
 
+    fun onRegistrarSalida() {
+        val state = _uiState.value
+        if (state.isSaving) return
+        if (!state.canRegister) {
+            _uiState.update {
+                it.copy(
+                    message = "Primero verifica la presencia: se necesita ubicación y baliza."
+                )
+            }
+            return
+        }
+
+        val location = state.location ?: return
+        val beacon = state.beacon ?: return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true) }
+
+            try {
+                // Validar que exista una entrada abierta antes de registrar salida.
+                val events = withContext(Dispatchers.IO) {
+                    store.pending().filter { it.workerId == LocalAttendanceEvent.WORKER_ID }
+                }
+                val hasOpenCheckIn = events.any { it.type == LocalAttendanceEvent.TYPE_CHECK_IN }
+                val alreadyCheckedOut = events.any { it.type == LocalAttendanceEvent.TYPE_CHECK_OUT }
+
+                val validation = AttendanceValidator.canRegisterCheckOut(
+                    hasOpenCheckIn = hasOpenCheckIn,
+                    alreadyCheckedOut = alreadyCheckedOut
+                )
+                if (validation is AttendanceValidator.ValidationResult.Invalid) {
+                    _uiState.update {
+                        it.copy(message = validation.reason)
+                    }
+                    return@launch
+                }
+
+                val event = LocalAttendanceEvent(
+                    id = UUID.randomUUID().toString(),
+                    type = LocalAttendanceEvent.TYPE_CHECK_OUT,
+                    timestampMillis = System.currentTimeMillis(),
+                    latitude = location.latitude,
+                    longitude = location.longitude,
+                    accuracyMeters = location.accuracyMeters,
+                    beaconId = beacon.beaconId,
+                    rssi = beacon.rssi,
+                    mockSignal = location.mockSignal,
+                    syncState = LocalAttendanceEvent.PENDING_SYNC
+                )
+
+                val pendingCount = withContext(Dispatchers.IO) {
+                    store.save(event)
+                    store.count()
+                }
+
+                notifier.notifyCheckInSaved()
+
+                _uiState.update {
+                    it.copy(
+                        lastEvent = event,
+                        pendingSyncCount = pendingCount,
+                        message = "Salida registrada a las ${formatHour(event.timestampMillis)}. Guardada en este dispositivo y pendiente de sincronización."
+                    )
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                _uiState.update {
+                    it.copy(
+                        message = "No se pudo guardar la salida en este dispositivo. " +
+                            "Intenta de nuevo."
+                    )
+                }
+            } finally {
+                _uiState.update { it.copy(isSaving = false) }
+            }
+        }
+    }
+
+    private fun formatHour(millis: Long): String {
+        val sdf = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+        return sdf.format(java.util.Date(millis))
+    }
+
     fun onDescartarMensaje() {
         _uiState.update { it.copy(message = null) }
     }
@@ -186,7 +271,7 @@ class PresenciaViewModel(
                 PresenciaViewModel(
                     locationProvider = AndroidLocationProvider(application),
                     beaconScanner = AndroidBeaconScanner(application),
-                    store = SharedPreferencesAttendanceStore(application),
+                    store = RoomAttendanceStore(application),
                     notifier = AttendanceNotifier(application)
                 )
             }
