@@ -3,6 +3,7 @@ package cl.smartvolt.asistencia.feature.attendance
 import cl.smartvolt.asistencia.data.local.LocalAttendanceEvent
 import cl.smartvolt.asistencia.domain.validation.AttendanceValidator
 import cl.smartvolt.asistencia.native.bluetooth.BeaconScanResult
+import cl.smartvolt.asistencia.native.bluetooth.BeaconScanStatus
 import cl.smartvolt.asistencia.native.location.LocationResult
 import cl.smartvolt.asistencia.native.permissions.PermissionStatus
 
@@ -38,5 +39,6 @@ data class PresenciaUiState(
         get() = PresenceEvaluator.mockWarning(location)
 
     val needsSettings: Boolean
-        get() = permissionState == PermissionStatus.PERMANENTLY_DENIED
+        get() = permissionState == PermissionStatus.PERMANENTLY_DENIED ||
+            beacon?.status == BeaconScanStatus.PERMISSION_DENIED
 }

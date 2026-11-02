@@ -131,8 +131,9 @@ class PresenciaViewModel(
 
             try {
                 val now = System.currentTimeMillis()
+                val timestamp = location.capturedAtMillis ?: now
                 val dayState = withContext(Dispatchers.IO) {
-                    AttendanceValidator.dayState(store.all(), now)
+                    AttendanceValidator.dayState(store.all(), timestamp)
                 }
                 val validation = AttendanceValidator.canRegisterCheckIn(
                     alreadyCheckedIn = dayState.hasCheckIn
@@ -147,7 +148,7 @@ class PresenciaViewModel(
                 val event = LocalAttendanceEvent(
                     id = UUID.randomUUID().toString(),
                     type = LocalAttendanceEvent.TYPE_CHECK_IN,
-                    timestampMillis = now,
+                    timestampMillis = timestamp,
                     latitude = location.latitude,
                     longitude = location.longitude,
                     accuracyMeters = location.accuracyMeters,
@@ -159,7 +160,7 @@ class PresenciaViewModel(
 
                 val (pendingCount, updatedDayState) = withContext(Dispatchers.IO) {
                     store.save(event)
-                    store.count() to AttendanceValidator.dayState(store.all(), now)
+                    store.count() to AttendanceValidator.dayState(store.all(), timestamp)
                 }
 
                 notifier.notifyCheckInSaved()
@@ -221,8 +222,9 @@ class PresenciaViewModel(
                 // Validar la jornada actual: una salida de ayer no debe bloquear
                 // la salida de hoy, y solo se sale si hay una entrada abierta.
                 val now = System.currentTimeMillis()
+                val timestamp = location.capturedAtMillis ?: now
                 val dayState = withContext(Dispatchers.IO) {
-                    AttendanceValidator.dayState(store.all(), now)
+                    AttendanceValidator.dayState(store.all(), timestamp)
                 }
                 val validation = AttendanceValidator.canRegisterCheckOut(
                     hasOpenCheckIn = dayState.hasOpenCheckIn,
@@ -238,7 +240,7 @@ class PresenciaViewModel(
                 val event = LocalAttendanceEvent(
                     id = UUID.randomUUID().toString(),
                     type = LocalAttendanceEvent.TYPE_CHECK_OUT,
-                    timestampMillis = now,
+                    timestampMillis = timestamp,
                     latitude = location.latitude,
                     longitude = location.longitude,
                     accuracyMeters = location.accuracyMeters,
@@ -250,7 +252,7 @@ class PresenciaViewModel(
 
                 val (pendingCount, updatedDayState) = withContext(Dispatchers.IO) {
                     store.save(event)
-                    store.count() to AttendanceValidator.dayState(store.all(), now)
+                    store.count() to AttendanceValidator.dayState(store.all(), timestamp)
                 }
 
                 notifier.notifyCheckOutSaved()

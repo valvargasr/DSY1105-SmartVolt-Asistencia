@@ -30,8 +30,12 @@ todavía no se han probado en un teléfono físico.**
 ### Implementado
 
 - Pantalla de bienvenida y pantalla de acceso con validación por campo
-  (correo con formato válido y contraseña no vacía), errores junto al campo.
-- Navegación entre pantallas con Navigation Compose.
+  (correo con formato válido y contraseña no vacía), errores junto al campo,
+  iconos de error y mensajes visuales por campo.
+- Identidad visual propia (paleta ámbar/teal, tipografía y formas Material 3),
+  tarjetas de estado, indicadores de progreso y soporte de modo claro/oscuro.
+- Navegación entre pantallas con Navigation Compose y transiciones animadas.
+- Animaciones de entrada, mensajes de resultado y cambios de estado en la interfaz.
 - Pantalla de marcación (`PresenciaScreen`) con estados de permisos, GPS y baliza.
 - Solicitud de permisos en contexto con explicación y manejo de rechazo, incluido el
   rechazo permanente con acceso directo a los ajustes de la aplicación.
@@ -141,7 +145,8 @@ de la interfaz.
 cl.smartvolt.asistencia
 ├── MainActivity.kt                 Navegación, bienvenida y acceso
 ├── LoginViewModel.kt               Estado y validación del acceso
-├── ui/theme/                       Tema Material 3
+├── ui/theme/                       Tema Material 3, colores y tipografía
+├── ui/components/                  Componentes compartidos (tarjetas, estados, cabecera)
 ├── feature/attendance/
 │   ├── PresenciaScreen.kt          Pantalla de marcación
 │   ├── PresenciaViewModel.kt       Orquestación y estado observable
@@ -171,6 +176,13 @@ cl.smartvolt.asistencia
 Los puertos (`LocationProvider`, `BeaconScanner`, `AttendanceLocalStore`) declaran que no
 lanzan excepciones: devuelven un objeto de resultado con estado y código de error. Esto
 permite sustituirlos por implementaciones de prueba.
+
+La interfaz usa una identidad visual propia sobre Material 3: ámbar como color principal,
+teal para estados correctos, rust para advertencias y una escala tipográfica con jerarquía
+clara. Los componentes compartidos de `ui/components/` concentran las tarjetas de estado,
+las píldoras de estado, la cabecera y los estados vacíos para mantener consistencia entre
+pantallas. El modo oscuro se resuelve con la misma paleta y no depende de colores dinámicos
+del sistema.
 
 ## 8. Pruebas
 
