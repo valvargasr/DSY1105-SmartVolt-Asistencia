@@ -44,13 +44,19 @@ class PresenciaViewModel(
     val uiState: StateFlow<PresenciaUiState> = _uiState.asStateFlow()
 
     init {
-        // El contador se lee fuera del hilo principal: leer SharedPreferences y
-        // parsear el JSON en el constructor bloquearía la composición.
+        // El contador y la jornada actual se leen fuera del hilo principal:
+        // consultar Room en el constructor bloquearía la composición.
         viewModelScope.launch {
-            val count = withContext(Dispatchers.IO) {
-                runCatching { store.count() }.getOrDefault(0)
+            val snapshot = withContext(Dispatchers.IO) {
+                val now = System.currentTimeMillis()
+                store.count() to AttendanceValidator.dayState(store.all(), now)
             }
-            _uiState.update { it.copy(pendingSyncCount = count) }
+            _uiState.update {
+                it.copy(
+                    pendingSyncCount = snapshot.first,
+                    dayState = snapshot.second
+                )
+            }
         }
     }
 
@@ -73,11 +79,15 @@ class PresenciaViewModel(
 
                 val location = locationDeferred.await()
                 val beacon = beaconDeferred.await()
+                val dayState = withContext(Dispatchers.IO) {
+                    AttendanceValidator.dayState(store.all(), System.currentTimeMillis())
+                }
 
                 _uiState.update { state ->
                     state.copy(
                         location = location,
                         beacon = beacon,
+                        dayState = dayState,
                         permissionState = when {
                             // Si hubo lectura, el permiso está concedido sin importar lo que
                             // se haya registrado antes (por ejemplo, si se habilitó en ajustes).
@@ -120,10 +130,24 @@ class PresenciaViewModel(
             _uiState.update { it.copy(isSaving = true) }
 
             try {
+                val now = System.currentTimeMillis()
+                val dayState = withContext(Dispatchers.IO) {
+                    AttendanceValidator.dayState(store.all(), now)
+                }
+                val validation = AttendanceValidator.canRegisterCheckIn(
+                    alreadyCheckedIn = dayState.hasCheckIn
+                )
+                if (validation is AttendanceValidator.ValidationResult.Invalid) {
+                    _uiState.update {
+                        it.copy(message = validation.reason, dayState = dayState)
+                    }
+                    return@launch
+                }
+
                 val event = LocalAttendanceEvent(
                     id = UUID.randomUUID().toString(),
                     type = LocalAttendanceEvent.TYPE_CHECK_IN,
-                    timestampMillis = System.currentTimeMillis(),
+                    timestampMillis = now,
                     latitude = location.latitude,
                     longitude = location.longitude,
                     accuracyMeters = location.accuracyMeters,
@@ -133,9 +157,9 @@ class PresenciaViewModel(
                     syncState = LocalAttendanceEvent.PENDING_SYNC
                 )
 
-                val pendingCount = withContext(Dispatchers.IO) {
+                val (pendingCount, updatedDayState) = withContext(Dispatchers.IO) {
                     store.save(event)
-                    store.count()
+                    store.count() to AttendanceValidator.dayState(store.all(), now)
                 }
 
                 notifier.notifyCheckInSaved()
@@ -144,6 +168,7 @@ class PresenciaViewModel(
                     it.copy(
                         lastEvent = event,
                         pendingSyncCount = pendingCount,
+                        dayState = updatedDayState,
                         message = PresenceEvaluator.resultMessage(event)
                     )
                 }
@@ -193,20 +218,19 @@ class PresenciaViewModel(
             _uiState.update { it.copy(isSaving = true) }
 
             try {
-                // Validar que exista una entrada abierta antes de registrar salida.
-                val events = withContext(Dispatchers.IO) {
-                    store.pending().filter { it.workerId == LocalAttendanceEvent.WORKER_ID }
+                // Validar la jornada actual: una salida de ayer no debe bloquear
+                // la salida de hoy, y solo se sale si hay una entrada abierta.
+                val now = System.currentTimeMillis()
+                val dayState = withContext(Dispatchers.IO) {
+                    AttendanceValidator.dayState(store.all(), now)
                 }
-                val hasOpenCheckIn = events.any { it.type == LocalAttendanceEvent.TYPE_CHECK_IN }
-                val alreadyCheckedOut = events.any { it.type == LocalAttendanceEvent.TYPE_CHECK_OUT }
-
                 val validation = AttendanceValidator.canRegisterCheckOut(
-                    hasOpenCheckIn = hasOpenCheckIn,
-                    alreadyCheckedOut = alreadyCheckedOut
+                    hasOpenCheckIn = dayState.hasOpenCheckIn,
+                    alreadyCheckedOut = dayState.hasCheckOut
                 )
                 if (validation is AttendanceValidator.ValidationResult.Invalid) {
                     _uiState.update {
-                        it.copy(message = validation.reason)
+                        it.copy(message = validation.reason, dayState = dayState)
                     }
                     return@launch
                 }
@@ -214,7 +238,7 @@ class PresenciaViewModel(
                 val event = LocalAttendanceEvent(
                     id = UUID.randomUUID().toString(),
                     type = LocalAttendanceEvent.TYPE_CHECK_OUT,
-                    timestampMillis = System.currentTimeMillis(),
+                    timestampMillis = now,
                     latitude = location.latitude,
                     longitude = location.longitude,
                     accuracyMeters = location.accuracyMeters,
@@ -224,17 +248,18 @@ class PresenciaViewModel(
                     syncState = LocalAttendanceEvent.PENDING_SYNC
                 )
 
-                val pendingCount = withContext(Dispatchers.IO) {
+                val (pendingCount, updatedDayState) = withContext(Dispatchers.IO) {
                     store.save(event)
-                    store.count()
+                    store.count() to AttendanceValidator.dayState(store.all(), now)
                 }
 
-                notifier.notifyCheckInSaved()
+                notifier.notifyCheckOutSaved()
 
                 _uiState.update {
                     it.copy(
                         lastEvent = event,
                         pendingSyncCount = pendingCount,
+                        dayState = updatedDayState,
                         message = "Salida registrada a las ${formatHour(event.timestampMillis)}. Guardada en este dispositivo y pendiente de sincronización."
                     )
                 }

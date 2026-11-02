@@ -5,6 +5,8 @@ import cl.smartvolt.asistencia.native.bluetooth.BeaconScanResult
 import cl.smartvolt.asistencia.native.bluetooth.BeaconScanStatus
 import cl.smartvolt.asistencia.native.location.LocationResult
 import cl.smartvolt.asistencia.native.location.LocationStatus
+import java.time.Instant
+import java.time.ZoneId
 
 /**
  * Validaciones de asistencia desacopladas de la UI (RNF-07, RF-22).
@@ -13,6 +15,23 @@ import cl.smartvolt.asistencia.native.location.LocationStatus
  * sin depender de Android ni de la interfaz.
  */
 object AttendanceValidator {
+
+    /**
+     * Estado de la jornada local de un trabajador.
+     *
+     * Se calcula a partir de las marcas guardadas: una entrada habilita la
+     * salida y una salida cierra la jornada. Las marcas de días anteriores no
+     * bloquean la jornada actual.
+     */
+    data class DayAttendanceState(
+        val hasCheckIn: Boolean = false,
+        val hasCheckOut: Boolean = false,
+        val hasOpenCheckIn: Boolean = false
+    ) {
+        val canCheckIn: Boolean get() = !hasCheckIn
+        val canCheckOut: Boolean get() = hasOpenCheckIn
+    }
+
 
     /** Resultado de una validación. */
     sealed class ValidationResult {
@@ -68,6 +87,36 @@ object AttendanceValidator {
             return ValidationResult.Invalid("Ya existe una entrada registrada para esta jornada.")
         }
         return ValidationResult.Valid
+    }
+
+    /**
+     * Calcula el estado de la jornada que contiene [nowMillis].
+     *
+     * Solo considera las marcas del trabajador indicado y del mismo día local.
+     * Así una salida registrada ayer no bloquea la salida de hoy.
+     */
+    fun dayState(
+        events: List<LocalAttendanceEvent>,
+        nowMillis: Long,
+        zoneId: ZoneId = ZoneId.systemDefault(),
+        workerId: String = LocalAttendanceEvent.WORKER_ID
+    ): DayAttendanceState {
+        val currentDay = Instant.ofEpochMilli(nowMillis).atZone(zoneId).toLocalDate()
+        val todayEvents = events
+            .filter { it.workerId == workerId }
+            .filter { event ->
+                Instant.ofEpochMilli(event.timestampMillis)
+                    .atZone(zoneId)
+                    .toLocalDate() == currentDay
+            }
+            .sortedBy { it.timestampMillis }
+
+        val lastEvent = todayEvents.lastOrNull()
+        return DayAttendanceState(
+            hasCheckIn = todayEvents.any { it.type == LocalAttendanceEvent.TYPE_CHECK_IN },
+            hasCheckOut = todayEvents.any { it.type == LocalAttendanceEvent.TYPE_CHECK_OUT },
+            hasOpenCheckIn = lastEvent?.type == LocalAttendanceEvent.TYPE_CHECK_IN
+        )
     }
 
     /**

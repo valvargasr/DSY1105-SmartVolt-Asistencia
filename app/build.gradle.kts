@@ -56,6 +56,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // minSdk 24: java.time se usa en el dominio y necesita desugaring para
+        // funcionar también en Android 7.0/7.1 (API 24-25).
+        isCoreLibraryDesugaringEnabled = true
     }
     buildFeatures {
         compose = true
@@ -83,5 +86,6 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
 
 }

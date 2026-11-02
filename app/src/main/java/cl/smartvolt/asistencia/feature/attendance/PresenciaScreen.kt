@@ -111,7 +111,7 @@ fun PresenciaScreen(
                     .widthIn(max = 480.dp)
             ) {
                 Text(
-                    text = "Registrar entrada",
+                    text = "Registrar asistencia",
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -253,7 +253,7 @@ fun PresenciaScreen(
 
                 Button(
                     onClick = presenciaViewModel::onRegistrarEntrada,
-                    enabled = estado.canRegister && !estado.isSaving,
+                    enabled = estado.canCheckIn && !estado.isSaving,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(54.dp)
@@ -272,7 +272,7 @@ fun PresenciaScreen(
 
                 OutlinedButton(
                     onClick = presenciaViewModel::onRegistrarSalida,
-                    enabled = estado.canRegister && !estado.isSaving,
+                    enabled = estado.canCheckOut && !estado.isSaving,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(54.dp)
@@ -287,10 +287,20 @@ fun PresenciaScreen(
                     )
                 }
 
-                if (!estado.canRegister) {
+                val ayuda = when {
+                    !estado.canRegister ->
+                        "Para registrar una marca se necesita ubicación lista y baliza detectada."
+                    !estado.dayState.canCheckIn && !estado.dayState.canCheckOut ->
+                        "La jornada de hoy ya tiene entrada y salida registradas."
+                    !estado.dayState.canCheckIn ->
+                        "La entrada de hoy ya está registrada. Puedes registrar la salida."
+                    else -> null
+                }
+
+                if (ayuda != null) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Para registrar la entrada se necesita ubicación lista y baliza detectada.",
+                        text = ayuda,
                         fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

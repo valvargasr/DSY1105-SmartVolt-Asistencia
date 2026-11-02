@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cl.smartvolt.asistencia.data.local.LocalAttendanceEvent
+import cl.smartvolt.asistencia.native.location.MockSignal
 
 /**
  * Pantalla de historial de marcas.
@@ -94,7 +95,7 @@ private fun EventCard(event: LocalAttendanceEvent) {
                     fontSize = 16.sp
                 )
                 Text(
-                    text = event.syncState,
+                    text = estadoSincronizacion(event.syncState),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -121,6 +122,13 @@ private fun EventCard(event: LocalAttendanceEvent) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            if (event.mockSignal == MockSignal.DETECTED) {
+                Text(
+                    text = "Ubicación simulada informada: marca en revisión.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             Text(
                 text = "Trabajador: ${event.workerId} | Faena: ${event.siteId}",
                 fontSize = 12.sp,
@@ -128,4 +136,9 @@ private fun EventCard(event: LocalAttendanceEvent) {
             )
         }
     }
+}
+
+private fun estadoSincronizacion(syncState: String): String = when (syncState) {
+    LocalAttendanceEvent.PENDING_SYNC -> "Pendiente de sincronización"
+    else -> syncState
 }

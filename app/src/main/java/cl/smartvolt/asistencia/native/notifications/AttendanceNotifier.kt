@@ -27,14 +27,24 @@ class AttendanceNotifier(
     // dentro de runCatching: si el usuario lo revoca en medio, no se cierra la app.
     @SuppressLint("MissingPermission")
     fun notifyCheckInSaved() {
+        notifySaved("Entrada registrada")
+    }
+
+    @SuppressLint("MissingPermission")
+    fun notifyCheckOutSaved() {
+        notifySaved("Salida registrada")
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun notifySaved(title: String) {
         if (!canNotify()) return
 
         createChannel()
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Entrada registrada")
-            .setContentText("Guardada en este dispositivo. Pendiente de sincronización.")
+            .setContentTitle(title)
+            .setContentText("Marca guardada en este dispositivo. Pendiente de sincronización.")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
             .build()

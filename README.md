@@ -23,8 +23,9 @@ Tablero de tareas: Trello **DSY1105 - SmartVolt Asistencia**.
 
 ## 3. Estado de implementación
 
-Estado verificado en la rama `feature/location-permissions`. Compila y sus pruebas
-unitarias pasan. **El GPS y el BLE todavía no se han probado en un teléfono físico.**
+Estado verificado en la rama `Branch/julian`, que integra las áreas A, B y C. Compila,
+pasan las 60 pruebas unitarias y `lintDebug` no reporta errores. **El GPS y el BLE
+todavía no se han probado en un teléfono físico.**
 
 ### Implementado
 
@@ -48,14 +49,14 @@ unitarias pasan. **El GPS y el BLE todavía no se han probado en un teléfono f�
 - 15 pruebas unitarias de esas reglas.
 - **Área B (Julián):** Persistencia local con Room/SQLite (entidad, DAO, base de datos, store).
 - **Área B (Julián):** Modelos de dominio (AttendanceEvent, WorkerProfile, Worksite, OvertimeApproval, HolidayCalendar).
-- **Área B (Julián):** Validaciones desacopladas (`AttendanceValidator`) con 21 pruebas unitarias.
+- **Área B (Julián):** Validaciones desacopladas (`AttendanceValidator`) con 26 pruebas unitarias.
 - **Área B (Julián):** Historial de marcas (`HistoryScreen` + `HistoryViewModel`).
 - **Área B (Julián):** Registro de salida (check-out) con validación de entrada previa.
 - **Área B (Julián):** Clasificador de puntualidad/ausencia configurable (`AttendanceClassifier`).
 - **Área B (Julián):** Gestión de horas extra (`OvertimeViewModel`) con persistencia en Room.
 - **Área B (Julián):** Calendario de feriados de Chile (`HolidayCalendar`).
 - **Área B (Julián):** Panel de supervisor con resumen operativo (`SupervisorViewModel`).
-- **Área B (Julián):** 21 pruebas unitarias adicionales (AttendanceValidator, HolidayCalendar, AttendanceClassifier).
+- **Área B (Julián):** 44 pruebas unitarias adicionales (AttendanceValidator 26, HolidayCalendar 7, AttendanceClassifier 11); el proyecto suma 60.
 
 ### Pendiente
 
@@ -68,11 +69,12 @@ unitarias pasan. **El GPS y el BLE todavía no se han probado en un teléfono f�
 ## 4. Requisitos del entorno
 
 - Android Studio Rabbit 1 (2026.2.1).
-- **JDK 17.** El proyecto no compila con JDK 24.
+- **JDK 24 o superior.** Verificado con JDK 24 y con el daemon JDK 25 que el wrapper
+  aprovisiona automáticamente mediante foojay. No se requiere JDK 17.
 - Android SDK Platform **android-37.0** y Build-Tools **37.0.0**.
 - Gradle **9.6.0**, incluido mediante el wrapper del repositorio (`gradlew`).
   No es necesario instalar Gradle por separado.
-- Variables de entorno `JAVA_HOME` apuntando al JDK 17 y `ANDROID_HOME` al SDK.
+- Variables de entorno `JAVA_HOME` apuntando al JDK 24 (o superior) y `ANDROID_HOME` al SDK.
 
 Versiones declaradas: AGP 9.4.1, Kotlin 2.2.10, Compose BOM 2026.02.01,
 `compileSdk` 37, `targetSdk` 37, `minSdk` 24.
@@ -84,7 +86,7 @@ No actualizar estas versiones de forma independiente: se revisan en conjunto con
 Desde la raíz del proyecto, en Windows (PowerShell):
 
 ```powershell
-$env:JAVA_HOME = "C:\ruta\al\jdk-17"
+$env:JAVA_HOME = "C:\ruta\al\jdk-24"
 $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 
 # Compila la aplicación de depuración
@@ -111,6 +113,8 @@ sincronización de Gradle y usar **Run** sobre un dispositivo conectado.
 4. Presionar **Verificar presencia** y conceder los permisos solicitados.
 5. Revisar el estado de la ubicación y de la baliza.
 6. Con ambos disponibles, presionar **Registrar entrada**.
+7. Con la entrada del día registrada, presionar **Registrar salida**.
+8. Presionar **Ver historial** para revisar las marcas guardadas en el dispositivo.
 
 ### Baliza de prueba
 
@@ -143,10 +147,20 @@ cl.smartvolt.asistencia
 │   ├── PresenciaViewModel.kt       Orquestación y estado observable
 │   ├── PresenciaUiState.kt         Estado inmutable de la pantalla
 │   └── PresenceEvaluator.kt        Reglas puras, sin dependencias de Android
+├── feature/history/                Historial de marcas (screen + view model)
+├── feature/overtime/               Lógica de horas extra (UI pendiente)
+├── feature/supervisor/             Resumen de supervisor (UI pendiente)
 ├── data/local/
 │   ├── LocalAttendanceEvent.kt     Modelo de la marcación
 │   ├── AttendanceLocalStore.kt     Puerto de persistencia
-│   └── SharedPreferencesAttendanceStore.kt
+│   ├── RoomAttendanceStore.kt      Implementación Room/SQLite
+│   ├── AppDatabase.kt              Base de datos (asistencia y horas extra)
+│   ├── AttendanceDao.kt            Consultas de marcaciones
+│   ├── AttendanceEventEntity.kt    Entidad Room de marcaciones
+│   └── OvertimeApproval*.kt        Entidad y DAO de horas extra
+├── data/repository/                Repositorio de asistencia
+├── domain/model/                   Modelos de dominio y calendario de feriados
+├── domain/validation/              AttendanceValidator, AttendanceClassifier y HolidayCalendar
 └── native/
     ├── location/                   LocationProvider y AndroidLocationProvider
     ├── bluetooth/                  BeaconScanner, AndroidBeaconScanner, BeaconConfig
@@ -163,6 +177,9 @@ permite sustituirlos por implementaciones de prueba.
 ```powershell
 .\gradlew.bat testDebugUnitTest
 ```
+
+La suite suma **60 pruebas unitarias**: `PresenceEvaluatorTest` (15), `AttendanceValidatorTest`
+(26), `AttendanceClassifierTest` (11), `HolidayCalendarTest` (7) y `ExampleUnitTest` (1).
 
 `PresenceEvaluatorTest` cubre 15 casos: ausencia de lecturas, GPS disponible, baliza
 detectada, baliza ausente, permiso denegado, ubicación apagada, Bluetooth apagado, tiempo
@@ -192,8 +209,8 @@ que no se puede instalar.
 - Se usan identificadores ficticios: `OP-001` y `FAENA-DEMO-01`. No hay nombres, RUT,
   correos ni datos personales reales.
 - La aplicación no declara el permiso `INTERNET`: las marcaciones quedan en el teléfono.
-- El respaldo automático está deshabilitado (`allowBackup="false"`) y las preferencias con
-  marcaciones se excluyen de las reglas de respaldo y transferencia.
+- El respaldo automático está deshabilitado (`allowBackup="false"`); la base de datos Room y
+  las preferencias quedan excluidas de las reglas de respaldo y transferencia.
 - La ubicación simulada se informa como una señal de revisión, no como una acusación de
   fraude. No se promete una detección infalible.
 - No se guardan contraseñas, tokens ni claves en el repositorio.
@@ -207,8 +224,9 @@ que no se puede instalar.
   local pendiente de sincronizar, nunca validado por un backend.
 - El UUID de la baliza es provisional y clonable: no constituye una prueba criptográfica
   de identidad.
-- La persistencia actual usa `SharedPreferences` con JSON. La migración a Room corresponde
-  al Área B.
+- La persistencia actual usa Room/SQLite (`smartvolt_attendance.db`).
+  `SharedPreferencesAttendanceStore` queda como implementación legada sin uso y no migra
+  marcas antiguas.
 - El acceso de demostración no implementa autenticación ni doble factor.
 
 ---

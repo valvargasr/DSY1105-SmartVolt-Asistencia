@@ -6,10 +6,30 @@ import cl.smartvolt.asistencia.native.bluetooth.BeaconScanStatus
 import cl.smartvolt.asistencia.native.location.LocationResult
 import cl.smartvolt.asistencia.native.location.LocationStatus
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.LocalDate
+import java.time.ZoneId
 
 class AttendanceValidatorTest {
+
+    private val zoneId = ZoneId.of("UTC")
+    private val today = LocalDate.of(2026, 5, 10)
+
+    private fun at(day: LocalDate, hour: Int): Long =
+        day.atTime(hour, 0).atZone(zoneId).toInstant().toEpochMilli()
+
+    private fun marca(
+        type: String,
+        timestampMillis: Long,
+        workerId: String = LocalAttendanceEvent.WORKER_ID
+    ) = LocalAttendanceEvent(
+        id = "evt-$type-$timestampMillis",
+        type = type,
+        timestampMillis = timestampMillis,
+        workerId = workerId
+    )
 
     @Test
     fun `evento valido pasa la validacion`() {
@@ -189,5 +209,78 @@ class AttendanceValidatorTest {
     fun `trabajador valido`() {
         val resultado = AttendanceValidator.validateWorkerId("OP-001")
         assertTrue(resultado is AttendanceValidator.ValidationResult.Valid)
+    }
+
+    @Test
+    fun `jornada sin marcas permite entrada y no salida`() {
+        val estado = AttendanceValidator.dayState(
+            events = emptyList(),
+            nowMillis = at(today, 8),
+            zoneId = zoneId
+        )
+
+        assertTrue(estado.canCheckIn)
+        assertFalse(estado.canCheckOut)
+    }
+
+    @Test
+    fun `entrada de hoy habilita la salida y bloquea otra entrada`() {
+        val estado = AttendanceValidator.dayState(
+            events = listOf(marca(LocalAttendanceEvent.TYPE_CHECK_IN, at(today, 8))),
+            nowMillis = at(today, 12),
+            zoneId = zoneId
+        )
+
+        assertFalse(estado.canCheckIn)
+        assertTrue(estado.canCheckOut)
+    }
+
+    @Test
+    fun `salida de ayer no bloquea la jornada de hoy`() {
+        val ayer = today.minusDays(1)
+        val estado = AttendanceValidator.dayState(
+            events = listOf(
+                marca(LocalAttendanceEvent.TYPE_CHECK_IN, at(ayer, 8)),
+                marca(LocalAttendanceEvent.TYPE_CHECK_OUT, at(ayer, 18))
+            ),
+            nowMillis = at(today, 8),
+            zoneId = zoneId
+        )
+
+        assertTrue(estado.canCheckIn)
+        assertFalse(estado.canCheckOut)
+    }
+
+    @Test
+    fun `jornada con entrada y salida queda cerrada`() {
+        val estado = AttendanceValidator.dayState(
+            events = listOf(
+                marca(LocalAttendanceEvent.TYPE_CHECK_IN, at(today, 8)),
+                marca(LocalAttendanceEvent.TYPE_CHECK_OUT, at(today, 18))
+            ),
+            nowMillis = at(today, 19),
+            zoneId = zoneId
+        )
+
+        assertFalse(estado.canCheckIn)
+        assertFalse(estado.canCheckOut)
+    }
+
+    @Test
+    fun `marcas de otro trabajador no afectan la jornada`() {
+        val estado = AttendanceValidator.dayState(
+            events = listOf(
+                marca(
+                    type = LocalAttendanceEvent.TYPE_CHECK_IN,
+                    timestampMillis = at(today, 8),
+                    workerId = "OP-999"
+                )
+            ),
+            nowMillis = at(today, 9),
+            zoneId = zoneId
+        )
+
+        assertTrue(estado.canCheckIn)
+        assertFalse(estado.canCheckOut)
     }
 }

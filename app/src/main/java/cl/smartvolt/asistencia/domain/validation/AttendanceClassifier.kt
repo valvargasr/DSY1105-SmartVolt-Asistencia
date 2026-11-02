@@ -4,6 +4,7 @@ import cl.smartvolt.asistencia.data.local.LocalAttendanceEvent
 import cl.smartvolt.asistencia.domain.model.DailyAttendanceStatus
 import java.time.Instant
 import java.time.ZoneId
+import java.util.Locale
 
 /**
  * Clasificador de puntualidad y ausencia.
@@ -86,6 +87,6 @@ object AttendanceClassifier {
     fun formatTime(millis: Long, zoneId: ZoneId = ZoneId.systemDefault()): String {
         val instant = Instant.ofEpochMilli(millis)
         val time = instant.atZone(zoneId).toLocalTime()
-        return String.format("%02d:%02d", time.hour, time.minute)
+        return String.format(Locale.getDefault(), "%02d:%02d", time.hour, time.minute)
     }
 }
