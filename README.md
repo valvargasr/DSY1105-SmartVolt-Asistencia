@@ -23,7 +23,7 @@ Tablero de tareas: Trello **DSY1105 - SmartVolt Asistencia**.
 
 ## 3. Estado de implementación
 
-Estado verificado en la rama `Branch/julian`, que integra las áreas A, B y C. Compila,
+Estado verificado en `main`, que integra las áreas A, B y C. Compila,
 pasan las 60 pruebas unitarias y `lintDebug` no reporta errores. **El GPS y el BLE
 todavía no se han probado en un teléfono físico.**
 
