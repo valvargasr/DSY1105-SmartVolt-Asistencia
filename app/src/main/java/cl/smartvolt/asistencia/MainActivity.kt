@@ -2,6 +2,7 @@ package cl.smartvolt.asistencia
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
@@ -37,6 +38,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Bluetooth
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.CloudOff
@@ -47,10 +49,11 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material.icons.outlined.Bluetooth
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -73,20 +76,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import cl.smartvolt.asistencia.data.local.RoomAttendanceStore
+import cl.smartvolt.asistencia.domain.model.WorkerRole
 import cl.smartvolt.asistencia.feature.attendance.PresenciaScreen
 import cl.smartvolt.asistencia.feature.history.HistoryScreen
 import cl.smartvolt.asistencia.feature.history.HistoryViewModel
+import cl.smartvolt.asistencia.feature.home.HomeScreen
+import cl.smartvolt.asistencia.feature.home.HomeViewModel
+import cl.smartvolt.asistencia.feature.overtime.OvertimeScreen
+import cl.smartvolt.asistencia.feature.overtime.OvertimeViewModel
+import cl.smartvolt.asistencia.feature.supervisor.SupervisorScreen
+import cl.smartvolt.asistencia.feature.supervisor.SupervisorViewModel
+import cl.smartvolt.asistencia.session.DemoAccount
+import cl.smartvolt.asistencia.session.DemoDirectory
+import cl.smartvolt.asistencia.session.SessionViewModel
 import cl.smartvolt.asistencia.ui.components.SectionLabel
 import cl.smartvolt.asistencia.ui.components.SmartVoltMark
 import cl.smartvolt.asistencia.ui.theme.SmartVoltAsistenciaTheme
@@ -98,9 +111,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             SmartVoltAsistenciaTheme {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize()
-                ) { innerPadding ->
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     AppNavegacion(
                         modifier = Modifier.padding(innerPadding)
                     )
@@ -110,13 +121,25 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/**
+ * Grafo de navegación.
+ *
+ * El destino inicial depende de la sesión guardada: si la demo ya se abrió
+ * antes, se entra directo al inicio del rol correspondiente. El botón atrás
+ * siempre vuelve a la pantalla anterior y en el inicio no cierra la app de
+ * golpe (evita el reinicio accidental que se observó en las pruebas).
+ */
 @Composable
 fun AppNavegacion(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
+    val context = LocalContext.current
+    val sessionViewModel: SessionViewModel = viewModel(factory = SessionViewModel.Factory)
+    val session by sessionViewModel.session.collectAsState()
+    val store = remember { RoomAttendanceStore(context.applicationContext) }
 
     NavHost(
         navController = navController,
-        startDestination = "bienvenida",
+        startDestination = if (session != null) RUTA_INICIO else RUTA_BIENVENIDA,
         modifier = modifier,
         enterTransition = {
             fadeIn(tween(240)) + slideInHorizontally(tween(280)) { it / 12 }
@@ -131,23 +154,29 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
             fadeOut(tween(160)) + slideOutHorizontally(tween(220)) { it / 24 }
         }
     ) {
-        composable("bienvenida") {
+        composable(RUTA_BIENVENIDA) {
             PantallaBienvenida(
                 onComenzar = {
-                    navController.navigate("login") {
-                        launchSingleTop = true
+                    if (session != null) {
+                        navController.navigate(RUTA_INICIO) {
+                            popUpTo(RUTA_BIENVENIDA) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    } else {
+                        navController.navigate(RUTA_LOGIN) { launchSingleTop = true }
                     }
                 }
             )
         }
 
-        composable("login") {
+        composable(RUTA_LOGIN) {
             PantallaLogin(
-                onEntrarDemo = {
-                    navController.navigate("presencia") {
-                        // La marcación reemplaza al acceso: volver atrás no debe
-                        // regresar al formulario con la contraseña escrita.
-                        popUpTo("login") { inclusive = true }
+                onSesionIniciada = { cuenta ->
+                    sessionViewModel.iniciar(cuenta)
+                    navController.navigate(RUTA_INICIO) {
+                        // El acceso reemplaza al formulario: volver atrás no debe
+                        // mostrar la contraseña escrita otra vez.
+                        popUpTo(RUTA_LOGIN) { inclusive = true }
                         launchSingleTop = true
                     }
                 },
@@ -155,31 +184,125 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
             )
         }
 
-        composable("presencia") {
+        composable(RUTA_INICIO) {
+            val cuenta = session
+            if (cuenta == null) {
+                LaunchedEffect(Unit) {
+                    navController.navigate(RUTA_LOGIN) {
+                        popUpTo(RUTA_INICIO) { inclusive = true }
+                    }
+                }
+            } else {
+                // Atrás en el inicio no cierra la app: primero hay que cerrar sesión.
+                BackHandler(enabled = true) { /* permanece en el inicio */ }
+
+                val homeViewModel: HomeViewModel = viewModel(
+                    key = "home-${cuenta.workerId}",
+                    factory = HomeViewModel.factory(
+                        store = store,
+                        workerId = cuenta.workerId,
+                        siteId = cuenta.siteId
+                    )
+                )
+
+                HomeScreen(
+                    account = cuenta,
+                    viewModel = homeViewModel,
+                    onRegistrarAsistencia = {
+                        navController.navigate(RUTA_PRESENCIA) { launchSingleTop = true }
+                    },
+                    onVerHistorial = {
+                        navController.navigate(RUTA_HISTORIAL) { launchSingleTop = true }
+                    },
+                    onAbrirPanel = {
+                        navController.navigate(RUTA_PANEL) { launchSingleTop = true }
+                    },
+                    onAbrirHorasExtra = {
+                        navController.navigate(RUTA_JORNADA) { launchSingleTop = true }
+                    },
+                    onCerrarSesion = {
+                        sessionViewModel.cerrar()
+                        navController.navigate(RUTA_BIENVENIDA) {
+                            popUpTo(RUTA_INICIO) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+        }
+
+        composable(RUTA_PRESENCIA) {
+            val cuenta = session ?: return@composable
             PresenciaScreen(
-                onVolver = {
-                    navController.popBackStack()
-                },
+                workerId = cuenta.workerId,
+                siteId = cuenta.siteId,
+                siteName = cuenta.siteName,
+                roleLabel = cuenta.roleLabel,
+                onVolver = { navController.popBackStack() },
                 onVerHistorial = {
-                    navController.navigate("historial")
+                    navController.navigate(RUTA_HISTORIAL) { launchSingleTop = true }
                 }
             )
         }
 
-        composable("historial") {
-            val store = cl.smartvolt.asistencia.data.local.RoomAttendanceStore(
-                androidx.compose.ui.platform.LocalContext.current
-            )
-            val historyViewModel = androidx.lifecycle.viewmodel.compose.viewModel<HistoryViewModel>(
-                factory = HistoryViewModel.factory(store)
+        composable(RUTA_HISTORIAL) {
+            val cuenta = session ?: return@composable
+            val historyViewModel: HistoryViewModel = viewModel(
+                key = "history-${cuenta.workerId}",
+                factory = HistoryViewModel.factory(
+                    store = store,
+                    workerId = if (cuenta.role == WorkerRole.WORKER) cuenta.workerId else null,
+                    siteId = cuenta.siteId
+                )
             )
             HistoryScreen(
                 viewModel = historyViewModel,
+                workerLabel = if (cuenta.role == WorkerRole.WORKER) {
+                    "Trabajador ${cuenta.workerId}"
+                } else {
+                    "${cuenta.roleLabel} · ${cuenta.siteName}"
+                },
+                onVolver = { navController.popBackStack() }
+            )
+        }
+
+        composable(RUTA_PANEL) {
+            val cuenta = session ?: return@composable
+            val supervisorViewModel: SupervisorViewModel = viewModel(
+                key = "panel-${cuenta.siteId}",
+                factory = SupervisorViewModel.factory(store, cuenta.siteId)
+            )
+            SupervisorScreen(
+                viewModel = supervisorViewModel,
+                siteName = cuenta.siteName,
+                onVolver = { navController.popBackStack() }
+            )
+        }
+
+        composable(RUTA_JORNADA) {
+            val cuenta = session ?: return@composable
+            val overtimeViewModel: OvertimeViewModel = viewModel(
+                factory = OvertimeViewModel.Factory(
+                    androidx.compose.ui.platform.LocalContext.current.applicationContext
+                        as android.app.Application
+                )
+            )
+            OvertimeScreen(
+                viewModel = overtimeViewModel,
+                account = cuenta,
                 onVolver = { navController.popBackStack() }
             )
         }
     }
 }
+
+private const val RUTA_BIENVENIDA = "bienvenida"
+private const val RUTA_LOGIN = "login"
+private const val RUTA_INICIO = "inicio"
+private const val RUTA_PRESENCIA = "presencia"
+private const val RUTA_HISTORIAL = "historial"
+private const val RUTA_PANEL = "panel"
+private const val RUTA_JORNADA = "jornada"
 
 @Composable
 fun PantallaBienvenida(
@@ -275,7 +398,7 @@ fun PantallaBienvenida(
                         FeatureRow(
                             icon = Icons.Outlined.Bluetooth,
                             title = "Baliza Bluetooth",
-                            description = "Verificación de proximidad física."
+                            description = "Compatible con un iPhone emitiendo iBeacon."
                         )
                         FeatureRow(
                             icon = Icons.Outlined.CloudOff,
@@ -358,9 +481,15 @@ private fun FeatureRow(
     }
 }
 
+/**
+ * Acceso a la demo.
+ *
+ * Incluye credenciales reales del directorio demo (validación campo por campo)
+ * y botones de rol para entrar directo como obrero, capataz o administrador.
+ */
 @Composable
 fun PantallaLogin(
-    onEntrarDemo: () -> Unit = {},
+    onSesionIniciada: (DemoAccount) -> Unit,
     onVolver: () -> Unit = {},
     loginViewModel: LoginViewModel = viewModel()
 ) {
@@ -390,15 +519,15 @@ fun PantallaLogin(
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
-                SectionLabel(text = "Acceso seguro")
+                SectionLabel(text = "Acceso demo")
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .widthIn(max = 440.dp),
+                    .widthIn(max = 460.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 SmartVoltMark(size = 62.dp)
@@ -420,7 +549,7 @@ fun PantallaLogin(
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -541,31 +670,47 @@ fun PantallaLogin(
                             .fillMaxWidth()
                             .padding(top = 14.dp),
                         shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.secondaryContainer
+                        color = if (estado.mensajeEsError) {
+                            MaterialTheme.colorScheme.errorContainer
+                        } else {
+                            MaterialTheme.colorScheme.secondaryContainer
+                        }
                     ) {
                         Row(
                             modifier = Modifier.padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = Icons.Outlined.CheckCircle,
+                                imageVector = if (estado.mensajeEsError) {
+                                    Icons.Outlined.ErrorOutline
+                                } else {
+                                    Icons.Outlined.CheckCircle
+                                },
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                tint = if (estado.mensajeEsError) {
+                                    MaterialTheme.colorScheme.onErrorContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onSecondaryContainer
+                                }
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = estado.mensaje,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                                color = if (estado.mensajeEsError) {
+                                    MaterialTheme.colorScheme.onErrorContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onSecondaryContainer
+                                }
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
-                    onClick = loginViewModel::validarFormulario,
+                    onClick = { loginViewModel.ingresar(onSesionIniciada) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
@@ -586,7 +731,7 @@ fun PantallaLogin(
                 ) {
                     HorizontalDivider(modifier = Modifier.weight(1f))
                     Text(
-                        text = "o",
+                        text = "acceso rápido por rol",
                         modifier = Modifier.padding(horizontal = 12.dp),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -594,37 +739,62 @@ fun PantallaLogin(
                     HorizontalDivider(modifier = Modifier.weight(1f))
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                OutlinedButton(
-                    onClick = onEntrarDemo,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(54.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Person,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Entrar como OP-001 · demo",
-                        style = MaterialTheme.typography.titleSmall
-                    )
+                    DemoDirectory.accounts.forEach { cuenta ->
+                        FilterChip(
+                            selected = estado.correo == cuenta.email,
+                            onClick = {
+                                loginViewModel.ingresarDemo(cuenta, onSesionIniciada)
+                            },
+                            label = { Text(cuenta.roleLabel) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = when (cuenta.role) {
+                                        WorkerRole.WORKER -> Icons.Outlined.Person
+                                        WorkerRole.SUPERVISOR -> Icons.Outlined.Badge
+                                        else -> Icons.Outlined.Lock
+                                    },
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor =
+                                    MaterialTheme.colorScheme.primaryContainer
+                            ),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                Text(
-                    text = "Acceso de demostración sin backend. La validación real " +
-                        "de credenciales queda pendiente.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        SectionLabel(text = "Credenciales de la demo")
+                        Spacer(modifier = Modifier.height(6.dp))
+                        DemoDirectory.accounts.forEach { cuenta ->
+                            Text(
+                                text = "${cuenta.roleLabel}: ${cuenta.email} · ${cuenta.password}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

@@ -1,7 +1,10 @@
 package cl.smartvolt.asistencia.feature.supervisor
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import cl.smartvolt.asistencia.data.local.AttendanceLocalStore
 import cl.smartvolt.asistencia.data.local.LocalAttendanceEvent
 import kotlinx.coroutines.Dispatchers
@@ -85,5 +88,16 @@ class SupervisorViewModel(
 
     fun refrescar() {
         cargarDatos()
+    }
+
+    companion object {
+        fun factory(
+            store: AttendanceLocalStore,
+            siteId: String
+        ): ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                SupervisorViewModel(store, siteId)
+            }
+        }
     }
 }

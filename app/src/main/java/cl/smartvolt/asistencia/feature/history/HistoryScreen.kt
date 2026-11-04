@@ -82,6 +82,7 @@ private enum class FiltroHistorial(val etiqueta: String) {
 @Composable
 fun HistoryScreen(
     viewModel: HistoryViewModel,
+    workerLabel: String,
     onVolver: () -> Unit
 ) {
     val events by viewModel.events.collectAsState()
@@ -108,7 +109,7 @@ fun HistoryScreen(
     ) {
         SmartVoltTopBar(
             title = "Historial de marcas",
-            subtitle = "Trabajador ${LocalAttendanceEvent.WORKER_ID}",
+            subtitle = workerLabel,
             onBack = onVolver,
             trailing = {
                 IconButton(onClick = viewModel::refrescar) {
@@ -390,4 +391,4 @@ private fun DetailRow(
 }
 
 private fun formatoFecha(millis: Long): String =
-    SimpleDateFormat("dd MMM yyyy · HH:mm", Locale.getDefault()).format(Date(millis))
+    SimpleDateFormat("dd MMM yyyy · HH:mm", Locale.forLanguageTag("es-CL")).format(Date(millis))

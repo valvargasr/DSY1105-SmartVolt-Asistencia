@@ -17,10 +17,13 @@ import kotlinx.coroutines.withContext
 /**
  * ViewModel para la pantalla de historial de marcas.
  *
- * Lee las marcas persistidas localmente y las expone a la UI.
+ * El obrero ve solo sus propias marcas; capataz y administrador ven las de la
+ * faena completa. El filtro se aplica al leer Room, no en el composable.
  */
 class HistoryViewModel(
-    private val store: AttendanceLocalStore
+    private val store: AttendanceLocalStore,
+    private val workerId: String? = null,
+    private val siteId: String? = null
 ) : ViewModel() {
 
     private val _events = MutableStateFlow<List<LocalAttendanceEvent>>(emptyList())
@@ -39,6 +42,12 @@ class HistoryViewModel(
             try {
                 val lista = withContext(Dispatchers.IO) {
                     store.all()
+                        .filter { event ->
+                            val delTrabajador = workerId == null || event.workerId == workerId
+                            val deLaFaena = siteId == null || event.siteId == siteId
+                            delTrabajador && deLaFaena
+                        }
+                        .sortedByDescending { it.timestampMillis }
                 }
                 _events.value = lista
             } finally {
@@ -52,11 +61,14 @@ class HistoryViewModel(
     }
 
     companion object {
-        fun factory(store: AttendanceLocalStore): ViewModelProvider.Factory =
-            viewModelFactory {
-                initializer {
-                    HistoryViewModel(store)
-                }
+        fun factory(
+            store: AttendanceLocalStore,
+            workerId: String? = null,
+            siteId: String? = null
+        ): ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                HistoryViewModel(store, workerId, siteId)
             }
+        }
     }
 }
