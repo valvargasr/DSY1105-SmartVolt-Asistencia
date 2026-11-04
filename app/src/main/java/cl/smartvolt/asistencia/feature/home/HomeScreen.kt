@@ -164,14 +164,15 @@ fun HomeScreen(
                     }
                 }
 
-                if (esAdmin) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    AnimatedVisibility(
-                        visible = visible,
-                        enter = fadeIn(tween(620)) + slideInVertically(tween(680)) { it / 10 }
-                    ) {
-                        TarjetaHorasExtra(onAbrirHorasExtra = onAbrirHorasExtra)
-                    }
+                Spacer(modifier = Modifier.height(16.dp))
+                AnimatedVisibility(
+                    visible = visible,
+                    enter = fadeIn(tween(620)) + slideInVertically(tween(680)) { it / 10 }
+                ) {
+                    TarjetaHorasExtra(
+                        esAdmin = esAdmin,
+                        onAbrirHorasExtra = onAbrirHorasExtra
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -559,7 +560,10 @@ private fun MetricaFaena(
 }
 
 @Composable
-private fun TarjetaHorasExtra(onAbrirHorasExtra: () -> Unit) {
+private fun TarjetaHorasExtra(
+    esAdmin: Boolean,
+    onAbrirHorasExtra: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -589,11 +593,15 @@ private fun TarjetaHorasExtra(onAbrirHorasExtra: () -> Unit) {
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Horas extra",
+                    text = if (esAdmin) "Horas extra" else "Mis horas extra",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = "Autoriza o rechaza solicitudes de la faena.",
+                    text = if (esAdmin) {
+                        "Autoriza o rechaza solicitudes de la faena."
+                    } else {
+                        "Solicita horas extra y revisa su estado."
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

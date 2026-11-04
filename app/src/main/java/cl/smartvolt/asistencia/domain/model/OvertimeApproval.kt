@@ -19,5 +19,7 @@ data class OvertimeApproval(
     val approverId: String,
     val status: OvertimeStatus = OvertimeStatus.PENDING,
     val reason: String? = null,
+    /** Nota del administrador al aprobar o rechazar; no reemplaza el motivo. */
+    val decisionNote: String? = null,
     val createdAtMillis: Long = System.currentTimeMillis()
 )

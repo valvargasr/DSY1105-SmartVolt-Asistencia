@@ -20,7 +20,7 @@ class RoomAttendanceStore(context: Context) : AttendanceLocalStore {
         context.applicationContext,
         AppDatabase::class.java,
         "smartvolt_attendance.db"
-    ).fallbackToDestructiveMigration().build()
+    ).addMigrations(AppDatabase.MIGRATION_2_3).fallbackToDestructiveMigration().build()
 
     private val dao: AttendanceDao = database.attendanceDao()
 

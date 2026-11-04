@@ -22,9 +22,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.automirrored.outlined.Notes
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.WarningAmber
@@ -51,6 +55,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cl.smartvolt.asistencia.domain.model.OvertimeApproval
 import cl.smartvolt.asistencia.domain.model.OvertimeStatus
+import cl.smartvolt.asistencia.domain.model.WorkerRole
 import cl.smartvolt.asistencia.session.DemoAccount
 import cl.smartvolt.asistencia.ui.components.EmptyState
 import cl.smartvolt.asistencia.ui.components.SectionLabel
@@ -77,6 +82,16 @@ fun OvertimeScreen(
 ) {
     val solicitudes by viewModel.requests.collectAsState()
     var rechazoDe by remember { mutableStateOf<OvertimeApproval?>(null) }
+
+    // El obrero no autoriza: solicita y consulta el estado de sus solicitudes.
+    if (account.role != WorkerRole.ADMIN) {
+        OvertimeWorkerScreen(
+            viewModel = viewModel,
+            account = account,
+            onVolver = onVolver
+        )
+        return
+    }
 
     val pendientes = solicitudes.filter { it.status == OvertimeStatus.PENDING }
     val decididas = solicitudes.filter { it.status != OvertimeStatus.PENDING }
@@ -238,11 +253,279 @@ fun OvertimeScreen(
     }
 }
 
+/**
+ * Vista del trabajador: formulario de solicitud y estado de sus solicitudes.
+ *
+ * El obrero no puede aprobar ni cambiar su rol; solo crear y cancelar
+ * solicitudes propias (regla de la lista de revisión del equipo).
+ */
+@Composable
+private fun OvertimeWorkerScreen(
+    viewModel: OvertimeViewModel,
+    account: DemoAccount,
+    onVolver: () -> Unit
+) {
+    val form by viewModel.form.collectAsState()
+    val todas by viewModel.requests.collectAsState()
+    val mias = todas
+        .filter { it.workerId == account.workerId }
+        .sortedByDescending { it.createdAtMillis }
+
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 540.dp)
+            ) {
+                SmartVoltTopBar(
+                    title = "Mis horas extra",
+                    subtitle = "${account.roleLabel} · ${account.workerId}",
+                    onBack = onVolver
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Nueva solicitud",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Indica fecha, horario y motivo. El administrador autoriza o " +
+                        "rechaza la solicitud; no se calculan pagos.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = form.fecha,
+                    onValueChange = viewModel::actualizarFecha,
+                    label = { Text("Fecha") },
+                    placeholder = { Text("dd/mm/aaaa") },
+                    leadingIcon = { Icon(Icons.Outlined.DateRange, contentDescription = null) },
+                    trailingIcon = {
+                        if (form.errors.fecha.isNotEmpty()) {
+                            Icon(
+                                imageVector = Icons.Outlined.ErrorOutline,
+                                contentDescription = "Error en la fecha",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    isError = form.errors.fecha.isNotEmpty(),
+                    supportingText = {
+                        if (form.errors.fecha.isNotEmpty()) Text(form.errors.fecha)
+                    },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = form.desde,
+                        onValueChange = viewModel::actualizarDesde,
+                        label = { Text("Desde") },
+                        placeholder = { Text("hh:mm") },
+                        leadingIcon = { Icon(Icons.Outlined.AccessTime, contentDescription = null) },
+                        trailingIcon = {
+                            if (form.errors.desde.isNotEmpty()) {
+                                Icon(
+                                    imageVector = Icons.Outlined.ErrorOutline,
+                                    contentDescription = "Error en la hora de inicio",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        },
+                        isError = form.errors.desde.isNotEmpty(),
+                        supportingText = {
+                            if (form.errors.desde.isNotEmpty()) Text(form.errors.desde)
+                        },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    OutlinedTextField(
+                        value = form.hasta,
+                        onValueChange = viewModel::actualizarHasta,
+                        label = { Text("Hasta") },
+                        placeholder = { Text("hh:mm") },
+                        leadingIcon = { Icon(Icons.Outlined.AccessTime, contentDescription = null) },
+                        trailingIcon = {
+                            if (form.errors.hasta.isNotEmpty()) {
+                                Icon(
+                                    imageVector = Icons.Outlined.ErrorOutline,
+                                    contentDescription = "Error en la hora de término",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        },
+                        isError = form.errors.hasta.isNotEmpty(),
+                        supportingText = {
+                            if (form.errors.hasta.isNotEmpty()) Text(form.errors.hasta)
+                        },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedTextField(
+                    value = form.motivo,
+                    onValueChange = viewModel::actualizarMotivo,
+                    label = { Text("Motivo") },
+                    placeholder = { Text("Describe por qué se requieren las horas extra") },
+                    leadingIcon = { Icon(Icons.AutoMirrored.Outlined.Notes, contentDescription = null) },
+                    trailingIcon = {
+                        if (form.errors.motivo.isNotEmpty()) {
+                            Icon(
+                                imageVector = Icons.Outlined.ErrorOutline,
+                                contentDescription = "Error en el motivo",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    isError = form.errors.motivo.isNotEmpty(),
+                    supportingText = {
+                        if (form.errors.motivo.isNotEmpty()) {
+                            Text(form.errors.motivo)
+                        } else {
+                            Text("Mínimo ${cl.smartvolt.asistencia.domain.validation.OvertimeRequestValidator.MOTIVO_MINIMO} caracteres.")
+                        }
+                    },
+                    minLines = 3,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                AnimatedVisibility(
+                    visible = form.mensaje.isNotEmpty(),
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Column {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (form.mensajeEsError) {
+                                    MaterialTheme.colorScheme.errorContainer
+                                } else {
+                                    MaterialTheme.colorScheme.secondaryContainer
+                                }
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Info,
+                                    contentDescription = null,
+                                    tint = if (form.mensajeEsError) {
+                                        MaterialTheme.colorScheme.onErrorContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.onSecondaryContainer
+                                    }
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = form.mensaje,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (form.mensajeEsError) {
+                                        MaterialTheme.colorScheme.onErrorContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.onSecondaryContainer
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Button(
+                    onClick = { viewModel.enviarSolicitud(account.workerId, account.siteId) },
+                    enabled = !form.enviando,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                ) {
+                    Icon(imageVector = Icons.Outlined.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (form.enviando) "Enviando..." else "Enviar solicitud")
+                }
+
+                Spacer(modifier = Modifier.height(22.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    SectionLabel(text = "Mis solicitudes")
+                    Spacer(modifier = Modifier.weight(1f))
+                    StatusPill(text = mias.size.toString(), tone = StatusTone.NEUTRAL)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (mias.isEmpty()) {
+                    EmptyState(
+                        icon = Icons.Outlined.Schedule,
+                        title = "Sin solicitudes todavía",
+                        description = "Cuando envíes una solicitud aparecerá aquí con su estado."
+                    )
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    mias.forEach { solicitud ->
+                        TarjetaSolicitud(
+                            solicitud = solicitud,
+                            onAprobar = {},
+                            onRechazar = {},
+                            onCancelar = if (solicitud.status == OvertimeStatus.PENDING) {
+                                { viewModel.cancelar(solicitud.approvalId) }
+                            } else {
+                                null
+                            }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                OutlinedButton(
+                    onClick = onVolver,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                ) {
+                    Text("Volver al inicio")
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+            }
+        }
+    }
+}
+
 @Composable
 private fun TarjetaSolicitud(
     solicitud: OvertimeApproval,
     onAprobar: () -> Unit,
-    onRechazar: () -> Unit
+    onRechazar: () -> Unit,
+    onCancelar: (() -> Unit)? = null
 ) {
     val tono = when (solicitud.status) {
         OvertimeStatus.PENDING -> StatusTone.WARNING
@@ -309,7 +592,26 @@ private fun TarjetaSolicitud(
                 )
             }
 
-            if (solicitud.status == OvertimeStatus.PENDING) {
+            if (!solicitud.decisionNote.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Decisión: ${solicitud.decisionNote}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            if (solicitud.status == OvertimeStatus.PENDING && onCancelar != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = onCancelar,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Cancelar solicitud")
+                }
+            }
+
+            if (solicitud.status == OvertimeStatus.PENDING && onCancelar == null) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(

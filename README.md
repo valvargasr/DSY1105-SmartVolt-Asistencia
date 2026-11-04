@@ -24,7 +24,7 @@ Tablero de tareas: Trello **DSY1105 - SmartVolt Asistencia**.
 ## 3. Estado de implementación
 
 Estado verificado en `main`, que integra las áreas A, B y C. Compila,
-pasan las 60 pruebas unitarias y `lintDebug` no reporta errores. **El GPS y el BLE
+pasan las 66 pruebas unitarias y `lintDebug` no reporta errores. **El GPS y el BLE
 todavía no se han probado en un teléfono físico.**
 
 ### Implementado
@@ -39,8 +39,11 @@ todavía no se han probado en un teléfono físico.**
   métricas agregadas de la faena (presentes, salidas, marcas) y accesos al panel y a
   horas extra.
 - **Panel de faena** (`SupervisorScreen`) con detalle animado por trabajador.
+- **Solicitud de horas extra del obrero** (`OvertimeScreen`): formulario con fecha, hora de
+  inicio, hora de término y motivo, validado por campo; el trabajador consulta el estado de
+  sus solicitudes y puede cancelar las pendientes.
 - **Autorización de horas extra** (`OvertimeScreen`) con aprobación, rechazo con motivo
-  validado y persistencia en Room.
+  validado, nota de decisión separada del motivo y persistencia en Room.
 - Identidad visual propia (paleta ámbar/teal, tipografía y formas Material 3),
   tarjetas de estado, indicadores de progreso y soporte de modo claro/oscuro.
 - Navegación entre pantallas con Navigation Compose y transiciones animadas; el botón
@@ -75,7 +78,7 @@ todavía no se han probado en un teléfono físico.**
 - **Área B (Julián):** Gestión de horas extra (`OvertimeViewModel`) con persistencia en Room.
 - **Área B (Julián):** Calendario de feriados de Chile (`HolidayCalendar`).
 - **Área B (Julián):** Panel de supervisor con resumen operativo (`SupervisorViewModel`).
-- **Área B (Julián):** 44 pruebas unitarias adicionales (AttendanceValidator 26, HolidayCalendar 7, AttendanceClassifier 11); el proyecto suma 60.
+- **Área B (Julián):** 44 pruebas unitarias adicionales (AttendanceValidator 26, HolidayCalendar 7, AttendanceClassifier 11); con las 6 del formulario de horas extra el proyecto suma 66.
 
 ### Pendiente
 
@@ -142,7 +145,10 @@ sincronización de Gradle y usar **Run** sobre un dispositivo conectado.
    marca ya existía; se cierra solo a los 7 segundos o con el botón de descarte.
 10. Con la entrada del día registrada, presionar **Registrar salida**.
 11. Presionar **Ver historial** para revisar las marcas guardadas en el dispositivo.
-12. Como capataz o administrador, abrir el **panel de faena**; como administrador, abrir
+12. Como obrero, abrir **Mis horas extra**, completar fecha, desde, hasta y motivo, y
+    comprobar los errores por campo al enviar vacío; luego enviar y ver la solicitud
+    pendiente en la lista.
+13. Como capataz o administrador, abrir el **panel de faena**; como administrador, abrir
     **horas extra**, crear una solicitud demo y aprobarla o rechazarla con motivo.
 
 El botón Atrás del sistema devuelve a la pantalla anterior; en el inicio no cierra la
@@ -225,8 +231,9 @@ del sistema.
 .\gradlew.bat testDebugUnitTest
 ```
 
-La suite suma **60 pruebas unitarias**: `PresenceEvaluatorTest` (15), `AttendanceValidatorTest`
-(26), `AttendanceClassifierTest` (11), `HolidayCalendarTest` (7) y `ExampleUnitTest` (1).
+La suite suma **66 pruebas unitarias**: `PresenceEvaluatorTest` (15), `AttendanceValidatorTest`
+(26), `AttendanceClassifierTest` (11), `HolidayCalendarTest` (7),
+`OvertimeRequestValidatorTest` (6) y `ExampleUnitTest` (1).
 
 `PresenceEvaluatorTest` cubre 15 casos: ausencia de lecturas, GPS disponible, baliza
 detectada, baliza ausente, permiso denegado, ubicación apagada, Bluetooth apagado, tiempo
@@ -240,8 +247,8 @@ La compilación de verificación incluye además `assembleDebug` y `lintDebug`:
 .\gradlew.bat --no-configuration-cache testDebugUnitTest assembleDebug lintDebug
 ```
 
-Estado actual: **60 pruebas, 0 fallos** y **lint con 0 errores** (solo advertencias por
-iconos de Material obsoletos, sin impacto funcional).
+Estado actual: **66 pruebas, 0 fallos** y **lint con 0 errores** (solo advertencias de
+dependencias y `UseKtx`, sin impacto funcional).
 
 ## 9. Firma del APK release
 

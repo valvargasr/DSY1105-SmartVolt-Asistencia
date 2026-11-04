@@ -11,7 +11,7 @@ confidenciales ni coordenadas de faenas reales.**
 | Recurso nativo | Implementación | Archivo principal |
 |---|---|---|
 | Ubicación GPS | `LocationManager`, lectura única con timeout de 15 s | `native/location/AndroidLocationProvider.kt` |
-| Bluetooth LE | `BluetoothLeScanner` con filtro por UUID de servicio | `native/bluetooth/AndroidBeaconScanner.kt` |
+| Bluetooth LE | `BluetoothLeScanner` sin filtro de servicio; acepta iBeacon, Eddystone-UID y UUID de laboratorio | `native/bluetooth/AndroidBeaconScanner.kt` |
 | Permisos | Solicitud en contexto + rechazo + bloqueo permanente | `native/permissions/PermissionChecker.kt` |
 | Notificaciones | Canal `asistencia`, aviso de entrada guardada | `native/notifications/AttendanceNotifier.kt` |
 
@@ -35,10 +35,13 @@ data class LocationResult(
 data class BeaconScanResult(
     val status: BeaconScanStatus,        // FOUND, NOT_FOUND, PERMISSION_DENIED, BLUETOOTH_OFF,
                                          // NOT_SUPPORTED, TIMEOUT, ERROR
-    val beaconId: String? = null,
+    val beaconId: String? = null,        // UUID iBeacon, UID Eddystone o UUID de laboratorio
     val rssi: Int? = null,
     val capturedAtMillis: Long? = null,
-    val errorCode: String? = null
+    val errorCode: String? = null,
+    val format: String? = null,          // "iBeacon", "Eddystone-UID" o "GATT"
+    val major: Int? = null,
+    val minor: Int? = null
 )
 ```
 
@@ -54,6 +57,7 @@ Así el ViewModel y la UI no necesitan `try/catch`.
 | Resultado | Detalle |
 |---|---|
 | 15 pruebas | 15 aprobadas, 0 fallidas |
+| 66 pruebas en total | 66 aprobadas, 0 fallidas (incluye `OvertimeRequestValidatorTest` con 6 pruebas del formulario de horas extra) |
 | Comando | `.\gradlew.bat testDebugUnitTest` |
 | Qué valida | Que no se pueda registrar sin GPS y baliza; que cada error tenga mensaje propio; que una ubicación simulada genere advertencia de revisión y no una acusación de fraude; que el resultado diga "pendiente de sincronización" y nunca "validada" |
 
@@ -74,8 +78,22 @@ con la matriz de la sección 4.
 
 ### 3.2 Preparar el emisor BLE de prueba
 
-No se dispone de una baliza física autorizada, así que se usa un **segundo teléfono Android
-como emisor**. Es un sustituto provisional y está registrado como consulta al profesor.
+No se dispone de una baliza física autorizada. Para la demostración se usa un **iPhone con
+la app Locate Beacons** emitiendo un **iBeacon**; como alternativa sirve un segundo teléfono
+Android con **nRF Connect**. Ambos son sustitutos provisionales registrados como consulta al
+profesor.
+
+**Opción A — iPhone con Locate Beacons (recomendada):**
+
+1. Instalar **Locate Beacons** desde App Store.
+2. Elegir el modo **iBeacon**.
+3. Dejar el UUID que trae por defecto o escribir `6f1b2c3d-4e5f-4a6b-8c9d-0e1f2a3b4c5d`,
+   con Major `1` y Minor `1`.
+4. Pulsar **Transmit** y **mantener la app abierta con la pantalla encendida**: iOS detiene el
+   anuncio si la app pasa a segundo plano o el teléfono se bloquea.
+5. En la app Android, pulsar **Verificar presencia** a menos de un metro del iPhone.
+
+**Opción B — segundo teléfono Android con nRF Connect:**
 
 1. Instalar **nRF Connect for Mobile** (Nordic Semiconductor) en el segundo teléfono.
 2. Abrir la pestaña **Advertiser**.
@@ -84,17 +102,22 @@ como emisor**. Es un sustituto provisional y está registrado como consulta al p
 4. Iniciar la emisión.
 
 > El UUID anterior es **provisional, inventado para el laboratorio**. No corresponde a ninguna
-> baliza real de la empresa. Cuando la contraparte entregue el listado ficticio de UUIDs
-> autorizados, se reemplaza el valor en `BeaconConfig.TEST_SERVICE_UUID` y no se toca nada más.
+> baliza real de la empresa. `BeaconConfig.EXPECTED_IBEACON_UUID` es `null` para aceptar el UUID
+> que se configure en Locate Beacons; en producción debe fijarse el UUID autorizado.
 
-Si el escaneo no encuentra el emisor, revisar en este orden: que el UUID esté en los datos de
-**advertisement** (no solo en scan response), que el Bluetooth esté encendido en ambos
-teléfonos, y que la app tenga el permiso de escaneo concedido.
+Si el escaneo no encuentra el emisor, revisar en este orden: que el iPhone esté anunciando con
+la pantalla encendida, que el Bluetooth esté encendido en ambos equipos, y que la app tenga el
+permiso de escaneo concedido. La ventana de escaneo es de **12 segundos**.
 
 ### 3.3 Recorrido en la app
 
-Bienvenida → **Comenzar** → **Entrar como OP-001 — demo** → pantalla **Registrar entrada**.
-El botón de demo existe solo para no depender del login, que pertenece a otra área.
+Bienvenida → **Comenzar** → elegir **Obrero** en *Acceso rápido por rol* → inicio →
+**Registrar entrada**. También se puede escribir `obrero@smartvolt.cl` con contraseña
+`demo1234`; capataz y administrador usan sus propios correos.
+
+La app acepta tres formatos de anuncio BLE: **iBeacon** (Locate Beacons), **Eddystone-UID**
+(servicio `0xFEAA`, trama `0x00`) y el **UUID de servicio de laboratorio**. No se filtra por
+un UUID fijo, porque un iBeacon solo publica datos de fabricante.
 
 ---
 
@@ -112,8 +135,8 @@ prueba aprobada.
 | PT-06.5 | Sin lectura de GPS | Probar bajo techo o en subterráneo | Tras 15 s se informa el problema; si existe última lectura conocida se usa esa | Pendiente |
 | PT-06.6 | Ubicación simulada | Activar una app de ubicación ficticia y verificar | Advertencia "La marca quedará en revisión"; la app no acusa fraude | Pendiente |
 | PT-07.1 | Bluetooth apagado | Apagar Bluetooth y verificar | Mensaje "El Bluetooth está apagado" | Pendiente |
-| PT-07.2 | Baliza cerca | Emisor a menos de 1 m | FOUND con UUID de prueba y RSSI (valor negativo, típicamente entre -40 y -70 dBm) | Pendiente |
-| PT-07.3 | Baliza ausente | Apagar el emisor y verificar | NOT_FOUND tras 10 s, con instrucción de acercarse e intentar de nuevo | Pendiente |
+| PT-07.2 | Baliza cerca | Emisor a menos de 1 m | FOUND con formato (`iBeacon`), UUID, major/minor y RSSI negativo (típicamente -40 a -70 dBm) | Pendiente |
+| PT-07.3 | Baliza ausente | Apagar el emisor y verificar | NOT_FOUND tras 12 s, con instrucción de acercarse e intentar de nuevo | Pendiente |
 | PT-07.4 | Permiso de escaneo denegado | En Android 12+, negar el permiso de dispositivos cercanos | Estado PERMISSION_DENIED con explicación | Pendiente |
 | PT-07.5 | Teléfono sin BLE | No aplica en teléfonos modernos | Estado NOT_SUPPORTED | No aplicable |
 | PT-08 | Registro exitoso | GPS READY + baliza FOUND, pulsar Registrar entrada | Se guarda el evento, mensaje "pendiente de sincronización" y el contador sube en 1 | Pendiente |
@@ -122,6 +145,9 @@ prueba aprobada.
 | PT-11 | Persistencia local | Registrar, cerrar la app por completo, reabrir | El contador de pendientes conserva el valor | Pendiente |
 | PT-12 | Notificación | Android 13+, conceder permiso de notificaciones, registrar | Aparece la notificación "Entrada registrada" | Pendiente |
 | PT-13 | Notificación sin permiso | Android 13+, negar permiso de notificaciones, registrar | Se guarda igual, sin notificación y sin error | Pendiente |
+| PT-14 | Formulario de horas extra | Como obrero, enviar vacío y luego completo | Errores por campo; con fecha, horario y motivo válidos queda **Pendiente** en *Mis solicitudes* | Pendiente |
+| PT-15 | Permisos por rol | Entrar como obrero y como administrador | El obrero solo solicita y cancela; el administrador autoriza o rechaza con motivo | Pendiente |
+| PT-16 | Mapa sin internet | Desactivar datos y verificar presencia | La tarjeta muestra error y **Reintentar** sin bloquear la marcación | Pendiente |
 
 ### Bitácora de hardware
 
@@ -151,9 +177,10 @@ permiso `BLUETOOTH_CONNECT`, que no se necesita para escanear y que habría que 
 aparte. El UUID del servicio identifica la baliza de prueba sin pedir permisos adicionales y
 además no es un identificador físico del dispositivo.
 
-**Por qué SharedPreferences y no Room.** Room pertenece al Área B y todavía no está integrado.
-La interfaz `AttendanceLocalStore` deja el reemplazo como un cambio de una sola clase cuando
-exista el repositorio real.
+**Por qué Room.** La asistencia y las solicitudes de horas extra se guardan en Room/SQLite
+(`smartvolt_attendance.db`), de modo que sobreviven al cierre de la app. La interfaz
+`AttendanceLocalStore` mantiene el desacoplamiento; `SharedPreferencesAttendanceStore` quedó
+como implementación legada y ya no se usa.
 
 **Por qué no se afirma que la marca está validada.** Sin backend no hay validación del
 servidor. Todo evento nace como `PENDING_SYNC` y la interfaz lo dice con esas palabras.
@@ -166,20 +193,20 @@ como pide el ERS, y nunca como veredicto.
 
 ## 6. Limitaciones conocidas
 
-1. **No hay baliza física autorizada.** El escaneo todavía no se ha ejecutado en un
-   dispositivo. El procedimiento previsto usa un segundo teléfono con nRF Connect como
-   emisor. La lectura BLE real contra una baliza de la empresa queda pendiente de que la
-   contraparte entregue el dispositivo y su UUID de prueba.
-2. **Emulador no sirve para BLE.** El emulador de Android no emite ni recibe Bluetooth LE real,
+1. **No hay baliza física autorizada.** El escaneo se ejecutó en emulador con un emisor
+   sintético temporal (ya retirado del código) y quedó pendiente la prueba con el iPhone y
+   *Locate Beacons* o con nRF Connect en un teléfono real. La lectura contra una baliza de la
+   empresa depende de que la contraparte entregue el dispositivo y su UUID de prueba.
+2. **Emulador no sirve para BLE real.** El emulador de Android no emite ni recibe Bluetooth LE,
    así que la prueba de PT-07 tiene que ser en teléfono físico.
 3. **Sin sincronización remota.** El evento queda local. Retrofit y el backend son fase
    posterior según la guía del equipo.
-4. **Sin pantalla de salida todavía.** Este módulo registra entrada. La salida depende de la
-   regla de orden que implementa el Área B.
-5. **Identidad fija de demostración.** `OP-001` y `FAENA-DEMO-01` son constantes de prueba; la
-   sesión real la define el Área B.
+4. **Entrada y salida implementadas.** La pantalla registra ambas y respeta el orden; lo que
+   falta es el envío al servidor.
+5. **Identidad de demostración.** Los tres roles usan cuentas ficticias; no hay autenticación
+   real ni doble factor.
 6. **El UUID de la baliza es provisional.** Debe reemplazarse por el que entregue la
-   contraparte antes de presentar como si fuera el autorizado.
+   contraparte antes de presentarlo como autorizado.
 
 ---
 
@@ -228,4 +255,40 @@ unitarias verificadas después de los cambios.
   revisión real. El texto de la interfaz lo presenta como una marca sujeta a revisión.
 - El instante guardado en el evento es el del guardado, no el del fix de GPS. El contrato
   `LocationResult` sí conserva `capturedAtMillis` para cuando el Área B lo necesite.
-- Las pruebas PT-06 a PT-13 continúan pendientes hasta contar con teléfono y baliza.
+- Las pruebas PT-06 a PT-16 continúan pendientes hasta contar con teléfono y baliza reales.
+
+---
+
+## 9. Verificación del 04-11-2026
+
+### Emulador (API 34)
+
+Se ejecutó el recorrido completo en el AVD `smartvolt`, con `adb emu geo fix` para simular
+coordenadas (`-33.45690, -70.64830`, precisión 5 m):
+
+| Comprobación | Resultado |
+|---|---|
+| Bienvenida, login y validación por campo | Correcto: errores bajo cada campo y chips de rol |
+| Inicio por rol (obrero, capataz, administrador) | Correcto; el inicio se refresca al volver de marcar |
+| Mapa de Mapbox con internet | Imagen estática cargada con coordenadas y precisión superpuestas |
+| Aviso de marca duplicada | Aparece como popup flotante y se cierra solo a los 7 s |
+| Botón Atrás | Vuelve a la pantalla anterior; en el inicio no cierra la app |
+| Historial filtrado por rol | Obrero ve solo sus marcas; administrador ve la faena |
+| Panel de faena y horas extra | Métricas reales y decisión con motivo obligatorio |
+| Persistencia Room | Marcas y solicitudes se mantienen al reabrir la app |
+
+**Prueba BLE en emulador:** no es representativa. Se usó un emisor sintético temporal para
+verificar el flujo de la interfaz y se retiró del código antes del commit; la prueba real queda
+para teléfono físico con *Locate Beacons* o nRF Connect.
+
+### Formulario de horas extra del obrero
+
+Se agregó el formulario con fecha, hora de inicio, hora de término y motivo, validado por
+`OvertimeRequestValidator` (fuera de la interfaz, con 6 pruebas unitarias). El obrero ve sus
+solicitudes y puede cancelar las pendientes; el administrador ya no reemplaza el motivo del
+trabajador al rechazar, porque la decisión se guarda en la columna `decisionNote`.
+
+### Build
+
+`testDebugUnitTest assembleDebug lintDebug` → **66 pruebas, 0 fallos**, lint **0 errores** y
+20 advertencias (dependencias y `UseKtx`, sin impacto funcional).

@@ -23,8 +23,8 @@ interface OvertimeApprovalDao {
     @Query("SELECT * FROM overtime_approvals WHERE approvalId = :id LIMIT 1")
     suspend fun getById(id: String): OvertimeApprovalEntity?
 
-    @Query("UPDATE overtime_approvals SET status = :newStatus, approverId = :approverId, reason = :reason WHERE approvalId = :id")
-    suspend fun updateDecision(id: String, newStatus: String, approverId: String, reason: String?)
+    @Query("UPDATE overtime_approvals SET status = :newStatus, approverId = :approverId, decisionNote = :note WHERE approvalId = :id")
+    suspend fun updateDecision(id: String, newStatus: String, approverId: String, note: String?)
 
     @Query("SELECT COUNT(*) FROM overtime_approvals WHERE status = :status")
     suspend fun countByStatus(status: String): Int

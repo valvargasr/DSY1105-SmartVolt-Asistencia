@@ -26,6 +26,7 @@ data class OvertimeApprovalEntity(
     val approverId: String,
     val status: String,
     val reason: String?,
+    val decisionNote: String? = null,
     val createdAtMillis: Long
 )
 
@@ -41,6 +42,7 @@ fun OvertimeApproval.toEntity(): OvertimeApprovalEntity = OvertimeApprovalEntity
     approverId = approverId,
     status = status.name,
     reason = reason,
+    decisionNote = decisionNote,
     createdAtMillis = createdAtMillis
 )
 
@@ -56,5 +58,6 @@ fun OvertimeApprovalEntity.toDomain(): OvertimeApproval = OvertimeApproval(
     approverId = approverId,
     status = runCatching { OvertimeStatus.valueOf(status) }.getOrDefault(OvertimeStatus.PENDING),
     reason = reason,
+    decisionNote = decisionNote,
     createdAtMillis = createdAtMillis
 )
