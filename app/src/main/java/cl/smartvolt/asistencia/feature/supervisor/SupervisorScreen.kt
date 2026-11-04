@@ -155,15 +155,17 @@ fun SupervisorScreen(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Metrica(
-                        valor = resumen.totalWorkers,
-                        etiqueta = "Presentes",
+                        valor = resumen.presentNow.toString(),
+                        etiqueta = "Presentes ahora",
+                        detalle = "Entrada registrada sin salida",
                         icon = Icons.Outlined.Groups,
                         modifier = Modifier.weight(1f)
                     )
                     Metrica(
-                        valor = resumen.checkedOut,
-                        etiqueta = "Con salida",
-                        icon = Icons.AutoMirrored.Outlined.Logout,
+                        valor = resumen.presentLate?.toString() ?: "—",
+                        etiqueta = "Atrasos",
+                        detalle = if (resumen.presentLate == null) "Falta configurar turnos" else null,
+                        icon = Icons.Outlined.Badge,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -175,18 +177,28 @@ fun SupervisorScreen(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Metrica(
-                        valor = resumen.pending,
-                        etiqueta = "Sin sincronizar",
-                        icon = Icons.Outlined.CloudOff,
+                        valor = resumen.absent?.toString() ?: "—",
+                        etiqueta = "Ausentes",
+                        detalle = if (resumen.absent == null) "Falta nómina y hora de corte" else null,
+                        icon = Icons.Outlined.PersonSearch,
                         modifier = Modifier.weight(1f)
                     )
                     Metrica(
-                        valor = eventos.size,
-                        etiqueta = "Marcas del día",
-                        icon = Icons.Outlined.Badge,
+                        valor = resumen.checkedOut.toString(),
+                        etiqueta = "Con salida",
+                        detalle = "Salida registrada hoy",
+                        icon = Icons.AutoMirrored.Outlined.Logout,
                         modifier = Modifier.weight(1f)
                     )
                 }
+
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "Los atrasos y ausencias se mostrarán cuando estén definidos los horarios, " +
+                        "la tolerancia y la lista de trabajadores con turno. No se asignan valores estimados.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
 
                 Spacer(modifier = Modifier.height(18.dp))
 
@@ -234,10 +246,11 @@ fun SupervisorScreen(
 
 @Composable
 private fun Metrica(
-    valor: Int,
+    valor: String,
     etiqueta: String,
     icon: ImageVector,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    detalle: String? = null
 ) {
     Card(
         modifier = modifier,
@@ -255,7 +268,7 @@ private fun Metrica(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = valor.toString(),
+                text = valor,
                 style = MaterialTheme.typography.headlineSmall
             )
             Text(
@@ -263,6 +276,13 @@ private fun Metrica(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            detalle?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+            }
         }
     }
 }

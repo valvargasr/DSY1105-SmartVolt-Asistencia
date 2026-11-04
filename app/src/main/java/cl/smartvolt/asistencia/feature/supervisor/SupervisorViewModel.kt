@@ -13,30 +13,24 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Instant
+import java.time.ZoneId
 
-/**
- * Resumen operativo de asistencia para el panel de supervisor.
- *
- * No calcula remuneraciones ni genera reportes de renta (RB-09).
- * Solo informa estados operacionales de asistencia.
- */
+/** Resumen del día calculado desde las marcas locales de la faena. */
 data class SupervisorSummary(
     val siteId: String,
     val totalWorkers: Int,
-    val presentOnTime: Int,
-    val presentLate: Int,
-    val absent: Int,
+    val presentNow: Int,
+    /** Nulo mientras no exista una configuración aprobada de turnos y tolerancia. */
+    val presentLate: Int?,
+    /** Nulo mientras no exista una nómina de turnos y una hora de corte aprobadas. */
+    val absent: Int?,
     val pending: Int,
     val checkedOut: Int,
     val pendingSyncCount: Int
 )
 
-/**
- * ViewModel para el panel de supervisor.
- *
- * Agrega las marcas locales por faena para mostrar el estado del equipo.
- * La UI (Área A) consume este estado para renderizar el panel.
- */
+/** Agrega las marcas del día actual para la faena asignada al supervisor. */
 class SupervisorViewModel(
     private val store: AttendanceLocalStore,
     private val siteId: String
@@ -46,9 +40,9 @@ class SupervisorViewModel(
         SupervisorSummary(
             siteId = siteId,
             totalWorkers = 0,
-            presentOnTime = 0,
-            presentLate = 0,
-            absent = 0,
+            presentNow = 0,
+            presentLate = null,
+            absent = null,
             pending = 0,
             checkedOut = 0,
             pendingSyncCount = 0
@@ -65,39 +59,48 @@ class SupervisorViewModel(
 
     fun cargarDatos() {
         viewModelScope.launch {
-            val events = withContext(Dispatchers.IO) {
-                store.all().filter { it.siteId == siteId }
+            val zone = ZoneId.systemDefault()
+            val today = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(zone).toLocalDate()
+            val todayEvents = withContext(Dispatchers.IO) {
+                store.all().filter { event ->
+                    event.siteId == siteId &&
+                        Instant.ofEpochMilli(event.timestampMillis).atZone(zone).toLocalDate() == today
+                }.sortedBy { it.timestampMillis }
             }
-            _events.value = events
+            _events.value = todayEvents
 
-            val checkIns = events.filter { it.type == LocalAttendanceEvent.TYPE_CHECK_IN }
-            val checkOuts = events.filter { it.type == LocalAttendanceEvent.TYPE_CHECK_OUT }
+            val byWorker = todayEvents.groupBy { it.workerId }
+            val lastByWorker = byWorker.mapValues { (_, marks) -> marks.maxByOrNull { it.timestampMillis } }
+            val presentNow = lastByWorker.values.count {
+                it?.type == LocalAttendanceEvent.TYPE_CHECK_IN
+            }
+            val checkedOut = lastByWorker.values.count {
+                it?.type == LocalAttendanceEvent.TYPE_CHECK_OUT
+            }
 
             _summary.value = SupervisorSummary(
                 siteId = siteId,
-                totalWorkers = checkIns.map { it.workerId }.distinct().size,
-                presentOnTime = 0, // Se clasifica cuando se definan las reglas de turno
-                presentLate = 0,
-                absent = 0,
-                pending = events.count { it.syncState == LocalAttendanceEvent.PENDING_SYNC },
-                checkedOut = checkOuts.map { it.workerId }.distinct().size,
-                pendingSyncCount = store.count()
+                totalWorkers = byWorker.size,
+                presentNow = presentNow,
+                // El proyecto aún no tiene horarios/tolerancias ni nómina de turnos aprobados.
+                // Mostrar 0 sería inventar un resultado; null se presenta como "Por configurar".
+                presentLate = null,
+                absent = null,
+                pending = todayEvents.count { it.syncState == LocalAttendanceEvent.PENDING_SYNC },
+                checkedOut = checkedOut,
+                pendingSyncCount = todayEvents.count { it.syncState == LocalAttendanceEvent.PENDING_SYNC }
             )
         }
     }
 
-    fun refrescar() {
-        cargarDatos()
-    }
+    fun refrescar() = cargarDatos()
 
     companion object {
         fun factory(
             store: AttendanceLocalStore,
             siteId: String
         ): ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                SupervisorViewModel(store, siteId)
-            }
+            initializer { SupervisorViewModel(store, siteId) }
         }
     }
 }

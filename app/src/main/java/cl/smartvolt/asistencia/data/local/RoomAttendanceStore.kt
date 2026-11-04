@@ -2,17 +2,14 @@ package cl.smartvolt.asistencia.data.local
 
 import android.content.Context
 import androidx.room.Room
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 
 /**
- * Implementación de [AttendanceLocalStore] sobre Room/SQLite.
+ * Implementación de AttendanceLocalStore sobre Room/SQLite.
  *
- * Reemplaza a [SharedPreferencesAttendanceStore] y garantiza que las marcas
- * sobrevivan al cierre de la aplicación. Las operaciones de Room son suspend,
- * por lo que se envuelven en runBlocking cuando se invocan desde la interfaz
- * síncrona; el ViewModel ya ejecuta estas llamadas en Dispatchers.IO.
+ * Guarda las marcas de asistencia localmente para permitir
+ * el funcionamiento sin conexión.
  */
 class RoomAttendanceStore(context: Context) : AttendanceLocalStore {
 
@@ -20,7 +17,9 @@ class RoomAttendanceStore(context: Context) : AttendanceLocalStore {
         context.applicationContext,
         AppDatabase::class.java,
         "smartvolt_attendance.db"
-    ).addMigrations(AppDatabase.MIGRATION_2_3).fallbackToDestructiveMigration().build()
+    )
+        .addMigrations(AppDatabase.MIGRATION_2_3)
+        .build()
 
     private val dao: AttendanceDao = database.attendanceDao()
 
@@ -40,7 +39,8 @@ class RoomAttendanceStore(context: Context) : AttendanceLocalStore {
     @Synchronized
     override fun pending(): List<LocalAttendanceEvent> =
         runBlocking(Dispatchers.IO) {
-            dao.getBySyncState(LocalAttendanceEvent.PENDING_SYNC).map { it.toDomain() }
+            dao.getBySyncState(LocalAttendanceEvent.PENDING_SYNC)
+                .map { it.toDomain() }
         }
 
     @Synchronized

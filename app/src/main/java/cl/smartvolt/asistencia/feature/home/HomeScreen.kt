@@ -164,15 +164,21 @@ fun HomeScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                AnimatedVisibility(
-                    visible = visible,
-                    enter = fadeIn(tween(620)) + slideInVertically(tween(680)) { it / 10 }
-                ) {
-                    TarjetaHorasExtra(
-                        esAdmin = esAdmin,
-                        onAbrirHorasExtra = onAbrirHorasExtra
-                    )
+                if (esObrero || esAdmin) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    AnimatedVisibility(
+                        visible = visible,
+                        enter = fadeIn(tween(620)) + slideInVertically(tween(680)) { it / 10 }
+                    ) {
+                        TarjetaHorasExtra(
+                            descripcion = if (esObrero) {
+                                "Envía solicitudes y revisa su estado."
+                            } else {
+                                "Revisa, aprueba o rechaza solicitudes de la faena."
+                            },
+                            onAbrirHorasExtra = onAbrirHorasExtra
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -561,7 +567,7 @@ private fun MetricaFaena(
 
 @Composable
 private fun TarjetaHorasExtra(
-    esAdmin: Boolean,
+    descripcion: String,
     onAbrirHorasExtra: () -> Unit
 ) {
     Card(
@@ -593,15 +599,11 @@ private fun TarjetaHorasExtra(
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = if (esAdmin) "Horas extra" else "Mis horas extra",
+                    text = "Horas extra",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = if (esAdmin) {
-                        "Autoriza o rechaza solicitudes de la faena."
-                    } else {
-                        "Solicita horas extra y revisa su estado."
-                    },
+                    text = descripcion,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
