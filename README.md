@@ -32,17 +32,32 @@ todavía no se han probado en un teléfono físico.**
 - Pantalla de bienvenida y pantalla de acceso con validación por campo
   (correo con formato válido y contraseña no vacía), errores junto al campo,
   iconos de error y mensajes visuales por campo.
+- **Tres roles de demostración** (obrero, capataz y administrador) con acceso rápido
+  desde el login y credenciales ficticias impresas en pantalla. La sesión se guarda en
+  `SharedPreferences` y el inicio se adapta al rol.
+- **Inicio por rol:** el obrero ve su jornada del día; capataz y administrador ven además
+  métricas agregadas de la faena (presentes, salidas, marcas) y accesos al panel y a
+  horas extra.
+- **Panel de faena** (`SupervisorScreen`) con detalle animado por trabajador.
+- **Autorización de horas extra** (`OvertimeScreen`) con aprobación, rechazo con motivo
+  validado y persistencia en Room.
 - Identidad visual propia (paleta ámbar/teal, tipografía y formas Material 3),
   tarjetas de estado, indicadores de progreso y soporte de modo claro/oscuro.
-- Navegación entre pantallas con Navigation Compose y transiciones animadas.
+- Navegación entre pantallas con Navigation Compose y transiciones animadas; el botón
+  Atrás del sistema devuelve a la pantalla anterior en lugar de cerrar la aplicación.
 - Animaciones de entrada, mensajes de resultado y cambios de estado en la interfaz.
 - Pantalla de marcación (`PresenciaScreen`) con estados de permisos, GPS y baliza.
 - Solicitud de permisos en contexto con explicación y manejo de rechazo, incluido el
   rechazo permanente con acceso directo a los ajustes de la aplicación.
 - Lectura real de ubicación con `LocationManager`: latitud, longitud, precisión,
   instante de la lectura y señal de ubicación simulada.
-- Escaneo BLE real con `BluetoothLeScanner`, filtrado por UUID de servicio, con ventana
-  de escaneo acotada y reporte de RSSI.
+- **Mapa de Mapbox** (Static Images API) con la posición del marcaje, caché en memoria,
+  estados de carga/error y reintento. Requiere permiso `INTERNET`.
+- Escaneo BLE real con `BluetoothLeScanner` **sin filtro de servicio**, con ventana de
+  escaneo acotada y reporte de RSSI. Acepta tres formatos: **iBeacon** (el que emite la
+  app iOS *Locate Beacons*), **Eddystone-UID** y el UUID de servicio de laboratorio.
+- **Aviso flotante** cuando la entrada o la salida del día ya estaba registrada, con
+  cierre automático y botón de descarte.
 - Detección y mensaje para: permiso denegado, ubicación apagada, Bluetooth apagado,
   hardware sin BLE, baliza no encontrada y errores del sistema.
 - Guardado local de la marcación con identificador único y estado `PENDING_SYNC`.
@@ -65,9 +80,9 @@ todavía no se han probado en un teléfono físico.**
 ### Pendiente
 
 - Pruebas en dispositivo físico (GPS y baliza). Ver `docs/pruebas-area-c.md`.
-- Panel de supervisor, autorización de horas extra y calendario de feriados (UI pendiente; lógica de datos implementada en Área B).
-- Activación con doble factor, sesión persistente y vinculación del dispositivo.
+- Activación con doble factor y vinculación del dispositivo.
 - Sincronización con API REST (Retrofit, Hilt y Spring Boot), etapa posterior.
+- Geocerca y umbral de RSSI: no se inventan valores sin acuerdo con la empresa.
 - APK release firmado: requiere generar el keystore (ver sección 9).
 
 ## 4. Requisitos del entorno
@@ -110,31 +125,48 @@ sincronización de Gradle y usar **Run** sobre un dispositivo conectado.
 
 ## 6. Cómo ejecutar la demostración
 
-1. Instalar el APK en un teléfono Android con GPS y Bluetooth.
+1. Instalar el APK en un teléfono Android con GPS y Bluetooth, y conexión a internet
+   (la imagen del mapa de Mapbox se descarga por HTTPS).
 2. Abrir la aplicación y presionar **Comenzar**.
-3. En el acceso, presionar **Entrar como OP-001 — demo**. Este botón es solo para la
-   demostración: no representa una autenticación real.
-4. Presionar **Verificar presencia** y conceder los permisos solicitados.
-5. Revisar el estado de la ubicación y de la baliza.
-6. Con ambos disponibles, presionar **Registrar entrada**.
-7. Con la entrada del día registrada, presionar **Registrar salida**.
-8. Presionar **Ver historial** para revisar las marcas guardadas en el dispositivo.
+3. Elegir un rol en **Acceso rápido por rol** (obrero, capataz o administrador) o escribir
+   las credenciales demo que aparecen en la misma pantalla. La contraseña de las tres
+   cuentas es `demo1234`. Este acceso es solo para la demostración: no representa una
+   autenticación real.
+4. En el inicio, revisar la jornada del día y, para capataz o administrador, las métricas
+   de la faena.
+5. Presionar **Registrar entrada** (o el botón equivalente de la tarjeta de jornada).
+6. Presionar **Verificar presencia** y conceder los permisos solicitados.
+7. Revisar el estado de la ubicación, el mapa de Mapbox y la baliza.
+8. Con ambos recursos disponibles, presionar **Registrar entrada**.
+9. Volver a intentar registrar la entrada para ver el **aviso flotante** que indica que la
+   marca ya existía; se cierra solo a los 7 segundos o con el botón de descarte.
+10. Con la entrada del día registrada, presionar **Registrar salida**.
+11. Presionar **Ver historial** para revisar las marcas guardadas en el dispositivo.
+12. Como capataz o administrador, abrir el **panel de faena**; como administrador, abrir
+    **horas extra**, crear una solicitud demo y aprobarla o rechazarla con motivo.
+
+El botón Atrás del sistema devuelve a la pantalla anterior; en el inicio no cierra la
+aplicación.
 
 ### Baliza de prueba
 
-La aplicación busca el UUID de servicio definido en
-`native/bluetooth/BeaconConfig.kt`:
+La aplicación acepta tres formatos de anuncio BLE, sin filtrar por un UUID de servicio:
 
-```
-6f1b2c3d-4e5f-4a6b-8c9d-0e1f2a3b4c5d
-```
+1. **iBeacon**, que es el que emite la app iOS **Locate Beacons**. Se configura esa app con
+   cualquier UUID (por ejemplo `6f1b2c3d-4e5f-4a6b-8c9d-0e1f2a3b4c5d`), un `major` y un
+   `minor`, y se deja emitiendo con la pantalla activa.
+2. **Eddystone-UID**, servicio `0xFEAA` con trama `0x00`.
+3. **UUID de servicio GATT** de laboratorio
+   `6f1b2c3d-4e5f-4a6b-8c9d-0e1f2a3b4c5d`, útil con nRF Connect.
 
-**Es un UUID provisional de laboratorio, no uno entregado por la empresa.** Mientras no
-exista una baliza autorizada, se puede usar un segundo teléfono con una aplicación emisora
-(por ejemplo nRF Connect) anunciando ese UUID como Service UUID.
+`BeaconConfig.EXPECTED_IBEACON_UUID` está en `null` para aceptar el UUID que se configure
+en *Locate Beacons* durante la defensa. En producción debe fijarse el UUID autorizado por
+la empresa.
 
-Si no hay ningún emisor, la aplicación informa «No se detectó la baliza autorizada» y no
-habilita el registro. Ese comportamiento es el esperado, no un error.
+Si no hay ningún emisor, la aplicación informa «No se detectó la baliza autorizada» o
+«No se encontró la baliza» y no habilita el registro. Ese comportamiento es el esperado,
+no un error. El escaneo **no** valida distancia ni geocerca: solo comprueba que el anuncio
+existe cerca, por lo que no debe presentarse como antifraude.
 
 ## 7. Arquitectura y organización
 
@@ -145,16 +177,18 @@ de la interfaz.
 cl.smartvolt.asistencia
 ├── MainActivity.kt                 Navegación, bienvenida y acceso
 ├── LoginViewModel.kt               Estado y validación del acceso
+├── session/                        Cuentas demo, sesión en SharedPreferences y SessionViewModel
 ├── ui/theme/                       Tema Material 3, colores y tipografía
-├── ui/components/                  Componentes compartidos (tarjetas, estados, cabecera)
+├── ui/components/                  Componentes compartidos (tarjetas, estados, cabecera, mapa)
 ├── feature/attendance/
-│   ├── PresenciaScreen.kt          Pantalla de marcación
+│   ├── PresenciaScreen.kt          Pantalla de marcación y aviso de duplicado
 │   ├── PresenciaViewModel.kt       Orquestación y estado observable
 │   ├── PresenciaUiState.kt         Estado inmutable de la pantalla
 │   └── PresenceEvaluator.kt        Reglas puras, sin dependencias de Android
+├── feature/home/                   Inicio por rol con métricas de la faena
 ├── feature/history/                Historial de marcas (screen + view model)
-├── feature/overtime/               Lógica de horas extra (UI pendiente)
-├── feature/supervisor/             Resumen de supervisor (UI pendiente)
+├── feature/overtime/               Solicitudes y autorización de horas extra (UI + VM)
+├── feature/supervisor/             Panel de faena por trabajador (UI + VM)
 ├── data/local/
 │   ├── LocalAttendanceEvent.kt     Modelo de la marcación
 │   ├── AttendanceLocalStore.kt     Puerto de persistencia
@@ -168,7 +202,8 @@ cl.smartvolt.asistencia
 ├── domain/validation/              AttendanceValidator, AttendanceClassifier y HolidayCalendar
 └── native/
     ├── location/                   LocationProvider y AndroidLocationProvider
-    ├── bluetooth/                  BeaconScanner, AndroidBeaconScanner, BeaconConfig
+    ├── bluetooth/                  BeaconScanner, AndroidBeaconScanner (iBeacon/Eddystone)
+    ├── maps/                       MapboxConfig y URL de Static Images
     ├── permissions/                PermissionChecker y PermissionStatus
     └── notifications/              AttendanceNotifier
 ```
@@ -199,6 +234,15 @@ de espera agotado, precisión informada, ubicación simulada y mensajes de sincr
 
 La matriz de pruebas en dispositivo físico y su bitácora están en `docs/pruebas-area-c.md`.
 
+La compilación de verificación incluye además `assembleDebug` y `lintDebug`:
+
+```powershell
+.\gradlew.bat --no-configuration-cache testDebugUnitTest assembleDebug lintDebug
+```
+
+Estado actual: **60 pruebas, 0 fallos** y **lint con 0 errores** (solo advertencias por
+iconos de Material obsoletos, sin impacto funcional).
+
 ## 9. Firma del APK release
 
 El keystore y sus contraseñas **no se suben al repositorio** (están en `.gitignore`).
@@ -220,7 +264,11 @@ que no se puede instalar.
 
 - Se usan identificadores ficticios: `OP-001` y `FAENA-DEMO-01`. No hay nombres, RUT,
   correos ni datos personales reales.
-- La aplicación no declara el permiso `INTERNET`: las marcaciones quedan en el teléfono.
+- **Red:** el permiso `INTERNET` se usa únicamente para descargar la imagen estática
+  del mapa desde la API de Mapbox. Las coordenadas del punto de marcaje viajan a Mapbox
+  en la URL de esa imagen; no hay backend propio ni otros envíos.
+- El token de Mapbox incluido es un token **público de demostración**, no el token
+  privado de descarga de Gradle. Debe rotarse y restringirse antes de publicar la app.
 - El respaldo automático está deshabilitado (`allowBackup="false"`); la base de datos Room y
   las preferencias quedan excluidas de las reglas de respaldo y transferencia.
 - La ubicación simulada se informa como una señal de revisión, no como una acusación de
@@ -232,6 +280,9 @@ que no se puede instalar.
 - El registro exige ubicación disponible y baliza detectada, pero **todavía no compara la
   posición con un perímetro de faena ni exige una precisión o un RSSI mínimo**. Esos
   umbrales dependen de decisiones pendientes con el profesor y la contraparte.
+- El mapa de Mapbox es una **imagen estática** para dar contexto visual de la marca. No
+  dibuja la geocerca ni valida que el punto esté dentro de la faena.
+- El escaneo BLE confirma que el anuncio existe cerca; no mide distancia real.
 - No hay validación de presencia en servidor. El estado `PENDING_SYNC` significa guardado
   local pendiente de sincronizar, nunca validado por un backend.
 - El UUID de la baliza es provisional y clonable: no constituye una prueba criptográfica

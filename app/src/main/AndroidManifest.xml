@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Red: se usa solo para descargar la imagen estática de Mapbox.
+         No hay backend ni envío de datos personales en esta versión. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <!-- Ubicación: solo mientras la app está en uso, para la marcación de asistencia -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />

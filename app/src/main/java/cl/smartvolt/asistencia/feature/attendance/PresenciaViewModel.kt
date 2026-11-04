@@ -17,6 +17,8 @@ import cl.smartvolt.asistencia.native.location.LocationProvider
 import cl.smartvolt.asistencia.native.location.LocationStatus
 import cl.smartvolt.asistencia.native.notifications.AttendanceNotifier
 import cl.smartvolt.asistencia.native.permissions.PermissionStatus
+import java.time.Instant
+import java.time.ZoneId
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -31,25 +33,30 @@ import kotlinx.coroutines.withContext
 /**
  * Coordina permisos, lectura de ubicación, escaneo BLE y guardado local.
  *
- * La pantalla solo observa [uiState]; no ejecuta lógica de negocio.
+ * La pantalla solo observa [uiState]; no ejecuta lógica de negocio. El
+ * trabajador y la faena vienen de la sesión activa, no de constantes.
  */
 class PresenciaViewModel(
     private val locationProvider: LocationProvider,
     private val beaconScanner: BeaconScanner,
     private val store: AttendanceLocalStore,
-    private val notifier: AttendanceNotifier
+    private val notifier: AttendanceNotifier,
+    private val workerId: String = LocalAttendanceEvent.WORKER_ID,
+    private val siteId: String = LocalAttendanceEvent.SITE_ID
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PresenciaUiState())
     val uiState: StateFlow<PresenciaUiState> = _uiState.asStateFlow()
 
     init {
-        // El contador y la jornada actual se leen fuera del hilo principal:
-        // consultar Room en el constructor bloquearía la composición.
         viewModelScope.launch {
             val snapshot = withContext(Dispatchers.IO) {
                 val now = System.currentTimeMillis()
-                store.count() to AttendanceValidator.dayState(store.all(), now)
+                store.count() to AttendanceValidator.dayState(
+                    events = store.all(),
+                    nowMillis = now,
+                    workerId = workerId
+                )
             }
             _uiState.update {
                 it.copy(
@@ -68,6 +75,7 @@ class PresenciaViewModel(
                 it.copy(
                     isChecking = true,
                     message = null,
+                    duplicateNotice = null,
                     location = null,
                     beacon = null
                 )
@@ -80,7 +88,11 @@ class PresenciaViewModel(
                 val location = locationDeferred.await()
                 val beacon = beaconDeferred.await()
                 val dayState = withContext(Dispatchers.IO) {
-                    AttendanceValidator.dayState(store.all(), System.currentTimeMillis())
+                    AttendanceValidator.dayState(
+                        events = store.all(),
+                        nowMillis = location.capturedAtMillis ?: System.currentTimeMillis(),
+                        workerId = workerId
+                    )
                 }
 
                 _uiState.update { state ->
@@ -89,8 +101,6 @@ class PresenciaViewModel(
                         beacon = beacon,
                         dayState = dayState,
                         permissionState = when {
-                            // Si hubo lectura, el permiso está concedido sin importar lo que
-                            // se haya registrado antes (por ejemplo, si se habilitó en ajustes).
                             location.status == LocationStatus.READY ->
                                 PermissionStatus.GRANTED
                             location.status == LocationStatus.PERMISSION_DENIED ->
@@ -117,7 +127,8 @@ class PresenciaViewModel(
         if (!state.canRegister) {
             _uiState.update {
                 it.copy(
-                    message = "Primero verifica la presencia: se necesita ubicación y baliza."
+                    message = "Primero verifica la presencia: se necesita ubicación y baliza.",
+                    duplicateNotice = null
                 )
             }
             return
@@ -127,20 +138,39 @@ class PresenciaViewModel(
         val beacon = state.beacon ?: return
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
+            _uiState.update { it.copy(isSaving = true, duplicateNotice = null) }
 
             try {
                 val now = System.currentTimeMillis()
                 val timestamp = location.capturedAtMillis ?: now
-                val dayState = withContext(Dispatchers.IO) {
-                    AttendanceValidator.dayState(store.all(), timestamp)
-                }
+                val events = withContext(Dispatchers.IO) { store.all() }
+                val dayState = AttendanceValidator.dayState(
+                    events = events,
+                    nowMillis = timestamp,
+                    workerId = workerId
+                )
                 val validation = AttendanceValidator.canRegisterCheckIn(
                     alreadyCheckedIn = dayState.hasCheckIn
                 )
                 if (validation is AttendanceValidator.ValidationResult.Invalid) {
+                    val existente = primeraMarcaDelDia(
+                        events,
+                        LocalAttendanceEvent.TYPE_CHECK_IN,
+                        timestamp
+                    )
                     _uiState.update {
-                        it.copy(message = validation.reason, dayState = dayState)
+                        it.copy(
+                            dayState = dayState,
+                            message = null,
+                            duplicateNotice = DuplicateNotice(
+                                title = "Entrada ya registrada",
+                                detail = existente?.let { millis ->
+                                    "Ya registraste tu entrada hoy a las ${formatHour(millis)}. " +
+                                        "Puedes registrar la salida cuando termines tu turno."
+                                } ?: "Ya existe una entrada registrada para la jornada de hoy.",
+                                type = LocalAttendanceEvent.TYPE_CHECK_IN
+                            )
+                        )
                     }
                     return@launch
                 }
@@ -155,12 +185,18 @@ class PresenciaViewModel(
                     beaconId = beacon.beaconId,
                     rssi = beacon.rssi,
                     mockSignal = location.mockSignal,
+                    workerId = workerId,
+                    siteId = siteId,
                     syncState = LocalAttendanceEvent.PENDING_SYNC
                 )
 
                 val (pendingCount, updatedDayState) = withContext(Dispatchers.IO) {
                     store.save(event)
-                    store.count() to AttendanceValidator.dayState(store.all(), timestamp)
+                    store.count() to AttendanceValidator.dayState(
+                        events = store.all(),
+                        nowMillis = timestamp,
+                        workerId = workerId
+                    )
                 }
 
                 notifier.notifyCheckInSaved()
@@ -206,7 +242,8 @@ class PresenciaViewModel(
         if (!state.canRegister) {
             _uiState.update {
                 it.copy(
-                    message = "Primero verifica la presencia: se necesita ubicación y baliza."
+                    message = "Primero verifica la presencia: se necesita ubicación y baliza.",
+                    duplicateNotice = null
                 )
             }
             return
@@ -216,16 +253,41 @@ class PresenciaViewModel(
         val beacon = state.beacon ?: return
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
+            _uiState.update { it.copy(isSaving = true, duplicateNotice = null) }
 
             try {
-                // Validar la jornada actual: una salida de ayer no debe bloquear
-                // la salida de hoy, y solo se sale si hay una entrada abierta.
                 val now = System.currentTimeMillis()
                 val timestamp = location.capturedAtMillis ?: now
-                val dayState = withContext(Dispatchers.IO) {
-                    AttendanceValidator.dayState(store.all(), timestamp)
+                val events = withContext(Dispatchers.IO) { store.all() }
+                val dayState = AttendanceValidator.dayState(
+                    events = events,
+                    nowMillis = timestamp,
+                    workerId = workerId
+                )
+
+                if (dayState.hasCheckOut) {
+                    val existente = primeraMarcaDelDia(
+                        events,
+                        LocalAttendanceEvent.TYPE_CHECK_OUT,
+                        timestamp
+                    )
+                    _uiState.update {
+                        it.copy(
+                            dayState = dayState,
+                            message = null,
+                            duplicateNotice = DuplicateNotice(
+                                title = "Salida ya registrada",
+                                detail = existente?.let { millis ->
+                                    "Ya registraste tu salida hoy a las ${formatHour(millis)}. " +
+                                        "La jornada de hoy está cerrada."
+                                } ?: "Ya existe una salida registrada para la jornada de hoy.",
+                                type = LocalAttendanceEvent.TYPE_CHECK_OUT
+                            )
+                        )
+                    }
+                    return@launch
                 }
+
                 val validation = AttendanceValidator.canRegisterCheckOut(
                     hasOpenCheckIn = dayState.hasOpenCheckIn,
                     alreadyCheckedOut = dayState.hasCheckOut
@@ -247,12 +309,18 @@ class PresenciaViewModel(
                     beaconId = beacon.beaconId,
                     rssi = beacon.rssi,
                     mockSignal = location.mockSignal,
+                    workerId = workerId,
+                    siteId = siteId,
                     syncState = LocalAttendanceEvent.PENDING_SYNC
                 )
 
                 val (pendingCount, updatedDayState) = withContext(Dispatchers.IO) {
                     store.save(event)
-                    store.count() to AttendanceValidator.dayState(store.all(), timestamp)
+                    store.count() to AttendanceValidator.dayState(
+                        events = store.all(),
+                        nowMillis = timestamp,
+                        workerId = workerId
+                    )
                 }
 
                 notifier.notifyCheckOutSaved()
@@ -262,7 +330,8 @@ class PresenciaViewModel(
                         lastEvent = event,
                         pendingSyncCount = pendingCount,
                         dayState = updatedDayState,
-                        message = "Salida registrada a las ${formatHour(event.timestampMillis)}. Guardada en este dispositivo y pendiente de sincronización."
+                        message = "Salida registrada a las ${formatHour(event.timestampMillis)}. " +
+                            "Guardada en este dispositivo y pendiente de sincronización."
                     )
                 }
             } catch (cancelled: CancellationException) {
@@ -280,17 +349,39 @@ class PresenciaViewModel(
         }
     }
 
+    fun onDescartarMensaje() {
+        _uiState.update { it.copy(message = null) }
+    }
+
+    fun onDescartarDuplicado() {
+        _uiState.update { it.copy(duplicateNotice = null) }
+    }
+
+    private fun primeraMarcaDelDia(
+        events: List<LocalAttendanceEvent>,
+        type: String,
+        timestampMillis: Long
+    ): Long? {
+        val zone = ZoneId.systemDefault()
+        val dia = Instant.ofEpochMilli(timestampMillis).atZone(zone).toLocalDate()
+        return events
+            .filter { it.workerId == workerId && it.type == type }
+            .filter {
+                Instant.ofEpochMilli(it.timestampMillis).atZone(zone).toLocalDate() == dia
+            }
+            .minOfOrNull { it.timestampMillis }
+    }
+
     private fun formatHour(millis: Long): String {
         val sdf = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
         return sdf.format(java.util.Date(millis))
     }
 
-    fun onDescartarMensaje() {
-        _uiState.update { it.copy(message = null) }
-    }
-
     companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
+        fun factory(
+            workerId: String = LocalAttendanceEvent.WORKER_ID,
+            siteId: String = LocalAttendanceEvent.SITE_ID
+        ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]
                     as? Application
@@ -299,9 +390,14 @@ class PresenciaViewModel(
                     locationProvider = AndroidLocationProvider(application),
                     beaconScanner = AndroidBeaconScanner(application),
                     store = RoomAttendanceStore(application),
-                    notifier = AttendanceNotifier(application)
+                    notifier = AttendanceNotifier(application),
+                    workerId = workerId,
+                    siteId = siteId
                 )
             }
         }
+
+        val Factory: ViewModelProvider.Factory
+            get() = factory()
     }
 }
