@@ -1,155 +1,88 @@
-
 # SmartVolt Asistencia
 
-Aplicación móvil Android desarrollada como Producto Mínimo Viable (MVP) académico para el registro y consulta de asistencia en faenas. El proyecto utiliza ubicación GPS y proximidad Bluetooth Low Energy (BLE) como mecanismos de apoyo para verificar la presencia física de los trabajadores.
+Aplicación Android para registrar y consultar la asistencia del personal en faena. Es un MVP
+académico de DSY1105 (Evaluación Parcial 2) y usa GPS y Bluetooth Low Energy como apoyo para
+comprobar la presencia física del trabajador. No es un sistema productivo y no contiene datos
+reales de trabajadores.
 
-## 1. Información general
+| Dato | Valor |
+|---|---|
+| Asignatura | DSY1105 - Desarrollo de Aplicaciones Móviles |
+| Evaluación | Evaluación Parcial 2 (EP2) |
+| Organización de referencia | Servicio de Ingeniería Smart-Volt SpA |
+| Paquete | `cl.smartvolt.asistencia` |
+| Plataforma | Android, Kotlin |
 
-- **Asignatura:** DSY1105 - Desarrollo de Aplicaciones Móviles.
-- **Evaluación:** Evaluación Parcial 2 (EP2).
-- **Organización de referencia:** Servicio de Ingeniería Smart-Volt SpA.
-- **Tipo de proyecto:** MVP académico.
-- **Plataforma:** Android.
-- **Lenguaje:** Kotlin.
-- **Paquete:** `cl.smartvolt.asistencia`.
-
-Este proyecto es una propuesta académica. No corresponde a un sistema productivo ni utiliza información real de trabajadores.
-
-## 2. Equipo y responsabilidades
+## Equipo
 
 | Integrante | Área | Responsabilidad |
 |---|---|---|
-| Valentina Vargas | Área A | Interfaz de usuario, experiencia visual, navegación y pantallas. |
-| Julián Silva | Área B | Lógica de negocio, ViewModels, validaciones y almacenamiento local. |
-| Joaquín Rojas | Área C | Recursos nativos, permisos, ubicación GPS y Bluetooth BLE. |
+| Valentina Vargas | A | Interfaz, navegación y pantallas |
+| Julián Silva | B | Lógica de negocio, ViewModels, validaciones y almacenamiento |
+| Joaquín Rojas | C | Permisos, GPS, Bluetooth BLE y recursos nativos |
 
-## 3. Tecnologías utilizadas
+## Stack
 
-- Kotlin.
-- Android Studio.
-- Jetpack Compose.
-- Material Design 3.
-- Arquitectura MVVM.
-- ViewModel y StateFlow.
-- Navigation Compose.
-- Room / SQLite.
-- Kotlin Coroutines.
-- Pruebas unitarias.
-- Git y GitHub.
+Kotlin con Jetpack Compose y Material 3, arquitectura MVVM, ViewModel con StateFlow,
+Navigation Compose, Room sobre SQLite, corrutinas y pruebas unitarias con JUnit. El control
+de versiones está en GitHub y la planificación de tareas en Trello.
 
-## 4. Funcionalidades implementadas
+## Qué hace la aplicación
 
-### Acceso y perfiles
-- Pantalla de bienvenida.
-- Acceso mediante cuentas de demostración.
-- Perfiles diferenciados por rol.
-- Persistencia local de sesión de demostración.
+La sesión se inicia con cuentas de demostración y el rol decide qué se ve. Hay tres perfiles.
 
-### Operario
-- Pantalla principal de jornada.
-- Flujo de registro de entrada y salida.
-- Visualización del estado de asistencia.
-- Consulta del historial.
-- Solicitud de horas extras.
+El obrero registra entrada y salida, ve el estado de su jornada y su historial, y solicita
+horas extra indicando fecha, horario y motivo. Las solicitudes quedan pendientes hasta que un
+administrador las revise.
 
-### Supervisor
-- Panel de supervisión.
-- Consulta de información y estados de asistencia del equipo.
+El capataz tiene un panel con la información del equipo: quiénes están presentes, quiénes
+ya salieron y cuántas marcas esperan sincronización. No puede aprobar horas extra.
 
-### Administrador
-- Gestión de solicitudes de horas extras.
-- Estados de aprobación y rechazo.
-- Registro de observaciones o motivos de decisión.
+El administrador además autoriza o rechaza las solicitudes. El rechazo exige un motivo.
+Ese motivo se guarda aparte del que escribió el trabajador, para que la tarjeta no confunda
+una cosa con la otra.
 
-### Validaciones y experiencia de usuario
-- Validaciones de formularios desacopladas de la interfaz.
-- Retroalimentación visual.
-- Gestión de estados de carga, éxito y error.
-- Animaciones mediante componentes de Jetpack Compose.
-- Diseño visual basado en Material Design 3.
+La pantalla de marcación pide ubicación y una baliza BLE cercana antes de habilitar el botón.
+Si falta cualquiera de las dos, explica qué pasa y no registra nada. Cada marca nace como
+pendiente de sincronización y la interfaz lo dice así, porque todavía no hay servidor que la
+valide.
 
-### Almacenamiento local
-- Persistencia de datos mediante Room / SQLite.
-- Recuperación de registros almacenados localmente.
-- Pruebas unitarias para validaciones.
+## Almacenamiento y datos
 
-### Recursos nativos
-- Integración de permisos de ubicación.
-- Integración de Bluetooth Low Energy (BLE).
-- Compatibilidad con lectura de balizas y señal RSSI.
-- Funcionalidades de ubicación y visualización asociadas a Mapbox.
+La asistencia y las solicitudes viven en Room, base `smartvolt_attendance.db`, y sobreviven
+al cierre de la aplicación. La interfaz `AttendanceLocalStore` separa el resto del código de
+la implementación concreta.
 
-## 5. Alcance y limitaciones
+Las cuentas son ficticias. La autenticación de demostración no representa un sistema real y
+no se deben cargar datos personales, credenciales ni llaves privadas.
 
-La versión actual corresponde a un MVP local.
+## Cómo ejecutar
 
-- Los perfiles de demostración utilizan datos ficticios.
-- La persistencia local se realiza mediante Room.
-- Las marcas pendientes de sincronización no deben considerarse validadas por un servidor.
-- La comprobación GPS y BLE real requiere pruebas en un dispositivo Android físico.
-- La detección BLE requiere una baliza física compatible y autorizada.
-- La autenticación de demostración no representa un sistema de autenticación productivo.
-- La integración con API REST, Retrofit, Hilt y Spring Boot queda para una etapa posterior del proyecto.
-- No se realizan cálculos de remuneraciones ni liquidaciones.
+1. Clonar el repositorio y abrirlo en Android Studio.
+2. Esperar la sincronización de Gradle y aceptar el SDK que pida.
+3. Elegir la configuración `app` y un emulador o teléfono conectado.
+4. Ejecutar con el botón Run.
 
-## 6. Requisitos para ejecutar el proyecto
-
-- Android Studio.
-- Android SDK configurado según la versión del proyecto.
-- Gradle Wrapper incluido en el repositorio.
-- Emulador Android o dispositivo físico compatible.
-
-## 7. Cómo ejecutar la aplicación
-
-1. Clonar el repositorio.
-2. Abrir el proyecto en Android Studio.
-3. Esperar la sincronización de Gradle.
-4. Seleccionar la configuración `app`.
-5. Seleccionar un emulador o dispositivo Android.
-6. Presionar **Run** para compilar e iniciar la aplicación.
-
-### Compilación desde terminal
-
-En Windows PowerShell:
+Desde PowerShell:
 
 ```powershell
-.\gradlew.bat assembleDebug
+.\gradlew.bat assembleDebug        # compilar
+.\gradlew.bat testDebugUnitTest    # 70 pruebas unitarias
+.\gradlew.bat lintDebug            # análisis estático
 ```
 
-### Ejecutar pruebas unitarias
+Para el APK firmado se usa Build > Generate Signed App Bundle or APK en Android Studio, con
+el keystore fuera del repositorio.
 
-```powershell
-.\gradlew.bat testDebugUnitTest
-```
+## Limitaciones
 
-### Ejecutar análisis Lint
+GPS y BLE se probaron en emulador con datos simulados. La lectura de una baliza real exige un
+teléfono físico y una baliza autorizada, así que la matriz de pruebas de campo sigue
+pendiente. La ubicación simulada se advierte, pero no bloquea el registro, y no hay cola de
+revisión.
 
-```powershell
-.\gradlew.bat lintDebug
-```
+No existe sincronización con backend: todo queda en el teléfono. Retrofit, Hilt y un servicio
+REST pertenecen a una etapa posterior. Tampoco se calculan remuneraciones ni liquidaciones.
 
-### Generar versión Release
-
-```powershell
-.\gradlew.bat assembleRelease
-```
-
-La generación del APK firmado se realiza mediante la opción **Build > Generate Signed App Bundle or APK** de Android Studio.
-
-## 8. Documentación y colaboración
-
-El proyecto utiliza GitHub para el control de versiones y Trello para la planificación y distribución de tareas.
-
-Las funcionalidades, pruebas y limitaciones deben documentarse de acuerdo con el estado real de implementación.
-
-## 9. Protección de datos
-
-La aplicación se desarrolla exclusivamente con datos ficticios o sintéticos para fines académicos.
-
-No se deben incorporar datos personales reales, credenciales, tokens, llaves privadas ni información operacional de la organización.
-
----
-
-**SmartVolt Asistencia**  
-DSY1105 - Desarrollo de Aplicaciones Móviles  
-Duoc UC
+El detalle de las pruebas de campo, los contratos de ubicación y BLE, y las decisiones sobre
+umbrales están en [docs/pruebas-area-c.md](docs/pruebas-area-c.md).
