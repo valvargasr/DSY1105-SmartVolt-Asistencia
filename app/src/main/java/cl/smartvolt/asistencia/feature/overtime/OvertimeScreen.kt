@@ -466,7 +466,12 @@ private fun TarjetaBaseSolicitud(
             )
             solicitud.reason?.takeIf { it.isNotBlank() }?.let {
                 Spacer(Modifier.height(4.dp))
-                Text("Motivo / comentario: $it", style = MaterialTheme.typography.bodySmall,
+                Text("Motivo: $it", style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            solicitud.decisionNote?.takeIf { it.isNotBlank() }?.let {
+                Spacer(Modifier.height(4.dp))
+                Text("Nota del administrador: $it", style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (acciones != null) {

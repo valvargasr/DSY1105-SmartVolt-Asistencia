@@ -105,9 +105,10 @@ class OvertimeViewModel(
     /** Solo un administrador puede aprobar. */
     fun aprobar(approvalId: String, approverId: String, approverRole: WorkerRole) {
         if (approverRole != WorkerRole.ADMIN) return
-        val solicitud = _requests.value.firstOrNull {
+        val existePendiente = _requests.value.any {
             it.approvalId == approvalId && it.status == OvertimeStatus.PENDING
-        } ?: return
+        }
+        if (!existePendiente) return
 
         viewModelScope.launch {
             runCatching {
@@ -116,7 +117,7 @@ class OvertimeViewModel(
                         approvalId,
                         OvertimeStatus.APPROVED.name,
                         approverId,
-                        solicitud.reason
+                        null
                     )
                 }
             }.onSuccess {
@@ -156,7 +157,7 @@ class OvertimeViewModel(
                         req.copy(
                             status = OvertimeStatus.REJECTED,
                             approverId = approverId,
-                            reason = motivo.trim()
+                            decisionNote = motivo.trim()
                         )
                     } else req
                 }
@@ -178,7 +179,8 @@ class OvertimeViewModel(
                         application,
                         cl.smartvolt.asistencia.data.local.AppDatabase::class.java,
                         "smartvolt_attendance.db"
-                    ).fallbackToDestructiveMigration().build()
+                    ).addMigrations(cl.smartvolt.asistencia.data.local.AppDatabase.MIGRATION_2_3)
+                        .build()
                     OvertimeViewModel(db.overtimeApprovalDao())
                 }
             }
