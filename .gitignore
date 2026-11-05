@@ -23,8 +23,11 @@
 
 # Claves de firma y sus contraseñas: nunca deben subir al repositorio
 *.jks
+**/*.jks
 *.keystore
+**/*.keystore
 keystore.properties
+**/keystore.properties
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
@@ -35,6 +38,7 @@ replay_pid*
 
 # Android local configuration
 local.properties
+**/local.properties
 
 # Generated build files
 .gradle/

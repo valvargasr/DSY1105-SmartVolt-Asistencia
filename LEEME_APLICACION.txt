@@ -1,0 +1,45 @@
+SMARTVOLT ASISTENCIA - PARCHE DE ACTUALIZACION
+
+IMPORTANTE
+- Este paquete contiene archivos para copiar en tu proyecto Android Studio.
+- No es un repositorio Git. No abras este ZIP como proyecto ni lo subas directamente a GitHub.
+- Primero crea una rama nueva desde el main actualizado.
+- Copia los archivos conservando exactamente las rutas y reemplaza los archivos existentes cuando Windows lo pregunte.
+- NO reemplaza MainActivity.kt ni toca la navegación general.
+
+ARCHIVOS INCLUIDOS
+1. .gitignore
+2. README.md
+3. app/src/main/java/cl/smartvolt/asistencia/feature/overtime/OvertimeFormValidator.kt (nuevo)
+4. app/src/main/java/cl/smartvolt/asistencia/feature/overtime/OvertimeViewModel.kt (reemplazar)
+5. app/src/main/java/cl/smartvolt/asistencia/feature/overtime/OvertimeScreen.kt (reemplazar)
+6. app/src/main/java/cl/smartvolt/asistencia/feature/home/HomeScreen.kt (reemplazar)
+7. app/src/main/java/cl/smartvolt/asistencia/feature/supervisor/SupervisorViewModel.kt (reemplazar)
+8. app/src/main/java/cl/smartvolt/asistencia/feature/supervisor/SupervisorScreen.kt (reemplazar)
+9. app/src/main/java/cl/smartvolt/asistencia/data/local/RoomAttendanceStore.kt (reemplazar)
+10. app/src/test/java/cl/smartvolt/asistencia/feature/overtime/OvertimeFormValidatorTest.kt (nuevo)
+
+ARCHIVO QUE SE DEBE ELIMINAR
+app/src/main/java/cl/smartvolt/asistencia/data/local/SharedPreferencesAttendanceStore.kt
+
+POR QUE SE ELIMINA
+La revisión del proyecto no encontró referencias de código a esa implementación antigua; RoomAttendanceStore es la implementación que se utiliza. Se elimina también la clase, no la sesión de demostración que usa SharedPreferences.
+
+CAMBIOS DE FUNCIONALIDAD
+- El obrero puede enviar una solicitud de horas extra con fecha, desde, hasta y motivo.
+- La solicitud valida cada campo y exige formato HH:mm; la hora final debe ser posterior a la inicial.
+- El obrero ve sus solicitudes y el estado pendiente/aprobada/rechazada.
+- El administrador puede aprobar o rechazar; el motivo del rechazo es obligatorio.
+- El capataz no ve el acceso ni puede aprobar horas extra.
+- El panel calcula presentes ahora y salidas a partir de las marcas del día.
+- Atrasos y ausencias aparecen como "—" hasta que se definan turnos, tolerancia, hora de corte y nómina. No se inventan reglas.
+- Se agrega una prueba unitaria para los cuatro escenarios del formulario (total esperado: 64).
+
+DESPUES DE COPIAR
+1. Guarda los archivos.
+2. En Android Studio: Build > Assemble Project.
+3. Ejecuta: .\gradlew.bat testDebugUnitTest
+4. Ejecuta: .\gradlew.bat lintDebug
+5. Revisa los resultados antes de hacer commit.
+
+No marcar GPS/BLE como probado hasta ejecutar la matriz de docs/pruebas-area-c.md en un teléfono físico.

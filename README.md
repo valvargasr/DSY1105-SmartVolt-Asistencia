@@ -1,305 +1,155 @@
+
 # SmartVolt Asistencia
 
-Aplicación móvil Android para el registro de asistencia en faenas, con verificación de
-ubicación GPS y proximidad mediante una baliza Bluetooth Low Energy (BLE).
+Aplicación móvil Android desarrollada como Producto Mínimo Viable (MVP) académico para el registro y consulta de asistencia en faenas. El proyecto utiliza ubicación GPS y proximidad Bluetooth Low Energy (BLE) como mecanismos de apoyo para verificar la presencia física de los trabajadores.
 
 ## 1. Información general
 
-- **Asignatura:** DSY1105 — Desarrollo de Aplicaciones Móviles
-- **Evaluación:** Evaluación Parcial 2 (EP2)
-- **Organización de referencia:** Servicio de Ingeniería Smart-Volt SpA (caso académico)
-- **Tipo de proyecto:** MVP académico. No es un sistema productivo.
-- **Paquete de la aplicación:** `cl.smartvolt.asistencia`
+- **Asignatura:** DSY1105 - Desarrollo de Aplicaciones Móviles.
+- **Evaluación:** Evaluación Parcial 2 (EP2).
+- **Organización de referencia:** Servicio de Ingeniería Smart-Volt SpA.
+- **Tipo de proyecto:** MVP académico.
+- **Plataforma:** Android.
+- **Lenguaje:** Kotlin.
+- **Paquete:** `cl.smartvolt.asistencia`.
+
+Este proyecto es una propuesta académica. No corresponde a un sistema productivo ni utiliza información real de trabajadores.
 
 ## 2. Equipo y responsabilidades
 
-| Integrante | Área | Responsabilidades |
+| Integrante | Área | Responsabilidad |
 |---|---|---|
-| Valentina Vargas | Área A | Diseño de interfaz, experiencia de usuario y pantallas. |
-| Julián Silva | Área B | Lógica de negocio, validaciones, almacenamiento local y gestión de datos. |
-| Joaquín Rojas | Área C | Recursos nativos de Android (GPS, BLE, permisos, notificaciones) e integración. |
+| Valentina Vargas | Área A | Interfaz de usuario, experiencia visual, navegación y pantallas. |
+| Julián Silva | Área B | Lógica de negocio, ViewModels, validaciones y almacenamiento local. |
+| Joaquín Rojas | Área C | Recursos nativos, permisos, ubicación GPS y Bluetooth BLE. |
 
-Tablero de tareas: Trello **DSY1105 - SmartVolt Asistencia**.
+## 3. Tecnologías utilizadas
 
-## 3. Estado de implementación
+- Kotlin.
+- Android Studio.
+- Jetpack Compose.
+- Material Design 3.
+- Arquitectura MVVM.
+- ViewModel y StateFlow.
+- Navigation Compose.
+- Room / SQLite.
+- Kotlin Coroutines.
+- Pruebas unitarias.
+- Git y GitHub.
 
-Estado verificado en `main`, que integra las áreas A, B y C. Compila,
-pasan las 66 pruebas unitarias y `lintDebug` no reporta errores. **El GPS y el BLE
-todavía no se han probado en un teléfono físico.**
+## 4. Funcionalidades implementadas
 
-### Implementado
+### Acceso y perfiles
+- Pantalla de bienvenida.
+- Acceso mediante cuentas de demostración.
+- Perfiles diferenciados por rol.
+- Persistencia local de sesión de demostración.
 
-- Pantalla de bienvenida y pantalla de acceso con validación por campo
-  (correo con formato válido y contraseña no vacía), errores junto al campo,
-  iconos de error y mensajes visuales por campo.
-- **Tres roles de demostración** (obrero, capataz y administrador) con acceso rápido
-  desde el login y credenciales ficticias impresas en pantalla. La sesión se guarda en
-  `SharedPreferences` y el inicio se adapta al rol.
-- **Inicio por rol:** el obrero ve su jornada del día; capataz y administrador ven además
-  métricas agregadas de la faena (presentes, salidas, marcas) y accesos al panel y a
-  horas extra.
-- **Panel de faena** (`SupervisorScreen`) con detalle animado por trabajador.
-- **Solicitud de horas extra del obrero** (`OvertimeScreen`): formulario con fecha, hora de
-  inicio, hora de término y motivo, validado por campo; el trabajador consulta el estado de
-  sus solicitudes y puede cancelar las pendientes.
-- **Autorización de horas extra** (`OvertimeScreen`) con aprobación, rechazo con motivo
-  validado, nota de decisión separada del motivo y persistencia en Room.
-- Identidad visual propia (paleta ámbar/teal, tipografía y formas Material 3),
-  tarjetas de estado, indicadores de progreso y soporte de modo claro/oscuro.
-- Navegación entre pantallas con Navigation Compose y transiciones animadas; el botón
-  Atrás del sistema devuelve a la pantalla anterior en lugar de cerrar la aplicación.
-- Animaciones de entrada, mensajes de resultado y cambios de estado en la interfaz.
-- Pantalla de marcación (`PresenciaScreen`) con estados de permisos, GPS y baliza.
-- Solicitud de permisos en contexto con explicación y manejo de rechazo, incluido el
-  rechazo permanente con acceso directo a los ajustes de la aplicación.
-- Lectura real de ubicación con `LocationManager`: latitud, longitud, precisión,
-  instante de la lectura y señal de ubicación simulada.
-- **Mapa de Mapbox** (Static Images API) con la posición del marcaje, caché en memoria,
-  estados de carga/error y reintento. Requiere permiso `INTERNET`.
-- Escaneo BLE real con `BluetoothLeScanner` **sin filtro de servicio**, con ventana de
-  escaneo acotada y reporte de RSSI. Acepta tres formatos: **iBeacon** (el que emite la
-  app iOS *Locate Beacons*), **Eddystone-UID** y el UUID de servicio de laboratorio.
-- **Aviso flotante** cuando la entrada o la salida del día ya estaba registrada, con
-  cierre automático y botón de descarte.
-- Detección y mensaje para: permiso denegado, ubicación apagada, Bluetooth apagado,
-  hardware sin BLE, baliza no encontrada y errores del sistema.
-- Guardado local de la marcación con identificador único y estado `PENDING_SYNC`.
-- Contador de marcaciones pendientes de sincronización.
-- Notificación local al guardar una marcación, con solicitud del permiso
-  `POST_NOTIFICATIONS` en Android 13 y posteriores.
-- Reglas de presencia en Kotlin puro (`PresenceEvaluator`), separadas de la interfaz.
-- 15 pruebas unitarias de esas reglas.
-- **Área B (Julián):** Persistencia local con Room/SQLite (entidad, DAO, base de datos, store).
-- **Área B (Julián):** Modelos de dominio (AttendanceEvent, WorkerProfile, Worksite, OvertimeApproval, HolidayCalendar).
-- **Área B (Julián):** Validaciones desacopladas (`AttendanceValidator`) con 26 pruebas unitarias.
-- **Área B (Julián):** Historial de marcas (`HistoryScreen` + `HistoryViewModel`).
-- **Área B (Julián):** Registro de salida (check-out) con validación de entrada previa.
-- **Área B (Julián):** Clasificador de puntualidad/ausencia configurable (`AttendanceClassifier`).
-- **Área B (Julián):** Gestión de horas extra (`OvertimeViewModel`) con persistencia en Room.
-- **Área B (Julián):** Calendario de feriados de Chile (`HolidayCalendar`).
-- **Área B (Julián):** Panel de supervisor con resumen operativo (`SupervisorViewModel`).
-- **Área B (Julián):** 44 pruebas unitarias adicionales (AttendanceValidator 26, HolidayCalendar 7, AttendanceClassifier 11); con las 6 del formulario de horas extra el proyecto suma 66.
+### Operario
+- Pantalla principal de jornada.
+- Flujo de registro de entrada y salida.
+- Visualización del estado de asistencia.
+- Consulta del historial.
+- Solicitud de horas extras.
 
-### Pendiente
+### Supervisor
+- Panel de supervisión.
+- Consulta de información y estados de asistencia del equipo.
 
-- Pruebas en dispositivo físico (GPS y baliza). Ver `docs/pruebas-area-c.md`.
-- Activación con doble factor y vinculación del dispositivo.
-- Sincronización con API REST (Retrofit, Hilt y Spring Boot), etapa posterior.
-- Geocerca y umbral de RSSI: no se inventan valores sin acuerdo con la empresa.
-- APK release firmado: requiere generar el keystore (ver sección 9).
+### Administrador
+- Gestión de solicitudes de horas extras.
+- Estados de aprobación y rechazo.
+- Registro de observaciones o motivos de decisión.
 
-## 4. Requisitos del entorno
+### Validaciones y experiencia de usuario
+- Validaciones de formularios desacopladas de la interfaz.
+- Retroalimentación visual.
+- Gestión de estados de carga, éxito y error.
+- Animaciones mediante componentes de Jetpack Compose.
+- Diseño visual basado en Material Design 3.
 
-- Android Studio Rabbit 1 (2026.2.1).
-- **JDK 24 o superior.** Verificado con JDK 24 y con el daemon JDK 25 que el wrapper
-  aprovisiona automáticamente mediante foojay. No se requiere JDK 17.
-- Android SDK Platform **android-37.0** y Build-Tools **37.0.0**.
-- Gradle **9.6.0**, incluido mediante el wrapper del repositorio (`gradlew`).
-  No es necesario instalar Gradle por separado.
-- Variables de entorno `JAVA_HOME` apuntando al JDK 24 (o superior) y `ANDROID_HOME` al SDK.
+### Almacenamiento local
+- Persistencia de datos mediante Room / SQLite.
+- Recuperación de registros almacenados localmente.
+- Pruebas unitarias para validaciones.
 
-Versiones declaradas: AGP 9.4.1, Kotlin 2.2.10, Compose BOM 2026.02.01,
-`compileSdk` 37, `targetSdk` 37, `minSdk` 24.
+### Recursos nativos
+- Integración de permisos de ubicación.
+- Integración de Bluetooth Low Energy (BLE).
+- Compatibilidad con lectura de balizas y señal RSSI.
+- Funcionalidades de ubicación y visualización asociadas a Mapbox.
 
-No actualizar estas versiones de forma independiente: se revisan en conjunto con el equipo.
+## 5. Alcance y limitaciones
 
-## 5. Cómo compilar
+La versión actual corresponde a un MVP local.
 
-Desde la raíz del proyecto, en Windows (PowerShell):
+- Los perfiles de demostración utilizan datos ficticios.
+- La persistencia local se realiza mediante Room.
+- Las marcas pendientes de sincronización no deben considerarse validadas por un servidor.
+- La comprobación GPS y BLE real requiere pruebas en un dispositivo Android físico.
+- La detección BLE requiere una baliza física compatible y autorizada.
+- La autenticación de demostración no representa un sistema de autenticación productivo.
+- La integración con API REST, Retrofit, Hilt y Spring Boot queda para una etapa posterior del proyecto.
+- No se realizan cálculos de remuneraciones ni liquidaciones.
+
+## 6. Requisitos para ejecutar el proyecto
+
+- Android Studio.
+- Android SDK configurado según la versión del proyecto.
+- Gradle Wrapper incluido en el repositorio.
+- Emulador Android o dispositivo físico compatible.
+
+## 7. Cómo ejecutar la aplicación
+
+1. Clonar el repositorio.
+2. Abrir el proyecto en Android Studio.
+3. Esperar la sincronización de Gradle.
+4. Seleccionar la configuración `app`.
+5. Seleccionar un emulador o dispositivo Android.
+6. Presionar **Run** para compilar e iniciar la aplicación.
+
+### Compilación desde terminal
+
+En Windows PowerShell:
 
 ```powershell
-$env:JAVA_HOME = "C:\ruta\al\jdk-24"
-$env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
-
-# Compila la aplicación de depuración
 .\gradlew.bat assembleDebug
+```
 
-# Ejecuta las pruebas unitarias
+### Ejecutar pruebas unitarias
+
+```powershell
 .\gradlew.bat testDebugUnitTest
+```
 
-# Compila la variante release (sin firmar si no hay keystore.properties)
+### Ejecutar análisis Lint
+
+```powershell
+.\gradlew.bat lintDebug
+```
+
+### Generar versión Release
+
+```powershell
 .\gradlew.bat assembleRelease
 ```
 
-El APK de depuración queda en `app/build/outputs/apk/debug/app-debug.apk`.
+La generación del APK firmado se realiza mediante la opción **Build > Generate Signed App Bundle or APK** de Android Studio.
 
-También se puede abrir la carpeta del proyecto en Android Studio, esperar la
-sincronización de Gradle y usar **Run** sobre un dispositivo conectado.
+## 8. Documentación y colaboración
 
-## 6. Cómo ejecutar la demostración
+El proyecto utiliza GitHub para el control de versiones y Trello para la planificación y distribución de tareas.
 
-1. Instalar el APK en un teléfono Android con GPS y Bluetooth, y conexión a internet
-   (la imagen del mapa de Mapbox se descarga por HTTPS).
-2. Abrir la aplicación y presionar **Comenzar**.
-3. Elegir un rol en **Acceso rápido por rol** (obrero, capataz o administrador) o escribir
-   las credenciales demo que aparecen en la misma pantalla. La contraseña de las tres
-   cuentas es `demo1234`. Este acceso es solo para la demostración: no representa una
-   autenticación real.
-4. En el inicio, revisar la jornada del día y, para capataz o administrador, las métricas
-   de la faena.
-5. Presionar **Registrar entrada** (o el botón equivalente de la tarjeta de jornada).
-6. Presionar **Verificar presencia** y conceder los permisos solicitados.
-7. Revisar el estado de la ubicación, el mapa de Mapbox y la baliza.
-8. Con ambos recursos disponibles, presionar **Registrar entrada**.
-9. Volver a intentar registrar la entrada para ver el **aviso flotante** que indica que la
-   marca ya existía; se cierra solo a los 7 segundos o con el botón de descarte.
-10. Con la entrada del día registrada, presionar **Registrar salida**.
-11. Presionar **Ver historial** para revisar las marcas guardadas en el dispositivo.
-12. Como obrero, abrir **Mis horas extra**, completar fecha, desde, hasta y motivo, y
-    comprobar los errores por campo al enviar vacío; luego enviar y ver la solicitud
-    pendiente en la lista.
-13. Como capataz o administrador, abrir el **panel de faena**; como administrador, abrir
-    **horas extra**, crear una solicitud demo y aprobarla o rechazarla con motivo.
+Las funcionalidades, pruebas y limitaciones deben documentarse de acuerdo con el estado real de implementación.
 
-El botón Atrás del sistema devuelve a la pantalla anterior; en el inicio no cierra la
-aplicación.
+## 9. Protección de datos
 
-### Baliza de prueba
+La aplicación se desarrolla exclusivamente con datos ficticios o sintéticos para fines académicos.
 
-La aplicación acepta tres formatos de anuncio BLE, sin filtrar por un UUID de servicio:
-
-1. **iBeacon**, que es el que emite la app iOS **Locate Beacons**. Se configura esa app con
-   cualquier UUID (por ejemplo `6f1b2c3d-4e5f-4a6b-8c9d-0e1f2a3b4c5d`), un `major` y un
-   `minor`, y se deja emitiendo con la pantalla activa.
-2. **Eddystone-UID**, servicio `0xFEAA` con trama `0x00`.
-3. **UUID de servicio GATT** de laboratorio
-   `6f1b2c3d-4e5f-4a6b-8c9d-0e1f2a3b4c5d`, útil con nRF Connect.
-
-`BeaconConfig.EXPECTED_IBEACON_UUID` está en `null` para aceptar el UUID que se configure
-en *Locate Beacons* durante la defensa. En producción debe fijarse el UUID autorizado por
-la empresa.
-
-Si no hay ningún emisor, la aplicación informa «No se detectó la baliza autorizada» o
-«No se encontró la baliza» y no habilita el registro. Ese comportamiento es el esperado,
-no un error. El escaneo **no** valida distancia ni geocerca: solo comprueba que el anuncio
-existe cerca, por lo que no debe presentarse como antifraude.
-
-## 7. Arquitectura y organización
-
-MVVM con Jetpack Compose, estado expuesto con `StateFlow` y reglas de negocio separadas
-de la interfaz.
-
-```
-cl.smartvolt.asistencia
-├── MainActivity.kt                 Navegación, bienvenida y acceso
-├── LoginViewModel.kt               Estado y validación del acceso
-├── session/                        Cuentas demo, sesión en SharedPreferences y SessionViewModel
-├── ui/theme/                       Tema Material 3, colores y tipografía
-├── ui/components/                  Componentes compartidos (tarjetas, estados, cabecera, mapa)
-├── feature/attendance/
-│   ├── PresenciaScreen.kt          Pantalla de marcación y aviso de duplicado
-│   ├── PresenciaViewModel.kt       Orquestación y estado observable
-│   ├── PresenciaUiState.kt         Estado inmutable de la pantalla
-│   └── PresenceEvaluator.kt        Reglas puras, sin dependencias de Android
-├── feature/home/                   Inicio por rol con métricas de la faena
-├── feature/history/                Historial de marcas (screen + view model)
-├── feature/overtime/               Solicitudes y autorización de horas extra (UI + VM)
-├── feature/supervisor/             Panel de faena por trabajador (UI + VM)
-├── data/local/
-│   ├── LocalAttendanceEvent.kt     Modelo de la marcación
-│   ├── AttendanceLocalStore.kt     Puerto de persistencia
-│   ├── RoomAttendanceStore.kt      Implementación Room/SQLite
-│   ├── AppDatabase.kt              Base de datos (asistencia y horas extra)
-│   ├── AttendanceDao.kt            Consultas de marcaciones
-│   ├── AttendanceEventEntity.kt    Entidad Room de marcaciones
-│   └── OvertimeApproval*.kt        Entidad y DAO de horas extra
-├── data/repository/                Repositorio de asistencia
-├── domain/model/                   Modelos de dominio y calendario de feriados
-├── domain/validation/              AttendanceValidator, AttendanceClassifier y HolidayCalendar
-└── native/
-    ├── location/                   LocationProvider y AndroidLocationProvider
-    ├── bluetooth/                  BeaconScanner, AndroidBeaconScanner (iBeacon/Eddystone)
-    ├── maps/                       MapboxConfig y URL de Static Images
-    ├── permissions/                PermissionChecker y PermissionStatus
-    └── notifications/              AttendanceNotifier
-```
-
-Los puertos (`LocationProvider`, `BeaconScanner`, `AttendanceLocalStore`) declaran que no
-lanzan excepciones: devuelven un objeto de resultado con estado y código de error. Esto
-permite sustituirlos por implementaciones de prueba.
-
-La interfaz usa una identidad visual propia sobre Material 3: ámbar como color principal,
-teal para estados correctos, rust para advertencias y una escala tipográfica con jerarquía
-clara. Los componentes compartidos de `ui/components/` concentran las tarjetas de estado,
-las píldoras de estado, la cabecera y los estados vacíos para mantener consistencia entre
-pantallas. El modo oscuro se resuelve con la misma paleta y no depende de colores dinámicos
-del sistema.
-
-## 8. Pruebas
-
-```powershell
-.\gradlew.bat testDebugUnitTest
-```
-
-La suite suma **66 pruebas unitarias**: `PresenceEvaluatorTest` (15), `AttendanceValidatorTest`
-(26), `AttendanceClassifierTest` (11), `HolidayCalendarTest` (7),
-`OvertimeRequestValidatorTest` (6) y `ExampleUnitTest` (1).
-
-`PresenceEvaluatorTest` cubre 15 casos: ausencia de lecturas, GPS disponible, baliza
-detectada, baliza ausente, permiso denegado, ubicación apagada, Bluetooth apagado, tiempo
-de espera agotado, precisión informada, ubicación simulada y mensajes de sincronización.
-
-La matriz de pruebas en dispositivo físico y su bitácora están en `docs/pruebas-area-c.md`.
-
-La compilación de verificación incluye además `assembleDebug` y `lintDebug`:
-
-```powershell
-.\gradlew.bat --no-configuration-cache testDebugUnitTest assembleDebug lintDebug
-```
-
-Estado actual: **66 pruebas, 0 fallos** y **lint con 0 errores** (solo advertencias de
-dependencias y `UseKtx`, sin impacto funcional).
-
-## 9. Firma del APK release
-
-El keystore y sus contraseñas **no se suben al repositorio** (están en `.gitignore`).
-
-1. Copiar `keystore.properties.example` como `keystore.properties` en la raíz del proyecto.
-2. Generar el keystore:
-
-   ```
-   keytool -genkeypair -v -keystore smartvolt-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias smartvolt
-   ```
-
-3. Completar las contraseñas en `keystore.properties`.
-4. Ejecutar `.\gradlew.bat assembleRelease`.
-
-Sin `keystore.properties` la compilación sigue funcionando y genera un APK sin firmar,
-que no se puede instalar.
-
-## 10. Privacidad y tratamiento de datos
-
-- Se usan identificadores ficticios: `OP-001` y `FAENA-DEMO-01`. No hay nombres, RUT,
-  correos ni datos personales reales.
-- **Red:** el permiso `INTERNET` se usa únicamente para descargar la imagen estática
-  del mapa desde la API de Mapbox. Las coordenadas del punto de marcaje viajan a Mapbox
-  en la URL de esa imagen; no hay backend propio ni otros envíos.
-- El token de Mapbox incluido es un token **público de demostración**, no el token
-  privado de descarga de Gradle. Debe rotarse y restringirse antes de publicar la app.
-- El respaldo automático está deshabilitado (`allowBackup="false"`); la base de datos Room y
-  las preferencias quedan excluidas de las reglas de respaldo y transferencia.
-- La ubicación simulada se informa como una señal de revisión, no como una acusación de
-  fraude. No se promete una detección infalible.
-- No se guardan contraseñas, tokens ni claves en el repositorio.
-
-## 11. Alcance y limitaciones
-
-- El registro exige ubicación disponible y baliza detectada, pero **todavía no compara la
-  posición con un perímetro de faena ni exige una precisión o un RSSI mínimo**. Esos
-  umbrales dependen de decisiones pendientes con el profesor y la contraparte.
-- El mapa de Mapbox es una **imagen estática** para dar contexto visual de la marca. No
-  dibuja la geocerca ni valida que el punto esté dentro de la faena.
-- El escaneo BLE confirma que el anuncio existe cerca; no mide distancia real.
-- No hay validación de presencia en servidor. El estado `PENDING_SYNC` significa guardado
-  local pendiente de sincronizar, nunca validado por un backend.
-- El UUID de la baliza es provisional y clonable: no constituye una prueba criptográfica
-  de identidad.
-- La persistencia actual usa Room/SQLite (`smartvolt_attendance.db`).
-  `SharedPreferencesAttendanceStore` queda como implementación legada sin uso y no migra
-  marcas antiguas.
-- El acceso de demostración no implementa autenticación ni doble factor.
+No se deben incorporar datos personales reales, credenciales, tokens, llaves privadas ni información operacional de la organización.
 
 ---
 
-**Asignatura:** DSY1105 — Desarrollo de Aplicaciones Móviles
-**Proyecto:** SmartVolt Asistencia
+**SmartVolt Asistencia**  
+DSY1105 - Desarrollo de Aplicaciones Móviles  
+Duoc UC
