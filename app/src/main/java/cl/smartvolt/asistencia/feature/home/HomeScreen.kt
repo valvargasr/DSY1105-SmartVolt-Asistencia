@@ -38,6 +38,7 @@ import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Schedule
@@ -45,6 +46,7 @@ import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -145,6 +147,7 @@ fun HomeScreen(
                         TarjetaJornada(
                             estado = estado,
                             esObrero = esObrero,
+                            siteName = account.siteName,
                             onRegistrarAsistencia = onRegistrarAsistencia,
                             onVerHistorial = onVerHistorial
                         )
@@ -278,6 +281,7 @@ private fun Saludo(account: DemoAccount) {
 private fun TarjetaJornada(
     estado: HomeUiState,
     esObrero: Boolean,
+    siteName: String,
     onRegistrarAsistencia: () -> Unit,
     onVerHistorial: () -> Unit
 ) {
@@ -298,9 +302,10 @@ private fun TarjetaJornada(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(18.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 SectionLabel(
                     text = "Jornada de hoy",
@@ -345,7 +350,7 @@ private fun TarjetaJornada(
 
             Text(
                 text = if (esObrero) {
-                    "Registra tu entrada y salida con GPS y baliza Bluetooth."
+                    "Registra tu entrada y salida de forma segura."
                 } else {
                     "Puedes marcar tu propia asistencia igual que el equipo."
                 },
@@ -353,7 +358,39 @@ private fun TarjetaJornada(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Surface(
+                shape = RoundedCornerShape(13.dp),
+                color = MaterialTheme.colorScheme.primaryContainer
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 13.dp, vertical = 11.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.LocationOn,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(9.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Faena actual",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = siteName,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(15.dp))
 
             LinearProgressIndicator(
                 progress = { progreso },
@@ -390,9 +427,17 @@ private fun TarjetaJornada(
 
             Button(
                 onClick = onRegistrarAsistencia,
+                colors = if (esObrero) {
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary
+                    )
+                } else {
+                    ButtonDefaults.buttonColors()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(54.dp)
+                    .height(60.dp)
             ) {
                 Icon(
                     imageVector = if (abierta) Icons.AutoMirrored.Outlined.Logout else Icons.AutoMirrored.Outlined.Login,
@@ -405,7 +450,7 @@ private fun TarjetaJornada(
                         completa -> "Ver marcas de hoy"
                         else -> "Registrar entrada"
                     },
-                    style = MaterialTheme.typography.titleSmall
+                    style = MaterialTheme.typography.titleMedium
                 )
             }
 
@@ -471,21 +516,23 @@ private fun TarjetaFaena(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
-        )
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Outlined.Groups,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    tint = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Faena en vivo",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
 
@@ -575,7 +622,8 @@ private fun TarjetaHorasExtra(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -625,9 +673,10 @@ private fun DatosSesion(account: DemoAccount) {
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(17.dp)) {
             SectionLabel(text = "Sesión de demostración")
             Spacer(modifier = Modifier.height(10.dp))
             FilaDato(icon = Icons.Outlined.Person, texto = account.email)

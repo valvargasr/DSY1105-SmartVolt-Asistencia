@@ -313,9 +313,17 @@ fun PantallaBienvenida(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = Color(0xFF0A2A52)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color(0xFF0A2A52), Color(0xFF123F78))
+                    )
+                )
+        ) {
             // Manchas de color muy suaves: dan profundidad sin competir con el contenido.
             Box(
                 modifier = Modifier
@@ -369,13 +377,17 @@ fun PantallaBienvenida(
 
                         Spacer(modifier = Modifier.height(22.dp))
 
-                        SectionLabel(text = "Control de asistencia · faena")
+                        SectionLabel(
+                            text = "Control de asistencia · faena",
+                            color = Color.White.copy(alpha = 0.82f)
+                        )
 
                         Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
                             text = "SmartVolt",
                             style = MaterialTheme.typography.displaySmall,
+                            color = Color.White,
                             textAlign = TextAlign.Center
                         )
 
@@ -384,7 +396,7 @@ fun PantallaBienvenida(
                         Text(
                             text = "Asistencia en terreno, sin papeleo.",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = Color.White.copy(alpha = 0.86f),
                             textAlign = TextAlign.Center
                         )
 
@@ -412,7 +424,7 @@ fun PantallaBienvenida(
                             onClick = onComenzar,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp)
+                                .height(60.dp)
                         ) {
                             Text("Comenzar", style = MaterialTheme.typography.titleMedium)
                             Spacer(modifier = Modifier.width(8.dp))
@@ -426,8 +438,8 @@ fun PantallaBienvenida(
 
                         Text(
                             text = "Demo académica · Datos ficticios",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color.White.copy(alpha = 0.72f)
                         )
                     }
                 }
@@ -452,7 +464,7 @@ private fun FeatureRow(
             modifier = Modifier
                 .size(44.dp)
                 .background(
-                    MaterialTheme.colorScheme.primaryContainer,
+                    Color.White.copy(alpha = 0.14f),
                     RoundedCornerShape(12.dp)
                 ),
             contentAlignment = Alignment.Center
@@ -460,7 +472,7 @@ private fun FeatureRow(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                tint = Color.White,
                 modifier = Modifier.size(22.dp)
             )
         }
@@ -470,12 +482,13 @@ private fun FeatureRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleSmall
+                style = MaterialTheme.typography.titleSmall,
+                color = Color.White
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = Color.White.copy(alpha = 0.78f)
             )
         }
     }

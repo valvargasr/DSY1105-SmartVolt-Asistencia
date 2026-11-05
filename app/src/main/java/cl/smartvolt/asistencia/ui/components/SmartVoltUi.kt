@@ -58,7 +58,7 @@ fun statusContainer(tone: StatusTone): Color = when (tone) {
     StatusTone.NEUTRAL -> MaterialTheme.colorScheme.surfaceVariant
 }
 
-/** Marca gráfica de SmartVolt: rayo dentro de un disco ámbar. */
+/** Marca gráfica de SmartVolt: rayo blanco sobre azul de marca. */
 @Composable
 fun SmartVoltMark(
     modifier: Modifier = Modifier,
@@ -86,9 +86,9 @@ fun SectionLabel(
     color: Color = MaterialTheme.colorScheme.onSurfaceVariant
 ) {
     Text(
-        text = text.uppercase(),
+        text = text,
         modifier = modifier,
-        style = MaterialTheme.typography.labelSmall,
+        style = MaterialTheme.typography.labelMedium,
         color = color
     )
 }
@@ -105,7 +105,7 @@ fun StatusPill(
         color = statusContainer(tone)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+            modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -115,8 +115,8 @@ fun StatusPill(
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = text.uppercase(),
-                style = MaterialTheme.typography.labelSmall,
+                text = text,
+                style = MaterialTheme.typography.labelMedium,
                 color = statusColor(tone)
             )
         }
@@ -143,10 +143,11 @@ fun ResourceStatusCard(
             .fillMaxWidth()
             .animateContentSize(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(17.dp),
             verticalAlignment = Alignment.Top
         ) {
             Box(
