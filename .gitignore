@@ -47,3 +47,6 @@ build/
 
 # Android Studio local files
 .idea/
+
+# APK de distribución local
+/app/release/
