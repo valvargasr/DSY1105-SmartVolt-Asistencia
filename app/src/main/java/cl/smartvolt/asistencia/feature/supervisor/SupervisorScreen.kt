@@ -53,6 +53,8 @@ import cl.smartvolt.asistencia.ui.components.SmartVoltMark
 import cl.smartvolt.asistencia.ui.components.SmartVoltTopBar
 import cl.smartvolt.asistencia.ui.components.StatusPill
 import cl.smartvolt.asistencia.ui.components.StatusTone
+import cl.smartvolt.asistencia.ui.components.statusColor
+import cl.smartvolt.asistencia.ui.components.statusContainer
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -157,8 +159,9 @@ fun SupervisorScreen(
                     Metrica(
                         valor = resumen.presentNow.toString(),
                         etiqueta = "Presentes ahora",
-                        detalle = "Entrada registrada sin salida",
+                        detalle = "Entrada sin salida",
                         icon = Icons.Outlined.Groups,
+                        tone = StatusTone.OK,
                         modifier = Modifier.weight(1f)
                     )
                     Metrica(
@@ -166,6 +169,7 @@ fun SupervisorScreen(
                         etiqueta = "Atrasos",
                         detalle = if (resumen.presentLate == null) "Falta configurar turnos" else null,
                         icon = Icons.Outlined.Badge,
+                        tone = StatusTone.WARNING,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -181,6 +185,7 @@ fun SupervisorScreen(
                         etiqueta = "Ausentes",
                         detalle = if (resumen.absent == null) "Falta nómina y hora de corte" else null,
                         icon = Icons.Outlined.PersonSearch,
+                        tone = StatusTone.DANGER,
                         modifier = Modifier.weight(1f)
                     )
                     Metrica(
@@ -188,6 +193,7 @@ fun SupervisorScreen(
                         etiqueta = "Con salida",
                         detalle = "Salida registrada hoy",
                         icon = Icons.AutoMirrored.Outlined.Logout,
+                        tone = StatusTone.NEUTRAL,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -250,37 +256,40 @@ private fun Metrica(
     etiqueta: String,
     icon: ImageVector,
     modifier: Modifier = Modifier,
-    detalle: String? = null
+    detalle: String? = null,
+    tone: StatusTone
 ) {
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = statusContainer(tone)
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = BorderStroke(1.dp, statusColor(tone).copy(alpha = 0.14f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(15.dp)) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.size(20.dp)
+                tint = statusColor(tone),
+                modifier = Modifier.size(23.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = valor,
-                style = MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = etiqueta,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface
             )
             detalle?.let {
                 Text(
                     text = it,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.tertiary
+                    color = statusColor(tone)
                 )
             }
         }
@@ -302,9 +311,10 @@ private fun FilaTrabajador(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier

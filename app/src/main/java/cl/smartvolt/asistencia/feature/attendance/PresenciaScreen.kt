@@ -50,6 +50,7 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -378,9 +379,13 @@ fun PresenciaScreen(
                     Button(
                         onClick = presenciaViewModel::onRegistrarEntrada,
                         enabled = !estado.isSaving,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary,
+                            contentColor = MaterialTheme.colorScheme.onSecondary
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(54.dp)
+                            .height(60.dp)
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.Login,
@@ -393,7 +398,7 @@ fun PresenciaScreen(
                                 estado.alreadyCheckedIn -> "Entrada ya registrada"
                                 else -> "Registrar entrada"
                             },
-                            fontSize = 16.sp
+                            fontSize = 17.sp
                         )
                     }
 

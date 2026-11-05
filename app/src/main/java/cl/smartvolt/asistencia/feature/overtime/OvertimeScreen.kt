@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
@@ -159,8 +160,15 @@ private fun SolicitudObreroScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(16.dp))
 
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
                 OutlinedTextField(
                     value = fecha.format(formatter),
                     onValueChange = {},
@@ -251,6 +259,9 @@ private fun SolicitudObreroScreen(
                         else MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodyMedium
                     )
+                }
+
+                    }
                 }
 
                 Spacer(Modifier.height(24.dp))
@@ -407,12 +418,26 @@ private fun TarjetaSolicitudAdmin(
         acciones = if (solicitud.status == OvertimeStatus.PENDING) {
             {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = onAprobar, modifier = Modifier.weight(1f)) {
+                    Button(
+                        onClick = onAprobar,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary,
+                            contentColor = MaterialTheme.colorScheme.onSecondary
+                        ),
+                        modifier = Modifier.weight(1f).height(50.dp)
+                    ) {
                         Icon(Icons.Outlined.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(5.dp))
                         Text("Aprobar")
                     }
-                    OutlinedButton(onClick = onRechazar, modifier = Modifier.weight(1f)) {
+                    OutlinedButton(
+                        onClick = onRechazar,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+                        modifier = Modifier.weight(1f).height(50.dp)
+                    ) {
                         Icon(Icons.Outlined.ErrorOutline, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(5.dp))
                         Text("Rechazar")
@@ -445,9 +470,10 @@ private fun TarjetaBaseSolicitud(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     if (mostrarTrabajador) Text(solicitud.workerId, style = MaterialTheme.typography.titleSmall)

@@ -1,7 +1,6 @@
 package cl.smartvolt.asistencia.ui.theme
 
 import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
@@ -37,7 +36,7 @@ private val LightColorScheme = lightColorScheme(
     error = ErrorRed,
     onError = OnSafetyRust,
     errorContainer = ErrorContainerSoft,
-    onErrorContainer = OnSafetyRustContainer
+    onErrorContainer = ColorTokens.OnErrorContainerLight
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -68,18 +67,18 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val SmartVoltShapes = Shapes(
-    extraSmall = RoundedCornerShape(6.dp),
-    small = RoundedCornerShape(10.dp),
-    medium = RoundedCornerShape(16.dp),
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(18.dp),
     large = RoundedCornerShape(22.dp),
     extraLarge = RoundedCornerShape(28.dp)
 )
 
 @Composable
 fun SmartVoltAsistenciaTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // La marca manda: el color dinámico queda disponible, pero apagado por
-    // defecto para que la app se vea igual en cualquier teléfono.
+    // La interfaz clara se mantiene constante para que los colores de estado
+    // sean siempre reconocibles durante una demostración en terreno.
+    darkTheme: Boolean = false,
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -88,7 +87,6 @@ fun SmartVoltAsistenciaTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
@@ -101,8 +99,8 @@ fun SmartVoltAsistenciaTheme(
     )
 }
 
-/** Colores auxiliares que no tienen un rol directo en Material 3. */
 private object ColorTokens {
-    val OutlineVariantLight = androidx.compose.ui.graphics.Color(0xFFD8D1C6)
-    val OutlineVariantDark = androidx.compose.ui.graphics.Color(0xFF45463E)
+    val OutlineVariantLight = androidx.compose.ui.graphics.Color(0xFFD5DFEC)
+    val OutlineVariantDark = androidx.compose.ui.graphics.Color(0xFF40536C)
+    val OnErrorContainerLight = androidx.compose.ui.graphics.Color(0xFF7A271A)
 }
