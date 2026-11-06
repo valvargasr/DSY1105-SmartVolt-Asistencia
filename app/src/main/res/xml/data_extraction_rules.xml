@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Misma regla para Android 12 y posteriores: las marcas con ubicación no se
-  copian a la nube ni se transfieren a otro dispositivo.
+  Misma regla para Android 12 y posteriores: la base con ubicaciones no se
+  copia a la nube ni se transfiere a otro dispositivo.
 -->
 <data-extraction-rules>
     <cloud-backup>
         <exclude
-            domain="sharedpref"
-            path="smartvolt_attendance.xml" />
+            domain="database"
+            path="smartvolt.db" />
     </cloud-backup>
     <device-transfer>
         <exclude
-            domain="sharedpref"
-            path="smartvolt_attendance.xml" />
+            domain="database"
+            path="smartvolt.db" />
     </device-transfer>
 </data-extraction-rules>

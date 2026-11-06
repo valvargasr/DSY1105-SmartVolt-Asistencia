@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Las marcas de asistencia guardan coordenadas del dispositivo. Se excluyen del
-  respaldo automático para que no salgan del teléfono sin que el usuario lo decida.
+  Las marcas de asistencia guardan coordenadas del dispositivo. Se excluye la
+  base local del respaldo automático.
 -->
 <full-backup-content>
     <exclude
-        domain="sharedpref"
-        path="smartvolt_attendance.xml" />
+        domain="database"
+        path="smartvolt.db" />
 </full-backup-content>
