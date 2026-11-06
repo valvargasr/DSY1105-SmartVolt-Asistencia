@@ -84,6 +84,7 @@ fun HorasExtraView(
 
     LaunchedEffect(cuenta.workerId) { viewModel.limpiarMensaje() }
 
+    // el obrero ve el formulario, el admin ve la bandeja para aprobar o rechazar
     if (cuenta.role == WorkerRole.WORKER) {
         FormularioObrero(
             cuenta = cuenta,
@@ -306,6 +307,7 @@ private fun AdministrarSolicitudes(
     onVolver: () -> Unit
 ) {
     var rechazoDe by remember { mutableStateOf<SolicitudHoraExtra?>(null) }
+    // las pendientes van arriba, las resueltas quedan abajo como historial
     val pendientes = solicitudes.filter { it.estado == EstadoSolicitud.PENDIENTE }
     val decididas = solicitudes.filter { it.estado != EstadoSolicitud.PENDIENTE }
 

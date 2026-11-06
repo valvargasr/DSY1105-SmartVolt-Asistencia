@@ -33,6 +33,7 @@ class InicioViewModel(application: Application) : AndroidViewModel(application) 
     val uiState: StateFlow<InicioUiState> = _uiState.asStateFlow()
 
     init {
+        // la pantalla de inicio solo mira la jornada de hoy y las marcas pendientes
         viewModelScope.launch {
             combine(
                 asistenciaDao.observarPorTrabajador(workerId),

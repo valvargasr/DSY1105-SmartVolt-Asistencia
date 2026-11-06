@@ -33,6 +33,7 @@ data class FaenaUiState(
     val longitudPreview: Double? get() = longitud.replace(',', '.').toDoubleOrNull()
 }
 
+// acá se edita la faena, o sea el lugar y el radio donde se puede marcar
 class FaenaViewModel(application: Application) : AndroidViewModel(application) {
 
     private val dao = AppDatabase.obtener(application).faenaDao()
@@ -81,6 +82,7 @@ class FaenaViewModel(application: Application) : AndroidViewModel(application) {
     fun usarUbicacionActual() {
         if (_uiState.value.ubicacionEnCurso) return
 
+        // botón para rellenar latitud y longitud con el GPS actual
         viewModelScope.launch {
             _uiState.update { it.copy(ubicacionEnCurso = true, mensaje = null) }
             try {
@@ -115,6 +117,7 @@ class FaenaViewModel(application: Application) : AndroidViewModel(application) {
         val estado = _uiState.value
         if (estado.guardando) return
 
+        // si la validación falla no tocamos la base, solo mostramos los errores
         when (val resultado = Validaciones.validarFaena(
             name = estado.nombre,
             address = estado.direccion,

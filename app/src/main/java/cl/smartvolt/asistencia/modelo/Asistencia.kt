@@ -3,6 +3,7 @@ package cl.smartvolt.asistencia.modelo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+// una marca es una entrada o una salida, no las dos juntas
 @Entity(tableName = "asistencias")
 data class Asistencia(
     @PrimaryKey

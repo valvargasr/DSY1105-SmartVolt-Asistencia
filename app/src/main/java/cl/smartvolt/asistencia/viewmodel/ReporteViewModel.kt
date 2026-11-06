@@ -53,6 +53,7 @@ class ReporteViewModel(application: Application) : AndroidViewModel(application)
 
     private fun cargar() {
         val mes = _uiState.value.mes
+        // el reporte se arma al vuelo juntando marcas y solicitudes del mes
         viewModelScope.launch {
             _uiState.update { it.copy(cargando = true) }
             try {

@@ -16,6 +16,7 @@ data class Faena(
     val active: Boolean = true
 )
 
+// si no hay faena guardada usamos esta de ejemplo
 fun faenaPorDefecto(): Faena = Faena(
     siteId = Asistencia.SITE_ID,
     name = "Faena Andes",

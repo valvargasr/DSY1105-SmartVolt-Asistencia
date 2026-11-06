@@ -12,6 +12,7 @@ object ReporteCsv {
     fun nombreArchivo(month: YearMonth): String = "registro-smartvolt-$month.csv"
 
     fun contenido(report: MonthlyReport, zone: ZoneId = ZoneId.systemDefault()): String {
+        // armamos el csv a mano porque son pocas columnas, el BOM es para que Excel no rompa
         val formatoHora = DateTimeFormatter.ofPattern("HH:mm")
         val texto = StringBuilder()
 

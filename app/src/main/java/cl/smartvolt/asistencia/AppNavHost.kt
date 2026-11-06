@@ -18,6 +18,7 @@ private const val RUTA_PRINCIPAL = "principal"
 fun AppNavHost() {
     val nav = rememberNavController()
 
+    // son tres pantallas nomás: splash, login y el contenedor con las pestañas
     NavHost(navController = nav, startDestination = RUTA_SPLASH) {
         composable(RUTA_SPLASH) {
             SplashView(
@@ -42,6 +43,7 @@ fun AppNavHost() {
         }
 
         composable(RUTA_PRINCIPAL) {
+            // si no hay sesión guardada lo devolvemos al login
             val cuenta = Sesion.cuenta
             if (cuenta == null) {
                 LaunchedEffect(Unit) {
@@ -53,6 +55,7 @@ fun AppNavHost() {
                 MainContainerView(
                     cuenta = cuenta,
                     onCerrarSesion = {
+                        // al cerrar sesión limpiamos la cuenta y volvemos al login
                         Sesion.cuenta = null
                         nav.navigate(RUTA_LOGIN) {
                             popUpTo(RUTA_PRINCIPAL) { inclusive = true }

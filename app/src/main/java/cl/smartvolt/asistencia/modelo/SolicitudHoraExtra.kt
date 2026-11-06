@@ -6,6 +6,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
+// cada solicitud queda con su estado hasta que el admin la revise
 @Entity(tableName = "solicitudes_horas_extra")
 data class SolicitudHoraExtra(
     @PrimaryKey

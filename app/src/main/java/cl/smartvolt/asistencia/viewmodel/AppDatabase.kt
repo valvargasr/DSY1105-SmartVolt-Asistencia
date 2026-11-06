@@ -25,6 +25,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun solicitudHoraExtraDao(): SolicitudHoraExtraDAO
 
     companion object {
+        // una sola instancia para toda la app, si no Room se queja
         @Volatile
         private var instancia: AppDatabase? = null
 

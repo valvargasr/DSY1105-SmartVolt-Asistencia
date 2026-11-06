@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+// todo lo que la pantalla necesita saber para dejar marcar
 data class AsistenciaUiState(
     val permiso: EstadoPermiso = EstadoPermiso.NO_SOLICITADO,
     val ubicacion: ResultadoUbicacion? = null,
@@ -113,6 +114,7 @@ class AsistenciaViewModel(application: Application) : AndroidViewModel(applicati
     val uiState: StateFlow<AsistenciaUiState> = _uiState.asStateFlow()
 
     init {
+        // escuchamos las marcas y la faena activa para recalcular la jornada solo
         viewModelScope.launch {
             combine(
                 asistenciaDao.observarPorTrabajador(workerId),
@@ -147,6 +149,7 @@ class AsistenciaViewModel(application: Application) : AndroidViewModel(applicati
     fun verificar() {
         if (_uiState.value.verificando) return
 
+        // ubicación y baliza se piden en paralelo para no demorar el doble
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
@@ -210,6 +213,7 @@ class AsistenciaViewModel(application: Application) : AndroidViewModel(applicati
         val estado = _uiState.value
         if (estado.guardando) return
 
+        // ojo, la entrada y la salida se guardan como marcas separadas
         if (tipo == Asistencia.TYPE_CHECK_IN && estado.jornada.tieneEntrada) {
             _uiState.update { it.copy(mensaje = "Ya registraste tu entrada hoy.") }
             return

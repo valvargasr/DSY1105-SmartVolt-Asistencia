@@ -21,6 +21,7 @@ enum class WorkerRole(val label: String) {
     MANAGEMENT("Gerencia")
 }
 
+// cuentas fijas para la demo, no hay base de usuarios real
 object DemoDirectory {
 
     const val PASSWORD = "demo1234"

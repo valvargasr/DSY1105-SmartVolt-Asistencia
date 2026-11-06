@@ -31,6 +31,7 @@ object ReportePdf {
         zone: ZoneId = ZoneId.systemDefault(),
         generatedAt: LocalDate = LocalDate.now()
     ): ByteArray {
+        // el pdf se dibuja a mano con canvas, por eso hay tantas coordenadas sueltas
         val documento = PdfDocument()
         val titulo = pincel(18f, Color.rgb(24, 32, 44), negrita = true)
         val subtitulo = pincel(10f, Color.rgb(90, 100, 112))

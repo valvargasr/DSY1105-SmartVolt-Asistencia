@@ -38,6 +38,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     fun ingresar(): DemoAccount? {
         val estado = _uiState.value
+        // login contra las cuentas demo, todavía no hay backend
         val errorCorreo = when {
             estado.correo.isBlank() -> "Ingresa tu correo electrónico."
             !Patterns.EMAIL_ADDRESS.matcher(estado.correo.trim()).matches() ->
@@ -79,6 +80,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun accesoDemo(cuenta: DemoAccount): DemoAccount {
+        // los botones demo rellenan el formulario y entran directo
         _uiState.value = _uiState.value.copy(
             correo = cuenta.email,
             contrasena = cuenta.password,

@@ -34,6 +34,7 @@ class PanelViewModel(application: Application) : AndroidViewModel(application) {
     val uiState: StateFlow<PanelUiState> = _uiState.asStateFlow()
 
     init {
+        // nos quedamos con la última marca de cada trabajador y de ahí salen los contadores
         viewModelScope.launch {
             combine(
                 asistenciaDao.observarPorFaena(siteId),

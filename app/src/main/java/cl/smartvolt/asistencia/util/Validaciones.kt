@@ -70,6 +70,7 @@ object Validaciones {
         latitude: String,
         longitude: String
     ): ResultadoFaena {
+        // no se guarda nada hasta que nombre, radio y coordenadas estén bien
         val nombre = name.trim()
         val direccion = address.trim()
         val radio = radiusMeters.trim().toIntOrNull()
@@ -130,6 +131,7 @@ object Validaciones {
         hasta: String,
         motivo: String
     ): ResultadoHoraExtra {
+        // además del formato revisamos que la salida sea después de la entrada
         val inicioTexto = desde.trim()
         val terminoTexto = hasta.trim()
         val razon = motivo.trim()

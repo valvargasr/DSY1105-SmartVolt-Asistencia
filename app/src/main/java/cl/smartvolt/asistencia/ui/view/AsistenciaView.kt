@@ -99,6 +99,7 @@ fun AsistenciaView(
     val lanzadorPermisos = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { resultados ->
+        // si la ubicación quedó ok verificamos altiro, el resto se avisa en pantalla
         val ubicacionOk = Permisos.ubicacionConcedida(contexto)
         val bloqueado = resultados.filterValues { !it }.keys.any { permiso ->
             actividad?.shouldShowRequestPermissionRationale(permiso) == false
@@ -260,6 +261,7 @@ fun AsistenciaView(
                 Spacer(Modifier.height(18.dp))
                 Button(
                     onClick = {
+                        // un solo botón: pide los permisos que falten y si ya están verifica
                         val permisos = Permisos.permisosPresencia()
                         val faltantes = permisos.filterNot { Permisos.estaConcedido(contexto, it) }
                         if (faltantes.isEmpty()) {

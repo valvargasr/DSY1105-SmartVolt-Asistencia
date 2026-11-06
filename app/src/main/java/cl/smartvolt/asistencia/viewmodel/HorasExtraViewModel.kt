@@ -47,6 +47,7 @@ class HorasExtraViewModel(application: Application) : AndroidViewModel(applicati
         )
 
     fun solicitar(fecha: LocalDate?, desde: String, hasta: String, motivo: String) {
+        // el obrero es el único que puede crear solicitudes
         if (cuenta?.role != WorkerRole.WORKER) {
             _uiState.update { it.copy(mensaje = "Solo el obrero puede crear una solicitud.") }
             return
@@ -112,6 +113,7 @@ class HorasExtraViewModel(application: Application) : AndroidViewModel(applicati
         nota: String?,
         mensaje: String
     ) {
+        // aprobar y rechazar terminan acá, solo cambia el estado
         viewModelScope.launch {
             try {
                 dao.decidir(approvalId, estado, cuenta?.workerId.orEmpty(), nota)

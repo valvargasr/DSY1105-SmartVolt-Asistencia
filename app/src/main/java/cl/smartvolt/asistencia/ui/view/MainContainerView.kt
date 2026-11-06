@@ -61,6 +61,7 @@ fun MainContainerView(
     val rutaActual = entrada?.destination?.route ?: RUTA_INICIO
     val mostrarBarra = pestanas.any { it.ruta == rutaActual }
 
+    // la barra de abajo solo aparece en las pestañas, no en las pantallas internas
     Scaffold(
         bottomBar = {
             if (mostrarBarra) {
@@ -133,6 +134,7 @@ fun MainContainerView(
                 PanelView(onVolver = { nav.popBackStack() })
             }
 
+            // el admin es el único que puede entrar a faena y al reporte
             composable(RUTA_FAENA) {
                 if (cuenta.role != WorkerRole.ADMIN) {
                     AccesoDenegado(

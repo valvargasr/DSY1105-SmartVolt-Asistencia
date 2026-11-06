@@ -14,6 +14,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+// acá probamos los casos raros del reporte: día sin salida, extra, varios trabajadores
 class ReporteMensualTest {
 
     @Test

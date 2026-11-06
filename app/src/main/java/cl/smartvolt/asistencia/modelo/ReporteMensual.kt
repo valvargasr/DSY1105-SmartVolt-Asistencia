@@ -45,6 +45,7 @@ data class MonthlyReport(
     val isEmpty: Boolean get() = workers.isEmpty()
 }
 
+// acá se arma todo el reporte del mes, es la parte más pesada de la app
 object MonthlyReportCalculator {
 
     fun build(
@@ -107,6 +108,7 @@ object MonthlyReportCalculator {
             var ultimaSalida: Long? = null
             var minutos = 0L
 
+            // se van emparejando entradas con salidas, si queda una entrada abierta se marca
             for (evento in delDia) {
                 when (evento.type) {
                     Asistencia.TYPE_CHECK_IN -> {

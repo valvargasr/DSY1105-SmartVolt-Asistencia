@@ -21,6 +21,7 @@ class HistorialViewModel(application: Application) : AndroidViewModel(applicatio
     private val workerId = cuenta?.workerId ?: Asistencia.WORKER_ID
     private val siteId = cuenta?.siteId ?: Asistencia.SITE_ID
 
+    // el trabajador ve solo sus marcas, el resto ve toda la faena
     val marcas: StateFlow<List<Asistencia>> = if (cuenta?.role == WorkerRole.WORKER) {
         dao.observarPorTrabajador(workerId)
     } else {

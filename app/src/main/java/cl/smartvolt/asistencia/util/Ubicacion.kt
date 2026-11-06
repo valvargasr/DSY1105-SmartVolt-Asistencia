@@ -54,6 +54,7 @@ class Ubicacion(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     suspend fun obtener(): ResultadoUbicacion {
+        // primero permisos y GPS, después esperamos una lectura de verdad
         val servicio = manager ?: return ResultadoUbicacion(EstadoUbicacion.NO_DISPONIBLE)
         if (!tienePermiso()) return ResultadoUbicacion(EstadoUbicacion.SIN_PERMISO)
         if (!estaActiva()) return ResultadoUbicacion(EstadoUbicacion.UBICACION_APAGADA)
@@ -99,6 +100,7 @@ class Ubicacion(private val context: Context) {
         servicio: LocationManager,
         proveedores: List<String>
     ): Location? = withTimeoutOrNull(TIEMPO_ESPERA_MILLIS) {
+        // si no llega nada en 15 segundos cortamos y probamos con la última conocida
         suspendCancellableCoroutine { continuation ->
             val listener = object : LocationListener {
                 override fun onLocationChanged(location: Location) {

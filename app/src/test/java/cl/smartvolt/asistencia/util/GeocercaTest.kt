@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+// puros casos simples para confirmar que la distancia a la faena esté bien calculada
 class GeocercaTest {
 
     @Test

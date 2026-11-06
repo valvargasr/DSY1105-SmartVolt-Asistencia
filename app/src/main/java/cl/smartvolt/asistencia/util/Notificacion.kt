@@ -18,6 +18,7 @@ class Notificacion(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     private fun avisar(titulo: String) {
+        // un aviso simple cuando se guarda una marca, sin robar la pantalla
         val permiso = Permisos.permisoNotificaciones()
         if (permiso != null && !Permisos.estaConcedido(context, permiso)) return
 

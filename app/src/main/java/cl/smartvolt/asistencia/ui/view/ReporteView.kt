@@ -70,6 +70,7 @@ fun ReporteView(
     val guardarCsv = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv")
     ) { uri ->
+        // primero armamos el texto y después el sistema nos pregunta dónde guardarlo
         val texto = csvPendiente
         if (uri != null && texto != null) {
             val guardado = runCatching {

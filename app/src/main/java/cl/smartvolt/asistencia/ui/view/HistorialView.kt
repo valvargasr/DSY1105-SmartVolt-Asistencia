@@ -70,6 +70,7 @@ fun HistorialView(viewModel: HistorialViewModel = viewModel()) {
     val encabezado by viewModel.encabezado.collectAsState()
     var filtro by rememberSaveable { mutableStateOf(FiltroHistorial.TODAS) }
 
+    // el filtro es solo visual, no vuelve a consultar la base
     val filtradas = when (filtro) {
         FiltroHistorial.TODAS -> marcas
         FiltroHistorial.ENTRADAS -> marcas.filter { it.type == Asistencia.TYPE_CHECK_IN }
@@ -171,6 +172,7 @@ fun HistorialView(viewModel: HistorialViewModel = viewModel()) {
 
 @Composable
 private fun TarjetaMarca(marca: Asistencia) {
+    // cada tarjeta muestra dónde y con qué baliza se marcó, por si hay que revisar
     val esEntrada = marca.type == Asistencia.TYPE_CHECK_IN
     val sincronizada = marca.syncState != Asistencia.PENDING_SYNC
     val icono = if (esEntrada) Icons.Outlined.Login else Icons.Outlined.Logout

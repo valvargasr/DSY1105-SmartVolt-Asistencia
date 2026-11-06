@@ -46,6 +46,7 @@ object Fechas {
     ): Boolean = Instant.ofEpochMilli(millis).atZone(zona).toLocalDate() == fecha
 
     fun estadoJornada(marcas: List<Asistencia>, fecha: LocalDate = LocalDate.now()): Jornada {
+        // con las marcas del día sacamos si hay entrada, salida y si quedó abierta
         val delDia = marcas
             .filter { esDelDia(it.timestampMillis, fecha) }
             .sortedBy { it.timestampMillis }

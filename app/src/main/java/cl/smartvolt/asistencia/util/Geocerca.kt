@@ -6,6 +6,7 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 
+// fórmula de haversine, sirve para saber si el trabajador está dentro del radio
 object Geocerca {
 
     private const val RADIO_TIERRA_METROS = 6_371_000.0

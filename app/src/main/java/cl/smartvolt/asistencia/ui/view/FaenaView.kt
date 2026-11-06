@@ -47,6 +47,7 @@ fun FaenaView(
     val estado by viewModel.uiState.collectAsState()
 
     LaunchedEffect(estado.guardado) {
+        // cuando se guarda volvemos atrás sin marear con otro mensaje
         if (estado.guardado) onGuardado()
     }
 

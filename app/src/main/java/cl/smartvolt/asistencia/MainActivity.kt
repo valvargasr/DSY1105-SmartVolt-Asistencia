@@ -14,6 +14,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // acá arranca todo, el tema envuelve la navegación completa
         setContent {
             SmartVoltAsistenciaTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {

@@ -21,6 +21,7 @@ object Permisos {
     )
 
     fun permisosPresencia(): Array<String> {
+        // según la versión de Android cambia lo que hay que pedir para el bluetooth
         val bluetooth = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             arrayOf(Manifest.permission.BLUETOOTH_SCAN)
         } else {

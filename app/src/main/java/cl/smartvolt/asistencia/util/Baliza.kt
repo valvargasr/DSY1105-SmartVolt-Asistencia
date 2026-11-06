@@ -56,6 +56,7 @@ class Baliza(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     suspend fun escanear(): ResultadoBaliza {
+        // escaneamos BLE un rato buscando iBeacon, Eddystone o el UUID del lab
         if (!soportada()) return ResultadoBaliza(EstadoBaliza.NO_SOPORTADA)
 
         val adapter = bluetoothManager?.adapter
@@ -130,6 +131,7 @@ class Baliza(private val context: Context) {
     }
 
     private fun interpretar(result: ScanResult): BalizaEncontrada? {
+        // acá se decide si el anuncio es de una baliza conocida o de cualquier cosa
         val record = result.scanRecord ?: return null
 
         val apple = record.manufacturerSpecificData?.get(IBEACON_COMPANY_ID)
