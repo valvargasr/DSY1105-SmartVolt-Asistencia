@@ -35,6 +35,7 @@ import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Badge
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.History
@@ -99,6 +100,7 @@ fun HomeScreen(
     onVerHistorial: () -> Unit,
     onAbrirPanel: () -> Unit,
     onAbrirHorasExtra: () -> Unit,
+    onEditarFaena: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
     val estado by viewModel.uiState.collectAsState()
@@ -148,6 +150,8 @@ fun HomeScreen(
                             estado = estado,
                             esObrero = esObrero,
                             siteName = account.siteName,
+                            puedeEditarFaena = esAdmin,
+                            onEditarFaena = onEditarFaena,
                             onRegistrarAsistencia = onRegistrarAsistencia,
                             onVerHistorial = onVerHistorial
                         )
@@ -282,6 +286,8 @@ private fun TarjetaJornada(
     estado: HomeUiState,
     esObrero: Boolean,
     siteName: String,
+    puedeEditarFaena: Boolean,
+    onEditarFaena: () -> Unit,
     onRegistrarAsistencia: () -> Unit,
     onVerHistorial: () -> Unit
 ) {
@@ -386,6 +392,15 @@ private fun TarjetaJornada(
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
+                    }
+                    if (puedeEditarFaena) {
+                        IconButton(onClick = onEditarFaena) {
+                            Icon(
+                                imageVector = Icons.Outlined.Edit,
+                                contentDescription = "Editar faena",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
             }

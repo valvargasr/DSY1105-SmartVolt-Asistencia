@@ -1,6 +1,7 @@
 package cl.smartvolt.asistencia.feature.attendance
 
 import cl.smartvolt.asistencia.data.local.LocalAttendanceEvent
+import cl.smartvolt.asistencia.domain.model.Worksite
 import cl.smartvolt.asistencia.native.bluetooth.BeaconScanResult
 import cl.smartvolt.asistencia.native.bluetooth.BeaconScanStatus
 import cl.smartvolt.asistencia.native.location.LocationResult
@@ -174,4 +175,55 @@ class PresenceEvaluatorTest {
             PresenceEvaluator.pendingSyncMessage(3).contains("3")
         )
     }
+
+    @Test
+    fun `dentro del radio de la faena se puede registrar`() {
+        assertTrue(
+            PresenceEvaluator.canRegister(
+                ubicacionLista(),
+                balizaEncontrada(),
+                faenaDePrueba()
+            )
+        )
+    }
+
+    @Test
+    fun `fuera del radio de la faena no se puede registrar`() {
+        val lejos = ubicacionLista().copy(latitude = -33.5000)
+
+        assertFalse(
+            PresenceEvaluator.canRegister(
+                lejos,
+                balizaEncontrada(),
+                faenaDePrueba()
+            )
+        )
+    }
+
+    @Test
+    fun `el mensaje de fuera de faena indica distancia y radio`() {
+        val lejos = ubicacionLista().copy(latitude = -33.5000)
+
+        val mensaje = PresenceEvaluator.outsideMessage(lejos, faenaDePrueba())
+
+        assertNotNull(mensaje)
+        assertTrue(mensaje!!.contains("300 m"))
+        assertTrue(mensaje.contains("Faena de prueba"))
+    }
+
+    @Test
+    fun `el mensaje de ubicacion indica si esta dentro de la faena`() {
+        val mensaje = PresenceEvaluator.locationMessage(ubicacionLista(), faenaDePrueba())
+
+        assertTrue(mensaje.contains("Estás dentro de Faena de prueba"))
+    }
+
+    private fun faenaDePrueba() = Worksite(
+        siteId = "FAENA-DEMO-01",
+        name = "Faena de prueba",
+        address = "Camino de prueba 100",
+        latitude = -33.4489,
+        longitude = -70.6693,
+        radiusMeters = 300
+    )
 }

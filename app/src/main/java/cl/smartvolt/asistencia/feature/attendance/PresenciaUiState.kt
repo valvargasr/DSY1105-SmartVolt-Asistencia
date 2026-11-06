@@ -1,6 +1,7 @@
 package cl.smartvolt.asistencia.feature.attendance
 
 import cl.smartvolt.asistencia.data.local.LocalAttendanceEvent
+import cl.smartvolt.asistencia.domain.model.Worksite
 import cl.smartvolt.asistencia.domain.validation.AttendanceValidator
 import cl.smartvolt.asistencia.native.bluetooth.BeaconScanResult
 import cl.smartvolt.asistencia.native.bluetooth.BeaconScanStatus
@@ -30,16 +31,17 @@ data class PresenciaUiState(
     val duplicateNotice: DuplicateNotice? = null,
     val lastEvent: LocalAttendanceEvent? = null,
     val pendingSyncCount: Int = 0,
-    val dayState: AttendanceValidator.DayAttendanceState = AttendanceValidator.DayAttendanceState()
+    val dayState: AttendanceValidator.DayAttendanceState = AttendanceValidator.DayAttendanceState(),
+    val worksite: Worksite? = null
 ) {
     val locationMessage: String
-        get() = PresenceEvaluator.locationMessage(location)
+        get() = PresenceEvaluator.locationMessage(location, worksite)
 
     val beaconMessage: String
         get() = PresenceEvaluator.beaconMessage(beacon)
 
     val canRegister: Boolean
-        get() = PresenceEvaluator.canRegister(location, beacon)
+        get() = PresenceEvaluator.canRegister(location, beacon, worksite)
 
     val canCheckIn: Boolean
         get() = canRegister && dayState.canCheckIn

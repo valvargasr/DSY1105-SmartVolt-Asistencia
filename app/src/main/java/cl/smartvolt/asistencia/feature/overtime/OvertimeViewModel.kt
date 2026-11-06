@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import cl.smartvolt.asistencia.data.local.AppDatabaseProvider
 import cl.smartvolt.asistencia.data.local.OvertimeApprovalDao
 import cl.smartvolt.asistencia.data.local.toDomain
 import cl.smartvolt.asistencia.data.local.toEntity
@@ -175,13 +176,9 @@ class OvertimeViewModel(
         val Factory: (android.app.Application) -> ViewModelProvider.Factory = { application ->
             viewModelFactory {
                 initializer {
-                    val db = androidx.room.Room.databaseBuilder(
-                        application,
-                        cl.smartvolt.asistencia.data.local.AppDatabase::class.java,
-                        "smartvolt_attendance.db"
-                    ).addMigrations(cl.smartvolt.asistencia.data.local.AppDatabase.MIGRATION_2_3)
-                        .build()
-                    OvertimeViewModel(db.overtimeApprovalDao())
+                    OvertimeViewModel(
+                        AppDatabaseProvider.get(application).overtimeApprovalDao()
+                    )
                 }
             }
         }

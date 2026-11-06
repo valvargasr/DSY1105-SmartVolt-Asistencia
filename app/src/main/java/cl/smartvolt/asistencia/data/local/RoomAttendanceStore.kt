@@ -1,7 +1,6 @@
 package cl.smartvolt.asistencia.data.local
 
 import android.content.Context
-import androidx.room.Room
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 
@@ -13,13 +12,7 @@ import kotlinx.coroutines.runBlocking
  */
 class RoomAttendanceStore(context: Context) : AttendanceLocalStore {
 
-    private val database: AppDatabase = Room.databaseBuilder(
-        context.applicationContext,
-        AppDatabase::class.java,
-        "smartvolt_attendance.db"
-    )
-        .addMigrations(AppDatabase.MIGRATION_2_3)
-        .build()
+    private val database: AppDatabase = AppDatabaseProvider.get(context)
 
     private val dao: AttendanceDao = database.attendanceDao()
 

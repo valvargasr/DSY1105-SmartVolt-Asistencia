@@ -42,16 +42,21 @@ El administrador además autoriza o rechaza las solicitudes. El rechazo exige un
 Ese motivo se guarda aparte del que escribió el trabajador, para que la tarjeta no confunda
 una cosa con la otra.
 
+Solo el administrador puede cambiar el lugar de la faena: nombre, dirección, coordenadas del
+centro y radio de marcación. El resto de las cuentas ve ese nombre en el inicio, el historial
+y el panel.
+
 La pantalla de marcación pide ubicación y una baliza BLE cercana antes de habilitar el botón.
-Si falta cualquiera de las dos, explica qué pasa y no registra nada. Cada marca nace como
-pendiente de sincronización y la interfaz lo dice así, porque todavía no hay servidor que la
-valide.
+Además compara la lectura del GPS con el centro de la faena y no registra si el trabajador
+está fuera del radio configurado. Si falta algo, explica qué pasa y no guarda nada. Cada marca
+nace como pendiente de sincronización y la interfaz lo dice así, porque todavía no hay
+servidor que la valide.
 
 ## Almacenamiento y datos
 
-La asistencia y las solicitudes viven en Room, base `smartvolt_attendance.db`, y sobreviven
-al cierre de la aplicación. La interfaz `AttendanceLocalStore` separa el resto del código de
-la implementación concreta.
+La asistencia, las solicitudes y la faena viven en Room, base `smartvolt_attendance.db`, y
+sobreviven al cierre de la aplicación. La interfaz `AttendanceLocalStore` separa el resto del
+código de la implementación concreta.
 
 Las cuentas son ficticias. La autenticación de demostración no representa un sistema real y
 no se deben cargar datos personales, credenciales ni llaves privadas.
@@ -67,7 +72,7 @@ Desde PowerShell:
 
 ```powershell
 .\gradlew.bat assembleDebug        # compilar
-.\gradlew.bat testDebugUnitTest    # 70 pruebas unitarias
+.\gradlew.bat testDebugUnitTest    # 87 pruebas unitarias
 .\gradlew.bat lintDebug            # análisis estático
 ```
 
@@ -85,4 +90,6 @@ No existe sincronización con backend: todo queda en el teléfono. Retrofit, Hil
 REST pertenecen a una etapa posterior. Tampoco se calculan remuneraciones ni liquidaciones.
 
 El detalle de las pruebas de campo, los contratos de ubicación y BLE, y las decisiones sobre
-umbrales están en [docs/pruebas-area-c.md](docs/pruebas-area-c.md).
+umbrales están en [docs/pruebas-area-c.md](docs/pruebas-area-c.md). La configuración de la
+faena y el cálculo del radio se explican en
+[docs/faena-configuracion.md](docs/faena-configuracion.md).

@@ -6,9 +6,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import cl.smartvolt.asistencia.data.local.AppDatabaseProvider
 import cl.smartvolt.asistencia.data.local.AttendanceLocalStore
 import cl.smartvolt.asistencia.data.local.LocalAttendanceEvent
 import cl.smartvolt.asistencia.data.local.RoomAttendanceStore
+import cl.smartvolt.asistencia.data.local.WorksiteRepository
 import cl.smartvolt.asistencia.domain.validation.AttendanceValidator
 import cl.smartvolt.asistencia.native.bluetooth.AndroidBeaconScanner
 import cl.smartvolt.asistencia.native.bluetooth.BeaconScanner
@@ -41,6 +43,7 @@ class PresenciaViewModel(
     private val beaconScanner: BeaconScanner,
     private val store: AttendanceLocalStore,
     private val notifier: AttendanceNotifier,
+    private val worksiteRepository: WorksiteRepository,
     private val workerId: String = LocalAttendanceEvent.WORKER_ID,
     private val siteId: String = LocalAttendanceEvent.SITE_ID
 ) : ViewModel() {
@@ -52,16 +55,18 @@ class PresenciaViewModel(
         viewModelScope.launch {
             val snapshot = withContext(Dispatchers.IO) {
                 val now = System.currentTimeMillis()
-                store.count() to AttendanceValidator.dayState(
+                val dayState = AttendanceValidator.dayState(
                     events = store.all(),
                     nowMillis = now,
                     workerId = workerId
                 )
+                Triple(store.count(), dayState, worksiteRepository.actual())
             }
             _uiState.update {
                 it.copy(
                     pendingSyncCount = snapshot.first,
-                    dayState = snapshot.second
+                    dayState = snapshot.second,
+                    worksite = snapshot.third
                 )
             }
         }
@@ -84,9 +89,11 @@ class PresenciaViewModel(
             try {
                 val locationDeferred = async { locationProvider.getCurrentLocation() }
                 val beaconDeferred = async { beaconScanner.scan() }
+                val worksiteDeferred = async { worksiteRepository.actual() }
 
                 val location = locationDeferred.await()
                 val beacon = beaconDeferred.await()
+                val worksite = worksiteDeferred.await()
                 val dayState = withContext(Dispatchers.IO) {
                     AttendanceValidator.dayState(
                         events = store.all(),
@@ -99,6 +106,7 @@ class PresenciaViewModel(
                     state.copy(
                         location = location,
                         beacon = beacon,
+                        worksite = worksite,
                         dayState = dayState,
                         permissionState = when {
                             location.status == LocationStatus.READY ->
@@ -125,9 +133,10 @@ class PresenciaViewModel(
         val state = _uiState.value
         if (state.isSaving) return
         if (!state.canRegister) {
+            val fuera = PresenceEvaluator.outsideMessage(state.location, state.worksite)
             _uiState.update {
                 it.copy(
-                    message = "Primero verifica la presencia: se necesita ubicación y baliza.",
+                    message = fuera ?: "Primero verifica la presencia: se necesita ubicación, baliza y estar dentro de la faena.",
                     duplicateNotice = null
                 )
             }
@@ -149,6 +158,13 @@ class PresenciaViewModel(
                     nowMillis = timestamp,
                     workerId = workerId
                 )
+                val worksite = withContext(Dispatchers.IO) { worksiteRepository.actual() }
+                val fueraDeFaena = PresenceEvaluator.outsideMessage(location, worksite)
+                if (fueraDeFaena != null) {
+                    _uiState.update { it.copy(message = fueraDeFaena, worksite = worksite) }
+                    return@launch
+                }
+
                 val validation = AttendanceValidator.canRegisterCheckIn(
                     alreadyCheckedIn = dayState.hasCheckIn
                 )
@@ -240,9 +256,10 @@ class PresenciaViewModel(
         val state = _uiState.value
         if (state.isSaving) return
         if (!state.canRegister) {
+            val fuera = PresenceEvaluator.outsideMessage(state.location, state.worksite)
             _uiState.update {
                 it.copy(
-                    message = "Primero verifica la presencia: se necesita ubicación y baliza.",
+                    message = fuera ?: "Primero verifica la presencia: se necesita ubicación, baliza y estar dentro de la faena.",
                     duplicateNotice = null
                 )
             }
@@ -285,6 +302,13 @@ class PresenciaViewModel(
                             )
                         )
                     }
+                    return@launch
+                }
+
+                val worksite = withContext(Dispatchers.IO) { worksiteRepository.actual() }
+                val fueraDeFaena = PresenceEvaluator.outsideMessage(location, worksite)
+                if (fueraDeFaena != null) {
+                    _uiState.update { it.copy(message = fueraDeFaena, worksite = worksite) }
                     return@launch
                 }
 
@@ -391,6 +415,9 @@ class PresenciaViewModel(
                     beaconScanner = AndroidBeaconScanner(application),
                     store = RoomAttendanceStore(application),
                     notifier = AttendanceNotifier(application),
+                    worksiteRepository = WorksiteRepository(
+                        AppDatabaseProvider.get(application).worksiteDao()
+                    ),
                     workerId = workerId,
                     siteId = siteId
                 )

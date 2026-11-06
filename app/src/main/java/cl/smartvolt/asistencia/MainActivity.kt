@@ -97,11 +97,15 @@ import cl.smartvolt.asistencia.feature.overtime.OvertimeScreen
 import cl.smartvolt.asistencia.feature.overtime.OvertimeViewModel
 import cl.smartvolt.asistencia.feature.supervisor.SupervisorScreen
 import cl.smartvolt.asistencia.feature.supervisor.SupervisorViewModel
+import cl.smartvolt.asistencia.feature.worksite.FaenaAdminScreen
+import cl.smartvolt.asistencia.feature.worksite.FaenaAdminViewModel
+import cl.smartvolt.asistencia.feature.worksite.WorksiteViewModel
 import cl.smartvolt.asistencia.session.DemoAccount
 import cl.smartvolt.asistencia.session.DemoDirectory
 import cl.smartvolt.asistencia.session.SessionViewModel
 import cl.smartvolt.asistencia.ui.components.SectionLabel
 import cl.smartvolt.asistencia.ui.components.SmartVoltMark
+import cl.smartvolt.asistencia.ui.components.SmartVoltTopBar
 import cl.smartvolt.asistencia.ui.theme.SmartVoltAsistenciaTheme
 
 class MainActivity : ComponentActivity() {
@@ -135,6 +139,8 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val sessionViewModel: SessionViewModel = viewModel(factory = SessionViewModel.Factory)
     val session by sessionViewModel.session.collectAsState()
+    val worksiteViewModel: WorksiteViewModel = viewModel(factory = WorksiteViewModel.Factory)
+    val faena by worksiteViewModel.worksite.collectAsState()
     val store = remember { RoomAttendanceStore(context.applicationContext) }
 
     NavHost(
@@ -206,7 +212,7 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                 )
 
                 HomeScreen(
-                    account = cuenta,
+                    account = cuenta.copy(siteName = faena.name),
                     viewModel = homeViewModel,
                     onRegistrarAsistencia = {
                         navController.navigate(RUTA_PRESENCIA) { launchSingleTop = true }
@@ -219,6 +225,9 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                     },
                     onAbrirHorasExtra = {
                         navController.navigate(RUTA_JORNADA) { launchSingleTop = true }
+                    },
+                    onEditarFaena = {
+                        navController.navigate(RUTA_FAENA) { launchSingleTop = true }
                     },
                     onCerrarSesion = {
                         sessionViewModel.cerrar()
@@ -236,7 +245,7 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
             PresenciaScreen(
                 workerId = cuenta.workerId,
                 siteId = cuenta.siteId,
-                siteName = cuenta.siteName,
+                siteName = faena.name,
                 roleLabel = cuenta.roleLabel,
                 onVolver = { navController.popBackStack() },
                 onVerHistorial = {
@@ -260,7 +269,7 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                 workerLabel = if (cuenta.role == WorkerRole.WORKER) {
                     "Trabajador ${cuenta.workerId}"
                 } else {
-                    "${cuenta.roleLabel} · ${cuenta.siteName}"
+                    "${cuenta.roleLabel} · ${faena.name}"
                 },
                 onVolver = { navController.popBackStack() }
             )
@@ -274,7 +283,7 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
             )
             SupervisorScreen(
                 viewModel = supervisorViewModel,
-                siteName = cuenta.siteName,
+                siteName = faena.name,
                 onVolver = { navController.popBackStack() }
             )
         }
@@ -289,9 +298,25 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
             )
             OvertimeScreen(
                 viewModel = overtimeViewModel,
-                account = cuenta,
+                account = cuenta.copy(siteName = faena.name),
                 onVolver = { navController.popBackStack() }
             )
+        }
+
+        composable(RUTA_FAENA) {
+            val cuenta = session ?: return@composable
+            if (cuenta.role != WorkerRole.ADMIN) {
+                AccesoFaenaDenegado(onVolver = { navController.popBackStack() })
+            } else {
+                val faenaViewModel: FaenaAdminViewModel = viewModel(
+                    factory = FaenaAdminViewModel.Factory
+                )
+                FaenaAdminScreen(
+                    viewModel = faenaViewModel,
+                    onVolver = { navController.popBackStack() },
+                    onGuardado = { navController.popBackStack() }
+                )
+            }
         }
     }
 }
@@ -303,6 +328,39 @@ private const val RUTA_PRESENCIA = "presencia"
 private const val RUTA_HISTORIAL = "historial"
 private const val RUTA_PANEL = "panel"
 private const val RUTA_JORNADA = "jornada"
+private const val RUTA_FAENA = "faena"
+
+@Composable
+private fun AccesoFaenaDenegado(onVolver: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+        ) {
+            SmartVoltTopBar(
+                title = "Faena",
+                subtitle = "Administración del lugar de marcación",
+                onBack = onVolver
+            )
+            Spacer(Modifier.height(24.dp))
+            Text(
+                text = "Solo el administrador puede cambiar el lugar de la faena.",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "Vuelve al inicio para continuar.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
 
 @Composable
 fun PantallaBienvenida(

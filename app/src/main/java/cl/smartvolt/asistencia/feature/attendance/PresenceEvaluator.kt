@@ -1,6 +1,8 @@
 package cl.smartvolt.asistencia.feature.attendance
 
 import cl.smartvolt.asistencia.data.local.LocalAttendanceEvent
+import cl.smartvolt.asistencia.domain.model.Worksite
+import cl.smartvolt.asistencia.domain.validation.GeoDistance
 import cl.smartvolt.asistencia.native.bluetooth.BeaconScanResult
 import cl.smartvolt.asistencia.native.bluetooth.BeaconScanStatus
 import cl.smartvolt.asistencia.native.location.LocationResult
@@ -9,6 +11,7 @@ import cl.smartvolt.asistencia.native.location.MockSignal
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.roundToInt
 
 /**
  * Reglas de presentación del flujo de marcación.
@@ -17,15 +20,15 @@ import java.util.Locale
  * comunes. Traduce los resultados nativos a mensajes claros y decide cuándo se
  * habilita el registro.
  *
- * Ningún umbral está escondido aquí: solo se exige ubicación lista y baliza
- * encontrada, que son señales concretas, no tolerancias inventadas.
+ * Se exige ubicación lista, baliza encontrada y, cuando la faena está
+ * configurada, estar dentro de su radio.
  */
 object PresenceEvaluator {
 
-    fun locationMessage(result: LocationResult?): String {
+    fun locationMessage(result: LocationResult?, worksite: Worksite? = null): String {
         if (result == null) return "Aún no se ha verificado la ubicación."
 
-        return when (result.status) {
+        val base = when (result.status) {
             LocationStatus.READY -> {
                 val accuracy = result.accuracyMeters
                 if (accuracy != null) {
@@ -52,6 +55,16 @@ object PresenceEvaluator {
 
             LocationStatus.ERROR ->
                 "Ocurrió un error al leer la ubicación. Intenta de nuevo."
+        }
+
+        if (result.status != LocationStatus.READY || worksite == null) return base
+
+        val distance = distanceToWorksite(result, worksite) ?: return base
+        val rounded = distance.roundToInt()
+        return if (distance <= worksite.radiusMeters) {
+            "$base Estás dentro de ${worksite.name} (${rounded} m del centro, radio ${worksite.radiusMeters} m)."
+        } else {
+            "$base Estás fuera de ${worksite.name} (${rounded} m del centro, radio ${worksite.radiusMeters} m)."
         }
     }
 
@@ -88,13 +101,45 @@ object PresenceEvaluator {
         }
     }
 
-    /** Solo se permite registrar cuando ambas señales están confirmadas. */
+    /** Solo se permite registrar cuando las señales están confirmadas y hay faena. */
     fun canRegister(
         location: LocationResult?,
-        beacon: BeaconScanResult?
-    ): Boolean =
-        location?.status == LocationStatus.READY &&
-            beacon?.status == BeaconScanStatus.FOUND
+        beacon: BeaconScanResult?,
+        worksite: Worksite? = null
+    ): Boolean {
+        if (location?.status != LocationStatus.READY) return false
+        if (beacon?.status != BeaconScanStatus.FOUND) return false
+        if (worksite == null) return true
+
+        val distance = distanceToWorksite(location, worksite) ?: return false
+        return distance <= worksite.radiusMeters
+    }
+
+    /** Distancia al centro de la faena, o null si falta alguna coordenada. */
+    fun distanceToWorksite(location: LocationResult?, worksite: Worksite?): Double? {
+        val latitude = location?.latitude ?: return null
+        val longitude = location?.longitude ?: return null
+        val site = worksite ?: return null
+        return GeoDistance.metersBetween(
+            latitude,
+            longitude,
+            site.latitude,
+            site.longitude
+        )
+    }
+
+    /**
+     * Motivo por el que no se puede marcar cuando la ubicación está fuera del
+     * radio. Devuelve null si está dentro o si todavía no hay datos.
+     */
+    fun outsideMessage(location: LocationResult?, worksite: Worksite?): String? {
+        if (location?.status != LocationStatus.READY) return null
+        val site = worksite ?: return null
+        val distance = distanceToWorksite(location, site) ?: return null
+        if (distance <= site.radiusMeters) return null
+        return "No puedes registrar la marca: estás a ${distance.roundToInt()} m del centro de " +
+            "${site.name}. El radio permitido es de ${site.radiusMeters} m."
+    }
 
     /**
      * Advertencia cuando el sistema informa ubicación simulada.
