@@ -1,10 +1,12 @@
-package cl.smartvolt.asistencia.domain.report
+package cl.smartvolt.asistencia.util
 
-import cl.smartvolt.asistencia.data.local.LocalAttendanceEvent
-import cl.smartvolt.asistencia.domain.model.OvertimeApproval
-import cl.smartvolt.asistencia.domain.model.OvertimeStatus
-import cl.smartvolt.asistencia.domain.model.WorkerRole
-import cl.smartvolt.asistencia.feature.report.ReportCsv
+import cl.smartvolt.asistencia.modelo.Asistencia
+import cl.smartvolt.asistencia.modelo.MonthlyReport
+import cl.smartvolt.asistencia.modelo.MonthlyReportCalculator
+import cl.smartvolt.asistencia.modelo.SolicitudHoraExtra
+import cl.smartvolt.asistencia.modelo.WorkerRole
+import cl.smartvolt.asistencia.modelo.amountForMinutes
+import cl.smartvolt.asistencia.modelo.formatClp
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
@@ -14,15 +16,15 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class MonthlyReportTest {
+class ReporteMensualTest {
 
     @Test
     fun `un dia completo suma las horas trabajadas`() {
         val fecha = LocalDate.of(2026, 11, 3)
         val reporte = calcular(
             listOf(
-                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_IN, fecha, 8),
-                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_OUT, fecha, 17)
+                marca("OP-001", Asistencia.TYPE_CHECK_IN, fecha, 8),
+                marca("OP-001", Asistencia.TYPE_CHECK_OUT, fecha, 17)
             )
         )
 
@@ -38,7 +40,7 @@ class MonthlyReportTest {
     fun `una entrada sin salida no suma horas`() {
         val fecha = LocalDate.of(2026, 11, 3)
         val reporte = calcular(
-            listOf(marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_IN, fecha, 8))
+            listOf(marca("OP-001", Asistencia.TYPE_CHECK_IN, fecha, 8))
         )
 
         val trabajador = reporte.workers.single()
@@ -54,10 +56,10 @@ class MonthlyReportTest {
         val fecha = LocalDate.of(2026, 11, 3)
         val reporte = calcular(
             listOf(
-                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_IN, fecha, 8),
-                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_OUT, fecha, 12),
-                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_IN, fecha, 13),
-                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_OUT, fecha, 17)
+                marca("OP-001", Asistencia.TYPE_CHECK_IN, fecha, 8),
+                marca("OP-001", Asistencia.TYPE_CHECK_OUT, fecha, 12),
+                marca("OP-001", Asistencia.TYPE_CHECK_IN, fecha, 13),
+                marca("OP-001", Asistencia.TYPE_CHECK_OUT, fecha, 17)
             )
         )
 
@@ -71,8 +73,8 @@ class MonthlyReportTest {
         val fecha = LocalDate.of(2026, 11, 3)
         val reporte = calcular(
             eventos = listOf(
-                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_IN, fecha, 8),
-                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_OUT, fecha, 17)
+                marca("OP-001", Asistencia.TYPE_CHECK_IN, fecha, 8),
+                marca("OP-001", Asistencia.TYPE_CHECK_OUT, fecha, 17)
             ),
             aprobaciones = listOf(aprobacion("OP-001", fecha, 18, 20))
         )
@@ -89,7 +91,13 @@ class MonthlyReportTest {
         val fecha = LocalDate.of(2026, 11, 3)
         val reporte = calcular(
             aprobaciones = listOf(
-                aprobacion("OP-001", fecha, 18, 20, estado = OvertimeStatus.PENDING)
+                aprobacion(
+                    "OP-001",
+                    fecha,
+                    18,
+                    20,
+                    estado = SolicitudHoraExtra.PENDIENTE
+                )
             )
         )
 
@@ -103,10 +111,10 @@ class MonthlyReportTest {
     fun `el reporte solo incluye el mes consultado`() {
         val reporte = calcular(
             listOf(
-                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_IN, LocalDate.of(2026, 10, 30), 8),
-                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_OUT, LocalDate.of(2026, 10, 30), 17),
-                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_IN, LocalDate.of(2026, 11, 3), 8),
-                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_OUT, LocalDate.of(2026, 11, 3), 17)
+                marca("OP-001", Asistencia.TYPE_CHECK_IN, LocalDate.of(2026, 10, 30), 8),
+                marca("OP-001", Asistencia.TYPE_CHECK_OUT, LocalDate.of(2026, 10, 30), 17),
+                marca("OP-001", Asistencia.TYPE_CHECK_IN, LocalDate.of(2026, 11, 3), 8),
+                marca("OP-001", Asistencia.TYPE_CHECK_OUT, LocalDate.of(2026, 11, 3), 17)
             ),
             mes = YearMonth.of(2026, 11)
         )
@@ -120,21 +128,21 @@ class MonthlyReportTest {
         val fecha = LocalDate.of(2026, 11, 3)
         val reporte = calcular(
             eventos = listOf(
-                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_IN, fecha, 8),
-                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_OUT, fecha, 17)
+                marca("OP-001", Asistencia.TYPE_CHECK_IN, fecha, 8),
+                marca("OP-001", Asistencia.TYPE_CHECK_OUT, fecha, 17)
             ),
             aprobaciones = listOf(aprobacion("OP-001", fecha, 18, 20))
         )
 
-        val csv = ReportCsv.content(reporte)
+        val csv = ReporteCsv.contenido(reporte)
 
         assertTrue(csv.startsWith("\uFEFF"))
         assertTrue(csv.contains("Fecha;Trabajador;Identificador"))
         assertTrue(csv.contains("Monto total CLP"))
         assertTrue(csv.contains("2026-11-03;Camila Rojas;OP-001;08:00;17:00"))
         assertTrue(csv.contains("TOTAL;;;;;9,00;;2,00;11,00;63000;21000;84000"))
-        assertNotNull(ReportCsv.fileName(reporte.month))
-        assertEquals("registro-smartvolt-2026-11.csv", ReportCsv.fileName(reporte.month))
+        assertNotNull(ReporteCsv.nombreArchivo(reporte.month))
+        assertEquals("registro-smartvolt-2026-11.csv", ReporteCsv.nombreArchivo(reporte.month))
     }
 
     @Test
@@ -149,8 +157,8 @@ class MonthlyReportTest {
         val fecha = LocalDate.of(2026, 11, 3)
         val reporte = calcular(
             eventos = listOf(
-                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_IN, fecha, 8),
-                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_OUT, fecha, 17)
+                marca("OP-001", Asistencia.TYPE_CHECK_IN, fecha, 8),
+                marca("OP-001", Asistencia.TYPE_CHECK_OUT, fecha, 17)
             ),
             aprobaciones = listOf(aprobacion("OP-001", fecha, 18, 20))
         )
@@ -168,8 +176,8 @@ class MonthlyReportTest {
     }
 
     private fun calcular(
-        eventos: List<LocalAttendanceEvent> = emptyList(),
-        aprobaciones: List<OvertimeApproval> = emptyList(),
+        eventos: List<Asistencia> = emptyList(),
+        aprobaciones: List<SolicitudHoraExtra> = emptyList(),
         mes: YearMonth = YearMonth.of(2026, 11)
     ): MonthlyReport = MonthlyReportCalculator.build(
         events = eventos,
@@ -184,9 +192,9 @@ class MonthlyReportTest {
         tipo: String,
         fecha: LocalDate,
         hora: Int
-    ): LocalAttendanceEvent {
+    ): Asistencia {
         val millis = fecha.atTime(hora, 0).atZone(ZONA).toInstant().toEpochMilli()
-        return LocalAttendanceEvent(
+        return Asistencia(
             id = UUID.randomUUID().toString(),
             type = tipo,
             timestampMillis = millis,
@@ -200,18 +208,19 @@ class MonthlyReportTest {
         fecha: LocalDate,
         desde: Int,
         hasta: Int,
-        estado: OvertimeStatus = OvertimeStatus.APPROVED
-    ): OvertimeApproval {
+        estado: String = SolicitudHoraExtra.APROBADA
+    ): SolicitudHoraExtra {
         val inicio = fecha.atTime(desde, 0).atZone(ZONA).toInstant().toEpochMilli()
         val fin = fecha.atTime(hasta, 0).atZone(ZONA).toInstant().toEpochMilli()
-        return OvertimeApproval(
+        return SolicitudHoraExtra(
             approvalId = UUID.randomUUID().toString(),
             workerId = workerId,
             siteId = "FAENA-DEMO-01",
-            date = fecha,
+            dateMillis = java.time.LocalDate.ofEpochDay(fecha.toEpochDay())
+                .atStartOfDay(java.time.ZoneOffset.UTC).toInstant().toEpochMilli(),
             authorizedStartMillis = inicio,
             authorizedEndMillis = fin,
-            approverRole = WorkerRole.ADMIN,
+            approverRole = WorkerRole.ADMIN.name,
             approverId = "ADM-003",
             status = estado
         )
