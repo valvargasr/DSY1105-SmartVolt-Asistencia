@@ -32,6 +32,8 @@ data class FaenaAdminUiState(
     val radio: String = "",
     val latitud: String = "",
     val longitud: String = "",
+    val tarifa: String = "",
+    val recargo: String = "",
     val errores: WorksiteErrors = WorksiteErrors(),
     val cargando: Boolean = true,
     val guardando: Boolean = false,
@@ -44,7 +46,7 @@ data class FaenaAdminUiState(
 }
 
 /**
- * Edita el nombre, la dirección y el perímetro de la faena activa.
+ * Edita el nombre, la dirección, el perímetro y la tarifa de la faena activa.
  *
  * Solo la pantalla del administrador crea este ViewModel. La validación vive
  * en [WorksiteValidator] y el guardado en [WorksiteRepository].
@@ -71,6 +73,8 @@ class FaenaAdminViewModel(
                     radio = faena.radiusMeters.toString(),
                     latitud = formato(faena.latitude),
                     longitud = formato(faena.longitude),
+                    tarifa = faena.hourlyRateClp.toString(),
+                    recargo = faena.overtimeSurchargePercent.toString(),
                     cargando = false
                 )
             }
@@ -105,6 +109,24 @@ class FaenaAdminViewModel(
     fun onLongitudChange(valor: String) {
         _uiState.update {
             it.copy(longitud = valor, errores = it.errores.copy(longitude = ""), mensaje = null)
+        }
+    }
+
+    fun onTarifaChange(valor: String) {
+        if (!valor.all { it.isDigit() }) return
+        _uiState.update {
+            it.copy(tarifa = valor, errores = it.errores.copy(hourlyRateClp = ""), mensaje = null)
+        }
+    }
+
+    fun onRecargoChange(valor: String) {
+        if (!valor.all { it.isDigit() }) return
+        _uiState.update {
+            it.copy(
+                recargo = valor,
+                errores = it.errores.copy(overtimeSurchargePercent = ""),
+                mensaje = null
+            )
         }
     }
 
@@ -152,7 +174,9 @@ class FaenaAdminViewModel(
             address = estado.direccion,
             radiusMeters = estado.radio,
             latitude = estado.latitud,
-            longitude = estado.longitud
+            longitude = estado.longitud,
+            hourlyRateClp = estado.tarifa,
+            overtimeSurchargePercent = estado.recargo
         )
 
         when (val resultado = WorksiteValidator.validate(entrada)) {
@@ -176,7 +200,9 @@ class FaenaAdminViewModel(
                                     address = datos.address,
                                     latitude = datos.latitude,
                                     longitude = datos.longitude,
-                                    radiusMeters = datos.radiusMeters
+                                    radiusMeters = datos.radiusMeters,
+                                    hourlyRateClp = datos.hourlyRateClp,
+                                    overtimeSurchargePercent = datos.overtimeSurchargePercent
                                 )
                             )
                         }

@@ -130,10 +130,41 @@ class MonthlyReportTest {
 
         assertTrue(csv.startsWith("\uFEFF"))
         assertTrue(csv.contains("Fecha;Trabajador;Identificador"))
+        assertTrue(csv.contains("Monto total CLP"))
         assertTrue(csv.contains("2026-11-03;Camila Rojas;OP-001;08:00;17:00"))
-        assertTrue(csv.contains("TOTAL;;;;;9,00;;2,00;11,00"))
+        assertTrue(csv.contains("TOTAL;;;;;9,00;;2,00;11,00;63000;21000;84000"))
         assertNotNull(ReportCsv.fileName(reporte.month))
         assertEquals("registro-smartvolt-2026-11.csv", ReportCsv.fileName(reporte.month))
+    }
+
+    @Test
+    fun `el monto se calcula con la tarifa y el recargo`() {
+        assertEquals(63000L, amountForMinutes(540, 7000))
+        assertEquals(21000L, amountForMinutes(120, 7000, 50))
+        assertEquals(0L, amountForMinutes(0, 7000))
+    }
+
+    @Test
+    fun `los montos del reporte usan la tarifa de la faena`() {
+        val fecha = LocalDate.of(2026, 11, 3)
+        val reporte = calcular(
+            eventos = listOf(
+                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_IN, fecha, 8),
+                marca("OP-001", LocalAttendanceEvent.TYPE_CHECK_OUT, fecha, 17)
+            ),
+            aprobaciones = listOf(aprobacion("OP-001", fecha, 18, 20))
+        )
+
+        val trabajador = reporte.workers.single()
+        assertEquals(63000L, trabajador.attendanceAmountClp)
+        assertEquals(21000L, trabajador.overtimeAmountClp)
+        assertEquals(84000L, trabajador.totalAmountClp)
+        assertEquals(84000L, reporte.totalAmountClp)
+    }
+
+    @Test
+    fun `el monto se formatea en pesos chilenos`() {
+        assertEquals("\$63.000", formatClp(63000))
     }
 
     private fun calcular(

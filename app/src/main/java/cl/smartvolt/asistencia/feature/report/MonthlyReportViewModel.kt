@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import cl.smartvolt.asistencia.data.local.AppDatabaseProvider
 import cl.smartvolt.asistencia.data.local.AttendanceLocalStore
 import cl.smartvolt.asistencia.data.local.OvertimeApprovalDao
+import cl.smartvolt.asistencia.data.local.WorksiteRepository
 import cl.smartvolt.asistencia.data.local.toDomain
 import cl.smartvolt.asistencia.domain.report.MonthlyReport
 import cl.smartvolt.asistencia.domain.report.MonthlyReportCalculator
@@ -39,6 +40,7 @@ data class MonthlyReportUiState(
 class MonthlyReportViewModel(
     private val store: AttendanceLocalStore,
     private val overtimeDao: OvertimeApprovalDao,
+    private val worksiteRepository: WorksiteRepository,
     private val siteId: String
 ) : ViewModel() {
 
@@ -76,11 +78,14 @@ class MonthlyReportViewModel(
                     val solicitudes = overtimeDao.getAll()
                         .map { it.toDomain() }
                         .filter { it.siteId == siteId }
+                    val faena = worksiteRepository.actual()
 
                     MonthlyReportCalculator.build(
                         events = eventos,
                         approvals = solicitudes,
                         month = mes,
+                        hourlyRateClp = faena.hourlyRateClp.toLong(),
+                        overtimeSurchargePercent = faena.overtimeSurchargePercent,
                         nameOf = { workerId ->
                             DemoDirectory.byWorkerId(workerId)?.displayName ?: workerId
                         }
@@ -108,6 +113,9 @@ class MonthlyReportViewModel(
                     MonthlyReportViewModel(
                         store = store,
                         overtimeDao = AppDatabaseProvider.get(application).overtimeApprovalDao(),
+                        worksiteRepository = WorksiteRepository(
+                            AppDatabaseProvider.get(application).worksiteDao()
+                        ),
                         siteId = siteId
                     )
                 }

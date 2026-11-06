@@ -40,7 +40,8 @@ import cl.smartvolt.asistencia.ui.components.SmartVoltTopBar
  * Pantalla del administrador para cambiar el lugar de la faena.
  *
  * Nombre y dirección se muestran en la app; las coordenadas y el radio
- * definen la zona donde se permite registrar una marca.
+ * definen la zona donde se permite registrar una marca. La tarifa por hora
+ * y el recargo de las horas extra se usan para estimar el monto del mes.
  */
 @Composable
 fun FaenaAdminScreen(
@@ -134,6 +135,39 @@ fun FaenaAdminScreen(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth()
                         )
+                        Spacer(Modifier.height(12.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            OutlinedTextField(
+                                value = estado.tarifa,
+                                onValueChange = viewModel::onTarifaChange,
+                                label = { Text("Tarifa por hora (CLP)") },
+                                placeholder = { Text("7000") },
+                                singleLine = true,
+                                isError = estado.errores.hourlyRateClp.isNotEmpty(),
+                                supportingText = {
+                                    if (estado.errores.hourlyRateClp.isNotEmpty()) {
+                                        Text(estado.errores.hourlyRateClp)
+                                    }
+                                },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.weight(1f)
+                            )
+                            OutlinedTextField(
+                                value = estado.recargo,
+                                onValueChange = viewModel::onRecargoChange,
+                                label = { Text("Recargo extra (%)") },
+                                placeholder = { Text("50") },
+                                singleLine = true,
+                                isError = estado.errores.overtimeSurchargePercent.isNotEmpty(),
+                                supportingText = {
+                                    if (estado.errores.overtimeSurchargePercent.isNotEmpty()) {
+                                        Text(estado.errores.overtimeSurchargePercent)
+                                    }
+                                },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                         Spacer(Modifier.height(12.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             OutlinedTextField(

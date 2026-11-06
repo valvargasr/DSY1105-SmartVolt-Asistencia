@@ -144,6 +144,7 @@ no una prueba aprobada.
 | PT-16 | Mapa sin internet | Desactivar datos y verificar presencia | La tarjeta muestra error y "Reintentar" sin bloquear la marcación | Pendiente |
 | PT-17 | Perímetro de la faena | Como administrador, cambiar el radio a 30 m; como obrero, verificar dentro y fuera del círculo | Dentro se habilita la marca; fuera aparece la distancia al centro con el radio permitido y no se registra nada | Pendiente |
 | PT-18 | Registro mensual | Como administrador, abrir el registro, cambiar de mes y guardar el CSV | El total suma asistencia y horas extra aprobadas; el archivo se abre con las columnas y la fila TOTAL | Pendiente |
+| PT-19 | Tarifa y montos | Como administrador, cambiar la tarifa a 8.000 y el recargo a 60 %, y generar el PDF del mes | El resumen y el PDF muestran montos coherentes con las horas, y la fila TOTAL coincide con la suma | Pendiente |
 
 ### Bitácora de hardware
 
@@ -243,7 +244,7 @@ Queda pendiente después de esa revisión:
   revisión real. El texto de la interfaz lo presenta como una marca sujeta a revisión.
 - El instante guardado en el evento es el del guardado, no el del fix de GPS. El contrato
   `LocationResult` sí conserva `capturedAtMillis` para cuando el Área B lo necesite.
-- Las pruebas PT-06 a PT-18 siguen pendientes hasta contar con teléfono y baliza reales.
+- Las pruebas PT-06 a PT-19 siguen pendientes hasta contar con teléfono y baliza reales.
 
 ## Verificación del 04-11-2026
 

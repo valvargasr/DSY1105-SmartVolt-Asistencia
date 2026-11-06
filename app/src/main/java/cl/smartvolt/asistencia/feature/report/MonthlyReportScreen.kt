@@ -21,7 +21,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.PictureAsPdf
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -44,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import cl.smartvolt.asistencia.domain.report.MonthlyReport
 import cl.smartvolt.asistencia.domain.report.ReportDay
 import cl.smartvolt.asistencia.domain.report.ReportWorker
+import cl.smartvolt.asistencia.domain.report.formatClp
 import cl.smartvolt.asistencia.domain.report.formatDuration
 import cl.smartvolt.asistencia.ui.components.SmartVoltTopBar
 import java.text.SimpleDateFormat
@@ -84,6 +87,27 @@ fun MonthlyReportScreen(
             Toast.makeText(
                 context,
                 if (guardado) "Registro guardado." else "No se pudo guardar el archivo.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    var pdfPendiente by remember { mutableStateOf<ByteArray?>(null) }
+
+    val guardarPdf = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf")
+    ) { uri ->
+        val bytes = pdfPendiente
+        if (uri != null && bytes != null) {
+            val guardado = runCatching {
+                context.contentResolver.openOutputStream(uri)?.use { salida ->
+                    salida.write(bytes)
+                }
+            }.isSuccess
+
+            Toast.makeText(
+                context,
+                if (guardado) "PDF guardado." else "No se pudo guardar el PDF.",
                 Toast.LENGTH_SHORT
             ).show()
         }
@@ -152,6 +176,24 @@ fun MonthlyReportScreen(
                     Icon(imageVector = Icons.Outlined.Download, contentDescription = null)
                     Text(
                         text = "Guardar registro en CSV",
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedButton(
+                    onClick = {
+                        pdfPendiente = ReportPdf.build(report = reporte, siteName = siteName)
+                        guardarPdf.launch(ReportPdf.fileName(reporte.month))
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                ) {
+                    Icon(imageVector = Icons.Outlined.PictureAsPdf, contentDescription = null)
+                    Text(
+                        text = "Guardar registro en PDF",
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
@@ -228,18 +270,21 @@ private fun ResumenMes(reporte: MonthlyReport) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Total del mes: ${formatDuration(reporte.totalMinutes)}",
+                text = "Total del mes: ${formatClp(reporte.totalAmountClp)}",
                 style = MaterialTheme.typography.titleLarge
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "Incluye asistencia y horas extra aprobadas.",
+                text = "${formatDuration(reporte.totalMinutes)} entre asistencia y horas extra aprobadas.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(12.dp))
-            FilaResumen("Asistencia", formatDuration(reporte.totalAttendanceMinutes))
+            FilaResumen("Horas de asistencia", formatDuration(reporte.totalAttendanceMinutes))
+            FilaResumen("Monto asistencia", formatClp(reporte.totalAttendanceAmountClp))
             FilaResumen("Horas extra aprobadas", formatDuration(reporte.totalOvertimeMinutes))
+            FilaResumen("Monto horas extra", formatClp(reporte.totalOvertimeAmountClp))
+            FilaResumen("Monto total", formatClp(reporte.totalAmountClp))
             FilaResumen("Trabajadores", reporte.totalWorkers.toString())
             FilaResumen("Días con marcas", reporte.totalDays.toString())
             if (reporte.totalPending > 0) {
@@ -254,6 +299,13 @@ private fun ResumenMes(reporte: MonthlyReport) {
                     color = MaterialTheme.colorScheme.error
                 )
             }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "El monto es una estimación con la tarifa de la faena. " +
+                    "No incluye impuestos, bonos ni descuentos.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -296,17 +348,30 @@ private fun TarjetaTrabajador(trabajador: ReportWorker) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Text(
-                    text = formatDuration(trabajador.totalMinutes),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = formatDuration(trabajador.totalMinutes),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = formatClp(trabajador.totalAmountClp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             Spacer(Modifier.height(8.dp))
             Text(
                 text = "Asistencia ${formatDuration(trabajador.attendanceMinutes)} · " +
                     "Extra ${formatDuration(trabajador.overtimeMinutes)} · " +
                     "${trabajador.daysWorked} día(s)",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "Monto asistencia ${formatClp(trabajador.attendanceAmountClp)} · " +
+                    "extra ${formatClp(trabajador.overtimeAmountClp)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -361,10 +426,17 @@ private fun FilaDia(dia: ReportDay) {
                 )
             }
         }
-        Text(
-            text = formatDuration(dia.totalMinutes),
-            style = MaterialTheme.typography.bodySmall
-        )
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = formatDuration(dia.totalMinutes),
+                style = MaterialTheme.typography.bodySmall
+            )
+            Text(
+                text = formatClp(dia.totalAmountClp),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 

@@ -11,7 +11,9 @@ data class WorksiteInput(
     val address: String,
     val radiusMeters: String,
     val latitude: String,
-    val longitude: String
+    val longitude: String,
+    val hourlyRateClp: String,
+    val overtimeSurchargePercent: String
 )
 
 data class WorksiteErrors(
@@ -19,14 +21,18 @@ data class WorksiteErrors(
     val address: String = "",
     val radiusMeters: String = "",
     val latitude: String = "",
-    val longitude: String = ""
+    val longitude: String = "",
+    val hourlyRateClp: String = "",
+    val overtimeSurchargePercent: String = ""
 ) {
     val hayErrores: Boolean
         get() = name.isNotBlank() ||
             address.isNotBlank() ||
             radiusMeters.isNotBlank() ||
             latitude.isNotBlank() ||
-            longitude.isNotBlank()
+            longitude.isNotBlank() ||
+            hourlyRateClp.isNotBlank() ||
+            overtimeSurchargePercent.isNotBlank()
 }
 
 data class WorksiteValidated(
@@ -34,7 +40,9 @@ data class WorksiteValidated(
     val address: String,
     val radiusMeters: Int,
     val latitude: Double,
-    val longitude: Double
+    val longitude: Double,
+    val hourlyRateClp: Int,
+    val overtimeSurchargePercent: Int
 )
 
 sealed interface WorksiteValidation {
@@ -45,9 +53,11 @@ sealed interface WorksiteValidation {
 /**
  * Reglas del formulario de faena.
  *
- * Solo se valida lo que la app necesita para calcular la geocerca: un nombre
- * reconocible, una dirección de referencia, un radio razonable y coordenadas
- * dentro del rango del planeta. No se inventan reglas de negocio adicionales.
+ * Solo se valida lo que la app necesita para calcular la geocerca y estimar
+ * el monto del registro: un nombre reconocible, una dirección de referencia,
+ * un radio razonable, coordenadas dentro del rango del planeta, una tarifa
+ * por hora y un recargo de horas extra. No se inventan reglas de negocio
+ * adicionales.
  */
 object WorksiteValidator {
 
@@ -57,6 +67,10 @@ object WorksiteValidator {
     const val DIRECCION_MAXIMO = 120
     const val RADIO_MINIMO = 20
     const val RADIO_MAXIMO = 1000
+    const val TARIFA_MINIMA = 1000
+    const val TARIFA_MAXIMA = 100000
+    const val RECARGO_MINIMO = 0
+    const val RECARGO_MAXIMO = 200
 
     fun validate(input: WorksiteInput): WorksiteValidation {
         val name = input.name.trim()
@@ -64,6 +78,8 @@ object WorksiteValidator {
         val radius = input.radiusMeters.trim().toIntOrNull()
         val latitude = input.latitude.trim().replace(',', '.').toDoubleOrNull()
         val longitude = input.longitude.trim().replace(',', '.').toDoubleOrNull()
+        val hourlyRate = input.hourlyRateClp.trim().toIntOrNull()
+        val surcharge = input.overtimeSurchargePercent.trim().toIntOrNull()
 
         val nameError = when {
             name.isEmpty() -> "Escribe el nombre de la faena."
@@ -98,12 +114,28 @@ object WorksiteValidator {
             else -> ""
         }
 
+        val hourlyRateError = when {
+            hourlyRate == null -> "La tarifa debe ser un número entero."
+            hourlyRate < TARIFA_MINIMA || hourlyRate > TARIFA_MAXIMA ->
+                "La tarifa debe estar entre $TARIFA_MINIMA y $TARIFA_MAXIMA pesos."
+            else -> ""
+        }
+
+        val surchargeError = when {
+            surcharge == null -> "El recargo debe ser un número entero."
+            surcharge < RECARGO_MINIMO || surcharge > RECARGO_MAXIMO ->
+                "El recargo debe estar entre $RECARGO_MINIMO y $RECARGO_MAXIMO por ciento."
+            else -> ""
+        }
+
         val errors = WorksiteErrors(
             name = nameError,
             address = addressError,
             radiusMeters = radiusError,
             latitude = latitudeError,
-            longitude = longitudeError
+            longitude = longitudeError,
+            hourlyRateClp = hourlyRateError,
+            overtimeSurchargePercent = surchargeError
         )
 
         if (errors.hayErrores) return WorksiteValidation.Invalid(errors)
@@ -114,7 +146,9 @@ object WorksiteValidator {
                 address = address,
                 radiusMeters = radius!!,
                 latitude = latitude!!,
-                longitude = longitude!!
+                longitude = longitude!!,
+                hourlyRateClp = hourlyRate!!,
+                overtimeSurchargePercent = surcharge!!
             )
         )
     }

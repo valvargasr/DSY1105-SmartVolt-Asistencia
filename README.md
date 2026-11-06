@@ -47,9 +47,13 @@ centro y radio de marcación. El resto de las cuentas ve ese nombre en el inicio
 y el panel.
 
 Ese mismo rol puede abrir el registro del mes, cambiar de mes con las flechas y guardar el
-detalle en un CSV. El total suma la asistencia y las horas extra aprobadas; las solicitudes
-pendientes se informan aparte y no suman horas. Las entradas sin salida quedan marcadas y
-tampoco se suman.
+detalle en un CSV o en un PDF. El total suma la asistencia y las horas extra aprobadas; las
+solicitudes pendientes se informan aparte y no suman horas. Las entradas sin salida quedan
+marcadas y tampoco se suman.
+
+La tarifa por hora y el recargo de las horas extra se configuran en la misma pantalla de la
+faena. Con esos valores el registro estima el monto de cada trabajador y el total del mes. Es
+una estimación para la demo: no incluye impuestos, bonos, descuentos ni reglas legales.
 
 La pantalla de marcación pide ubicación y una baliza BLE cercana antes de habilitar el botón.
 Además compara la lectura del GPS con el centro de la faena y no registra si el trabajador
@@ -77,7 +81,7 @@ Desde PowerShell:
 
 ```powershell
 .\gradlew.bat assembleDebug        # compilar
-.\gradlew.bat testDebugUnitTest    # 94 pruebas unitarias
+.\gradlew.bat testDebugUnitTest    # 99 pruebas unitarias
 .\gradlew.bat lintDebug            # análisis estático
 ```
 
@@ -97,5 +101,5 @@ REST pertenecen a una etapa posterior. Tampoco se calculan remuneraciones ni liq
 El detalle de las pruebas de campo, los contratos de ubicación y BLE, y las decisiones sobre
 umbrales están en [docs/pruebas-area-c.md](docs/pruebas-area-c.md). La configuración de la
 faena y el cálculo del radio se explican en
-[docs/faena-configuracion.md](docs/faena-configuracion.md), y el registro mensual con el
-formato del CSV en [docs/registro-mensual.md](docs/registro-mensual.md).
+[docs/faena-configuracion.md](docs/faena-configuracion.md), y el registro mensual con los
+montos, el CSV y el PDF en [docs/registro-mensual.md](docs/registro-mensual.md).

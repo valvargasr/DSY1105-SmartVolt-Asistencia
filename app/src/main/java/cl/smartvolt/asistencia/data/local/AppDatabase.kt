@@ -17,7 +17,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         OvertimeApprovalEntity::class,
         WorksiteEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -61,6 +61,21 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        val MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_2_3, MIGRATION_3_4)
+        /**
+         * v5 agrega la tarifa por hora y el recargo de las horas extra a la
+         * faena. Los valores por defecto cubren las faenas ya guardadas.
+         */
+        val MIGRATION_4_5: Migration = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE worksites ADD COLUMN hourlyRateClp INTEGER NOT NULL DEFAULT 7000"
+                )
+                db.execSQL(
+                    "ALTER TABLE worksites ADD COLUMN overtimeSurchargePercent INTEGER NOT NULL DEFAULT 50"
+                )
+            }
+        }
+
+        val MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
     }
 }

@@ -87,17 +87,39 @@ class WorksiteValidatorTest {
         assertEquals(-70.52, datos.longitude, 0.0001)
     }
 
+    @Test
+    fun `la tarifa fuera de rango se rechaza`() {
+        val resultado = WorksiteValidator.validate(formulario(hourlyRateClp = "500"))
+
+        assertTrue(resultado is WorksiteValidation.Invalid)
+        val errores = (resultado as WorksiteValidation.Invalid).errors
+        assertFalse(errores.hourlyRateClp.isBlank())
+    }
+
+    @Test
+    fun `el recargo fuera de rango se rechaza`() {
+        val resultado = WorksiteValidator.validate(formulario(overtimeSurchargePercent = "250"))
+
+        assertTrue(resultado is WorksiteValidation.Invalid)
+        val errores = (resultado as WorksiteValidation.Invalid).errors
+        assertFalse(errores.overtimeSurchargePercent.isBlank())
+    }
+
     private fun formulario(
         name: String = "Faena Andes",
         address: String = "Camino a Farellones km 12",
         radiusMeters: String = "300",
         latitude: String = "-33.35",
-        longitude: String = "-70.52"
+        longitude: String = "-70.52",
+        hourlyRateClp: String = "7000",
+        overtimeSurchargePercent: String = "50"
     ) = WorksiteInput(
         name = name,
         address = address,
         radiusMeters = radiusMeters,
         latitude = latitude,
-        longitude = longitude
+        longitude = longitude,
+        hourlyRateClp = hourlyRateClp,
+        overtimeSurchargePercent = overtimeSurchargePercent
     )
 }

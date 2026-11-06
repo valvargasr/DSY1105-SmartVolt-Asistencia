@@ -37,7 +37,9 @@ class WorksiteRepository(
             address = "Camino a Farellones km 12, Lo Barnechea",
             latitude = -33.3500,
             longitude = -70.5200,
-            radiusMeters = 300
+            radiusMeters = 300,
+            hourlyRateClp = 7000,
+            overtimeSurchargePercent = 50
         )
     }
 }

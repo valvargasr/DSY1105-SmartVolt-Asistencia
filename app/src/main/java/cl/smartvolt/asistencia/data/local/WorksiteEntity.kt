@@ -19,6 +19,8 @@ data class WorksiteEntity(
     val latitude: Double,
     val longitude: Double,
     val radiusMeters: Int,
+    val hourlyRateClp: Int,
+    val overtimeSurchargePercent: Int,
     val perimeterVersion: Int,
     val active: Boolean
 )
@@ -31,6 +33,8 @@ fun Worksite.toEntity(): WorksiteEntity = WorksiteEntity(
     latitude = latitude,
     longitude = longitude,
     radiusMeters = radiusMeters,
+    hourlyRateClp = hourlyRateClp,
+    overtimeSurchargePercent = overtimeSurchargePercent,
     perimeterVersion = perimeterVersion,
     active = active
 )
@@ -43,6 +47,8 @@ fun WorksiteEntity.toDomain(): Worksite = Worksite(
     latitude = latitude,
     longitude = longitude,
     radiusMeters = radiusMeters,
+    hourlyRateClp = hourlyRateClp,
+    overtimeSurchargePercent = overtimeSurchargePercent,
     perimeterVersion = perimeterVersion,
     active = active
 )
