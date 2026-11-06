@@ -95,6 +95,8 @@ import cl.smartvolt.asistencia.feature.home.HomeScreen
 import cl.smartvolt.asistencia.feature.home.HomeViewModel
 import cl.smartvolt.asistencia.feature.overtime.OvertimeScreen
 import cl.smartvolt.asistencia.feature.overtime.OvertimeViewModel
+import cl.smartvolt.asistencia.feature.report.MonthlyReportScreen
+import cl.smartvolt.asistencia.feature.report.MonthlyReportViewModel
 import cl.smartvolt.asistencia.feature.supervisor.SupervisorScreen
 import cl.smartvolt.asistencia.feature.supervisor.SupervisorViewModel
 import cl.smartvolt.asistencia.feature.worksite.FaenaAdminScreen
@@ -229,6 +231,9 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                     onEditarFaena = {
                         navController.navigate(RUTA_FAENA) { launchSingleTop = true }
                     },
+                    onAbrirRegistro = {
+                        navController.navigate(RUTA_REPORTE) { launchSingleTop = true }
+                    },
                     onCerrarSesion = {
                         sessionViewModel.cerrar()
                         navController.navigate(RUTA_BIENVENIDA) {
@@ -318,6 +323,23 @@ fun AppNavegacion(modifier: Modifier = Modifier) {
                 )
             }
         }
+
+        composable(RUTA_REPORTE) {
+            val cuenta = session ?: return@composable
+            if (cuenta.role != WorkerRole.ADMIN) {
+                AccesoRegistroDenegado(onVolver = { navController.popBackStack() })
+            } else {
+                val reportViewModel: MonthlyReportViewModel = viewModel(
+                    key = "reporte-${cuenta.siteId}",
+                    factory = MonthlyReportViewModel.factory(store, cuenta.siteId)
+                )
+                MonthlyReportScreen(
+                    viewModel = reportViewModel,
+                    siteName = faena.name,
+                    onVolver = { navController.popBackStack() }
+                )
+            }
+        }
     }
 }
 
@@ -329,6 +351,7 @@ private const val RUTA_HISTORIAL = "historial"
 private const val RUTA_PANEL = "panel"
 private const val RUTA_JORNADA = "jornada"
 private const val RUTA_FAENA = "faena"
+private const val RUTA_REPORTE = "reporte"
 
 @Composable
 private fun AccesoFaenaDenegado(onVolver: () -> Unit) {
@@ -349,6 +372,38 @@ private fun AccesoFaenaDenegado(onVolver: () -> Unit) {
             Spacer(Modifier.height(24.dp))
             Text(
                 text = "Solo el administrador puede cambiar el lugar de la faena.",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "Vuelve al inicio para continuar.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun AccesoRegistroDenegado(onVolver: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+        ) {
+            SmartVoltTopBar(
+                title = "Registro del mes",
+                subtitle = "Administración de la faena",
+                onBack = onVolver
+            )
+            Spacer(Modifier.height(24.dp))
+            Text(
+                text = "Solo el administrador puede ver el registro del mes.",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )

@@ -46,6 +46,11 @@ Solo el administrador puede cambiar el lugar de la faena: nombre, dirección, co
 centro y radio de marcación. El resto de las cuentas ve ese nombre en el inicio, el historial
 y el panel.
 
+Ese mismo rol puede abrir el registro del mes, cambiar de mes con las flechas y guardar el
+detalle en un CSV. El total suma la asistencia y las horas extra aprobadas; las solicitudes
+pendientes se informan aparte y no suman horas. Las entradas sin salida quedan marcadas y
+tampoco se suman.
+
 La pantalla de marcación pide ubicación y una baliza BLE cercana antes de habilitar el botón.
 Además compara la lectura del GPS con el centro de la faena y no registra si el trabajador
 está fuera del radio configurado. Si falta algo, explica qué pasa y no guarda nada. Cada marca
@@ -72,7 +77,7 @@ Desde PowerShell:
 
 ```powershell
 .\gradlew.bat assembleDebug        # compilar
-.\gradlew.bat testDebugUnitTest    # 87 pruebas unitarias
+.\gradlew.bat testDebugUnitTest    # 94 pruebas unitarias
 .\gradlew.bat lintDebug            # análisis estático
 ```
 
@@ -92,4 +97,5 @@ REST pertenecen a una etapa posterior. Tampoco se calculan remuneraciones ni liq
 El detalle de las pruebas de campo, los contratos de ubicación y BLE, y las decisiones sobre
 umbrales están en [docs/pruebas-area-c.md](docs/pruebas-area-c.md). La configuración de la
 faena y el cálculo del radio se explican en
-[docs/faena-configuracion.md](docs/faena-configuracion.md).
+[docs/faena-configuracion.md](docs/faena-configuracion.md), y el registro mensual con el
+formato del CSV en [docs/registro-mensual.md](docs/registro-mensual.md).

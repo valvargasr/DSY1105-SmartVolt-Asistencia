@@ -37,6 +37,7 @@ import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.LocationOn
@@ -101,6 +102,7 @@ fun HomeScreen(
     onAbrirPanel: () -> Unit,
     onAbrirHorasExtra: () -> Unit,
     onEditarFaena: () -> Unit,
+    onAbrirRegistro: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
     val estado by viewModel.uiState.collectAsState()
@@ -177,14 +179,20 @@ fun HomeScreen(
                         visible = visible,
                         enter = fadeIn(tween(620)) + slideInVertically(tween(680)) { it / 10 }
                     ) {
-                        TarjetaHorasExtra(
-                            descripcion = if (esObrero) {
-                                "Envía solicitudes y revisa su estado."
-                            } else {
-                                "Revisa, aprueba o rechaza solicitudes de la faena."
-                            },
-                            onAbrirHorasExtra = onAbrirHorasExtra
-                        )
+                        Column {
+                            TarjetaHorasExtra(
+                                descripcion = if (esObrero) {
+                                    "Envía solicitudes y revisa su estado."
+                                } else {
+                                    "Revisa, aprueba o rechaza solicitudes de la faena."
+                                },
+                                onAbrirHorasExtra = onAbrirHorasExtra
+                            )
+                            if (esAdmin) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                TarjetaRegistro(onAbrirRegistro = onAbrirRegistro)
+                            }
+                        }
                     }
                 }
 
@@ -675,6 +683,57 @@ private fun TarjetaHorasExtra(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = "Abrir horas extra"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TarjetaRegistro(onAbrirRegistro: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .background(
+                        MaterialTheme.colorScheme.primaryContainer,
+                        RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Description,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Registro del mes",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "Revisa las horas trabajadas y guarda el detalle en CSV.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(onClick = onAbrirRegistro) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = "Abrir registro del mes"
                 )
             }
         }
