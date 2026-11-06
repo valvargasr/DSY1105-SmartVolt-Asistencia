@@ -35,11 +35,9 @@ distancia al centro y el radio permitido.
 
 ## Almacenamiento
 
-La faena se guarda en la tabla `worksites` de la base `smartvolt_attendance.db`. La versión 4
-de la base agrega esa tabla con una migración que no toca las marcas ni las solicitudes
-existentes, y la versión 5 le suma la tarifa por hora y el recargo de las horas extra. Cada
-guardado sube el campo `perimeterVersion`, que sirve para distinguir una configuración de
-otra.
+La faena se guarda en la tabla `faenas` de la base `smartvolt.db`. La base está en la versión
+1 y se crea desde cero, sin migraciones. Cada guardado sube el campo `perimeterVersion`, que
+sirve para distinguir una configuración de otra.
 
 Mientras la tabla está vacía se usa la faena por defecto de la demo:
 

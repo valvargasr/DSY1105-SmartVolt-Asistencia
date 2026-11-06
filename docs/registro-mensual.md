@@ -43,7 +43,7 @@ El detalle por día se obtiene así:
 
 Las solicitudes pendientes o rechazadas se cuentan en el resumen, pero no suman horas ni
 dinero. La autorización de una solicitud no demuestra que esas horas se hayan trabajado, tal
-como advierte el modelo `OvertimeApproval`.
+como advierte el modelo `SolicitudHoraExtra`.
 
 Las marcas se agrupan por fecha local del teléfono. Un turno que cruza la medianoche queda
 partido en dos días.

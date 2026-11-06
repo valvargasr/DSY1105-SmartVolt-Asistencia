@@ -23,9 +23,27 @@ reales de trabajadores.
 
 ## Stack
 
-Kotlin con Jetpack Compose y Material 3, arquitectura MVVM, ViewModel con StateFlow,
+Kotlin con Jetpack Compose y Material 3, arquitectura MVVM simple, ViewModel con StateFlow,
 Navigation Compose, Room sobre SQLite, corrutinas y pruebas unitarias con JUnit. El control
 de versiones está en GitHub y la planificación de tareas en Trello.
+
+## Estructura del proyecto
+
+El código está separado en cuatro capas simples, sin repository ni factories:
+
+| Carpeta | Contenido |
+|---|---|
+| `modelo/` | Entidades Room, DAOs, cuentas demo y cálculo del reporte mensual |
+| `viewmodel/` | Base de datos y ViewModels que leen la sesión y usan los DAO |
+| `ui/view/` | Pantallas de Compose y navegación |
+| `ui/components/` | Tarjetas, etiquetas y mapa reutilizables |
+| `ui/theme/` | Colores, tipografía y tema azul |
+| `util/` | Sesión, GPS, baliza, permisos, geocerca, fechas y exportaciones |
+
+La navegación principal tiene tres rutas: `splash`, `login` y `principal`. Dentro de
+`principal` hay cuatro pestañas fijas: Inicio, Asistencia, Historial y Gestión. Las pantallas
+`panel`, `faena`, `reporte` y `horas_extra` se abren desde las pestañas y no muestran la barra
+inferior.
 
 ## Qué hace la aplicación
 
@@ -71,14 +89,17 @@ servidor que la valide.
 
 ## Almacenamiento y datos
 
-La asistencia, las solicitudes y la faena viven en Room, base `smartvolt_attendance.db`, y
-sobreviven al cierre de la aplicación. La interfaz `AttendanceLocalStore` separa el resto del
-código de la implementación concreta.
+La asistencia, las solicitudes y la faena viven en Room, base `smartvolt.db`, y sobreviven al
+cierre de la aplicación. La base está en la versión 1 y se crea desde cero, sin migraciones.
+Tiene tres tablas:
 
-La base está en la versión 5. La tabla `worksites` guarda nombre, dirección, centro, radio,
-tarifa por hora y recargo de horas extra; las migraciones 3 a 4 y 4 a 5 la agregan sin tocar
-las marcas ni las solicitudes existentes. La faena parte con 7.000 pesos por hora y 50 por
-ciento de recargo, y esos valores se escriben recién en el primer guardado.
+- `asistencias`: marcas de entrada y salida con GPS, baliza y estado de sincronización.
+- `faenas`: nombre, dirección, centro, radio, tarifa por hora y recargo de horas extra.
+- `solicitudes_horas_extra`: solicitudes y decisiones del administrador.
+
+Cada ViewModel abre la base con `AppDatabase.obtener(getApplication())` y usa directamente los
+DAO. La faena parte con 7.000 pesos por hora y 50 por ciento de recargo, y esos valores se
+escriben recién en el primer guardado.
 
 Las cuentas son ficticias. La autenticación de demostración no representa un sistema real y
 no se deben cargar datos personales, credenciales ni llaves privadas.
@@ -107,7 +128,7 @@ Desde PowerShell:
 
 ```powershell
 .\gradlew.bat assembleDebug        # compilar
-.\gradlew.bat testDebugUnitTest    # 99 pruebas unitarias
+.\gradlew.bat testDebugUnitTest    # 23 pruebas unitarias
 .\gradlew.bat lintDebug            # análisis estático
 ```
 

@@ -173,9 +173,8 @@ UUID del servicio identifica la baliza de prueba sin pedir permisos adicionales 
 es un identificador físico del dispositivo.
 
 Room en lugar de SharedPreferences. La asistencia y las solicitudes de horas extra se
-guardan en Room/SQLite (`smartvolt_attendance.db`), de modo que sobreviven al cierre de la
-app. La interfaz `AttendanceLocalStore` mantiene el desacoplamiento. La implementación
-anterior con SharedPreferences se eliminó cuando se confirmó que nadie la usaba.
+guardan en Room/SQLite (`smartvolt.db`), de modo que sobreviven al cierre de la app. Los
+ViewModels usan directamente los DAO.
 
 No se afirma que la marca está validada. Sin backend no hay validación del servidor.
 Todo evento nace como `PENDING_SYNC` y la interfaz lo dice con esas palabras.
@@ -230,7 +229,7 @@ verificadas después de los cambios.
 | `PresenciaViewModel`: `try/catch/finally` en verificación y guardado | `isChecking` e `isSaving` siempre vuelven a `false` y el usuario recibe un mensaje si algo falla |
 | `PresenciaScreen`: se solicita `POST_NOTIFICATIONS` en un lanzador independiente | En Android 13+ la notificación puede aparecer, y negarla no bloquea el registro |
 | Manifest: se eliminó `neverForLocation` de `BLUETOOTH_SCAN` | La baliza sí se usa para acreditar presencia física y ese flag filtra anuncios BLE |
-| Manifest: `allowBackup="false"` y exclusión de `smartvolt_attendance` en las reglas de respaldo | Las coordenadas guardadas no salen del teléfono en respaldos ni transferencias |
+| Manifest: `allowBackup="false"` y exclusión de `smartvolt` en las reglas de respaldo | Las coordenadas guardadas no salen del teléfono en respaldos ni transferencias |
 | `MainActivity`: `popUpTo("login")` al entrar a la marcación | Volver atrás ya no regresa al formulario con la contraseña escrita |
 | `MainActivity`: desplazamiento y `imePadding` en bienvenida y acceso | El teclado ya no tapa los botones |
 | `.gitignore`: exclusión de `*.jks`, `*.keystore` y `keystore.properties` | Las llaves de firma no pueden subirse por accidente |
