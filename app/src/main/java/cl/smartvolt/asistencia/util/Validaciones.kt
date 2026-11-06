@@ -9,9 +9,7 @@ object Validaciones {
         val address: String,
         val radiusMeters: Int,
         val latitude: Double,
-        val longitude: Double,
-        val hourlyRateClp: Int,
-        val overtimeSurchargePercent: Int
+        val longitude: Double
     )
 
     data class ErroresFaena(
@@ -19,15 +17,12 @@ object Validaciones {
         val address: String = "",
         val radiusMeters: String = "",
         val latitude: String = "",
-        val longitude: String = "",
-        val hourlyRateClp: String = "",
-        val overtimeSurchargePercent: String = ""
+        val longitude: String = ""
     ) {
         val hayErrores: Boolean
             get() = name.isNotBlank() || address.isNotBlank() ||
                 radiusMeters.isNotBlank() || latitude.isNotBlank() ||
-                longitude.isNotBlank() || hourlyRateClp.isNotBlank() ||
-                overtimeSurchargePercent.isNotBlank()
+                longitude.isNotBlank()
     }
 
     sealed interface ResultadoFaena {
@@ -64,10 +59,6 @@ object Validaciones {
     const val DIRECCION_MAXIMO = 120
     const val RADIO_MINIMO = 20
     const val RADIO_MAXIMO = 1000
-    const val TARIFA_MINIMA = 1000
-    const val TARIFA_MAXIMA = 100000
-    const val RECARGO_MINIMO = 0
-    const val RECARGO_MAXIMO = 200
     const val MOTIVO_MINIMO = 5
 
     private val formatoHora = Regex("^(?:[01]\\d|2[0-3]):[0-5]\\d$")
@@ -77,17 +68,13 @@ object Validaciones {
         address: String,
         radiusMeters: String,
         latitude: String,
-        longitude: String,
-        hourlyRateClp: String,
-        overtimeSurchargePercent: String
+        longitude: String
     ): ResultadoFaena {
         val nombre = name.trim()
         val direccion = address.trim()
         val radio = radiusMeters.trim().toIntOrNull()
         val lat = latitude.trim().replace(',', '.').toDoubleOrNull()
         val lon = longitude.trim().replace(',', '.').toDoubleOrNull()
-        val tarifa = hourlyRateClp.trim().toIntOrNull()
-        val recargo = overtimeSurchargePercent.trim().toIntOrNull()
 
         val errores = ErroresFaena(
             name = when {
@@ -121,18 +108,6 @@ object Validaciones {
                 lon == null -> "La longitud debe ser un número."
                 lon < -180.0 || lon > 180.0 -> "La longitud debe estar entre -180 y 180."
                 else -> ""
-            },
-            hourlyRateClp = when {
-                tarifa == null -> "La tarifa debe ser un número entero."
-                tarifa < TARIFA_MINIMA || tarifa > TARIFA_MAXIMA ->
-                    "La tarifa debe estar entre $TARIFA_MINIMA y $TARIFA_MAXIMA pesos."
-                else -> ""
-            },
-            overtimeSurchargePercent = when {
-                recargo == null -> "El recargo debe ser un número entero."
-                recargo < RECARGO_MINIMO || recargo > RECARGO_MAXIMO ->
-                    "El recargo debe estar entre $RECARGO_MINIMO y $RECARGO_MAXIMO por ciento."
-                else -> ""
             }
         )
 
@@ -144,9 +119,7 @@ object Validaciones {
                 address = direccion,
                 radiusMeters = radio!!,
                 latitude = lat!!,
-                longitude = lon!!,
-                hourlyRateClp = tarifa!!,
-                overtimeSurchargePercent = recargo!!
+                longitude = lon!!
             )
         )
     }

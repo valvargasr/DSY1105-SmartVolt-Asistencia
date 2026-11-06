@@ -129,37 +129,6 @@ fun FaenaView(
                         Spacer(Modifier.height(12.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             OutlinedTextField(
-                                value = estado.tarifa,
-                                onValueChange = viewModel::onTarifa,
-                                label = { Text("Tarifa por hora (CLP)") },
-                                singleLine = true,
-                                isError = estado.errores.hourlyRateClp.isNotEmpty(),
-                                supportingText = {
-                                    if (estado.errores.hourlyRateClp.isNotEmpty()) {
-                                        Text(estado.errores.hourlyRateClp)
-                                    }
-                                },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier.weight(1f)
-                            )
-                            OutlinedTextField(
-                                value = estado.recargo,
-                                onValueChange = viewModel::onRecargo,
-                                label = { Text("Recargo extra (%)") },
-                                singleLine = true,
-                                isError = estado.errores.overtimeSurchargePercent.isNotEmpty(),
-                                supportingText = {
-                                    if (estado.errores.overtimeSurchargePercent.isNotEmpty()) {
-                                        Text(estado.errores.overtimeSurchargePercent)
-                                    }
-                                },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        Spacer(Modifier.height(12.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            OutlinedTextField(
                                 value = estado.latitud,
                                 onValueChange = viewModel::onLatitud,
                                 label = { Text("Latitud") },

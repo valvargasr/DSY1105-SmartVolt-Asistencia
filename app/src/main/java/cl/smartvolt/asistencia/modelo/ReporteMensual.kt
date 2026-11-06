@@ -12,44 +12,28 @@ data class ReportDay(
     val lastCheckOutMillis: Long?,
     val attendanceMinutes: Long,
     val overtimeMinutes: Long,
-    val openAtEnd: Boolean,
-    val hourlyRateClp: Long = DEFAULT_HOURLY_RATE_CLP,
-    val overtimeSurchargePercent: Int = DEFAULT_OVERTIME_SURCHARGE
+    val openAtEnd: Boolean
 ) {
     val withoutCheckOut: Boolean get() = openAtEnd
     val totalMinutes: Long get() = attendanceMinutes + overtimeMinutes
-    val attendanceAmountClp: Long
-        get() = amountForMinutes(attendanceMinutes, hourlyRateClp)
-    val overtimeAmountClp: Long
-        get() = amountForMinutes(overtimeMinutes, hourlyRateClp, overtimeSurchargePercent)
-    val totalAmountClp: Long get() = attendanceAmountClp + overtimeAmountClp
 }
 
 data class ReportWorker(
     val workerId: String,
     val workerName: String,
     val days: List<ReportDay>,
-    val pendingRequests: Int,
-    val hourlyRateClp: Long = DEFAULT_HOURLY_RATE_CLP,
-    val overtimeSurchargePercent: Int = DEFAULT_OVERTIME_SURCHARGE
+    val pendingRequests: Int
 ) {
     val daysWorked: Int get() = days.size
     val attendanceMinutes: Long get() = days.sumOf { it.attendanceMinutes }
     val overtimeMinutes: Long get() = days.sumOf { it.overtimeMinutes }
     val totalMinutes: Long get() = attendanceMinutes + overtimeMinutes
     val daysWithoutCheckOut: Int get() = days.count { it.withoutCheckOut }
-    val attendanceAmountClp: Long
-        get() = amountForMinutes(attendanceMinutes, hourlyRateClp)
-    val overtimeAmountClp: Long
-        get() = amountForMinutes(overtimeMinutes, hourlyRateClp, overtimeSurchargePercent)
-    val totalAmountClp: Long get() = attendanceAmountClp + overtimeAmountClp
 }
 
 data class MonthlyReport(
     val month: YearMonth,
-    val workers: List<ReportWorker>,
-    val hourlyRateClp: Long = DEFAULT_HOURLY_RATE_CLP,
-    val overtimeSurchargePercent: Int = DEFAULT_OVERTIME_SURCHARGE
+    val workers: List<ReportWorker>
 ) {
     val totalWorkers: Int get() = workers.size
     val totalDays: Int get() = workers.sumOf { it.daysWorked }
@@ -58,9 +42,6 @@ data class MonthlyReport(
     val totalMinutes: Long get() = totalAttendanceMinutes + totalOvertimeMinutes
     val totalPending: Int get() = workers.sumOf { it.pendingRequests }
     val workersWithoutCheckOut: Int get() = workers.count { it.daysWithoutCheckOut > 0 }
-    val totalAttendanceAmountClp: Long get() = workers.sumOf { it.attendanceAmountClp }
-    val totalOvertimeAmountClp: Long get() = workers.sumOf { it.overtimeAmountClp }
-    val totalAmountClp: Long get() = workers.sumOf { it.totalAmountClp }
     val isEmpty: Boolean get() = workers.isEmpty()
 }
 
@@ -71,8 +52,6 @@ object MonthlyReportCalculator {
         approvals: List<SolicitudHoraExtra>,
         month: YearMonth,
         zone: ZoneId = ZoneId.systemDefault(),
-        hourlyRateClp: Long = DEFAULT_HOURLY_RATE_CLP,
-        overtimeSurchargePercent: Int = DEFAULT_OVERTIME_SURCHARGE,
         nameOf: (String) -> String
     ): MonthlyReport {
         val eventosDelMes = events
@@ -94,34 +73,26 @@ object MonthlyReportCalculator {
             val dias = diasDelTrabajador(
                 eventos = eventosDelMes[workerId].orEmpty(),
                 aprobadas = aprobadasDelMes[workerId].orEmpty(),
-                zone = zone,
-                hourlyRateClp = hourlyRateClp,
-                overtimeSurchargePercent = overtimeSurchargePercent
+                zone = zone
             )
             ReportWorker(
                 workerId = workerId,
                 workerName = nameOf(workerId),
                 days = dias,
-                pendingRequests = pendientesDelMes[workerId].orEmpty().size,
-                hourlyRateClp = hourlyRateClp,
-                overtimeSurchargePercent = overtimeSurchargePercent
+                pendingRequests = pendientesDelMes[workerId].orEmpty().size
             )
         }.sortedBy { it.workerName }
 
         return MonthlyReport(
             month = month,
-            workers = trabajadores,
-            hourlyRateClp = hourlyRateClp,
-            overtimeSurchargePercent = overtimeSurchargePercent
+            workers = trabajadores
         )
     }
 
     private fun diasDelTrabajador(
         eventos: List<Asistencia>,
         aprobadas: List<SolicitudHoraExtra>,
-        zone: ZoneId,
-        hourlyRateClp: Long,
-        overtimeSurchargePercent: Int
+        zone: ZoneId
     ): List<ReportDay> {
         val eventosPorDia = eventos.groupBy {
             Instant.ofEpochMilli(it.timestampMillis).atZone(zone).toLocalDate()
@@ -168,25 +139,10 @@ object MonthlyReportCalculator {
                 lastCheckOutMillis = ultimaSalida,
                 attendanceMinutes = minutos,
                 overtimeMinutes = extra,
-                openAtEnd = abierta != null,
-                hourlyRateClp = hourlyRateClp,
-                overtimeSurchargePercent = overtimeSurchargePercent
+                openAtEnd = abierta != null
             )
         }
     }
-}
-
-const val DEFAULT_HOURLY_RATE_CLP: Long = 7000
-const val DEFAULT_OVERTIME_SURCHARGE: Int = 50
-
-fun amountForMinutes(
-    minutes: Long,
-    hourlyRateClp: Long,
-    surchargePercent: Int = 0
-): Long {
-    if (minutes <= 0 || hourlyRateClp <= 0) return 0
-    val factor = 100.0 + surchargePercent
-    return Math.round(minutes * hourlyRateClp * factor / 6000.0)
 }
 
 fun formatDuration(minutes: Long): String {
@@ -201,6 +157,3 @@ fun formatDuration(minutes: Long): String {
 
 fun formatDecimalHours(minutes: Long): String =
     String.format(Locale.US, "%.2f", minutes / 60.0).replace('.', ',')
-
-fun formatClp(amount: Long): String =
-    "$" + String.format(Locale.US, "%,d", amount).replace(',', '.')

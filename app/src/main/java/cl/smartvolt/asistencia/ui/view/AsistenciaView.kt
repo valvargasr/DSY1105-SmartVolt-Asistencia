@@ -221,9 +221,7 @@ fun AsistenciaView(
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = "Radio ${estado.faena.radiusMeters} m - " +
-                                "Tarifa ${estado.faena.hourlyRateClp} CLP/h - " +
-                                "Recargo ${estado.faena.overtimeSurchargePercent} %",
+                            text = "Radio ${estado.faena.radiusMeters} m",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

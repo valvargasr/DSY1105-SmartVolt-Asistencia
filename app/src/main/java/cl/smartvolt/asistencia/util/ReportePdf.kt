@@ -6,7 +6,6 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import cl.smartvolt.asistencia.modelo.MonthlyReport
-import cl.smartvolt.asistencia.modelo.formatClp
 import cl.smartvolt.asistencia.modelo.formatDecimalHours
 import cl.smartvolt.asistencia.modelo.formatDuration
 import java.io.ByteArrayOutputStream
@@ -44,7 +43,7 @@ object ReportePdf {
             color = Color.rgb(214, 218, 224)
             strokeWidth = 0.6f
         }
-        val montoDerecha = pincel(9f, Color.rgb(24, 32, 44), negrita = true).apply {
+        val totalDerecha = pincel(9f, Color.rgb(24, 32, 44), negrita = true).apply {
             textAlign = Paint.Align.RIGHT
         }
 
@@ -107,24 +106,13 @@ object ReportePdf {
             MARGEN, y, cuerpo
         )
         lienzo.drawText(
-            "Monto asistencia: ${formatClp(report.totalAttendanceAmountClp)}",
+            "Horas totales: ${formatDuration(report.totalMinutes)}",
             MARGEN + 250f, y, cuerpo
         )
         y += 15f
         lienzo.drawText(
             "Horas extra aprobadas: ${formatDuration(report.totalOvertimeMinutes)}",
             MARGEN, y, cuerpo
-        )
-        lienzo.drawText(
-            "Monto extra: ${formatClp(report.totalOvertimeAmountClp)}",
-            MARGEN + 250f, y, cuerpo
-        )
-        y += 18f
-        lienzo.drawText("Monto total: ${formatClp(report.totalAmountClp)}", MARGEN, y, negrita)
-        y += 12f
-        lienzo.drawText(
-            "Estimación con la tarifa de la faena. No incluye impuestos, bonos ni descuentos.",
-            MARGEN, y, pequeno
         )
         y += 22f
 
@@ -136,9 +124,8 @@ object ReportePdf {
                 "${trabajador.workerName} (${trabajador.workerId})",
                 MARGEN, y, negrita
             )
-            val resumen = "${formatDuration(trabajador.totalMinutes)} - " +
-                formatClp(trabajador.totalAmountClp)
-            lienzo.drawText(resumen, ANCHO - MARGEN, y, montoDerecha)
+            val resumen = formatDuration(trabajador.totalMinutes)
+            lienzo.drawText(resumen, ANCHO - MARGEN, y, totalDerecha)
             y += 12f
 
             trabajador.days.sortedBy { it.date }.forEach { dia ->
@@ -154,7 +141,6 @@ object ReportePdf {
                 )
                 lienzo.drawText(formatDecimalHours(dia.attendanceMinutes), MARGEN + 190f, y, cuerpo)
                 lienzo.drawText(formatDecimalHours(dia.overtimeMinutes), MARGEN + 250f, y, cuerpo)
-                lienzo.drawText(formatClp(dia.totalAmountClp), ANCHO - MARGEN, y, cuerpo)
                 if (dia.withoutCheckOut) {
                     lienzo.drawText("Sin salida", MARGEN + 310f, y, pequeno)
                 }
@@ -169,7 +155,6 @@ object ReportePdf {
         lienzo.drawText("TOTAL DEL MES", MARGEN, y, negrita)
         lienzo.drawText(formatDecimalHours(report.totalAttendanceMinutes), MARGEN + 190f, y, negrita)
         lienzo.drawText(formatDecimalHours(report.totalOvertimeMinutes), MARGEN + 250f, y, negrita)
-        lienzo.drawText(formatClp(report.totalAmountClp), ANCHO - MARGEN, y, montoDerecha)
 
         cerrarPagina()
 
@@ -209,10 +194,6 @@ object ReportePdf {
         lienzo.drawText("Salida", MARGEN + 136f, y, encabezado)
         lienzo.drawText("Horas", MARGEN + 190f, y, encabezado)
         lienzo.drawText("Extra", MARGEN + 250f, y, encabezado)
-        val monto = pincel(8.5f, Color.rgb(70, 78, 90), negrita = true).apply {
-            textAlign = Paint.Align.RIGHT
-        }
-        lienzo.drawText("Monto", ANCHO - MARGEN, y, monto)
         lienzo.drawLine(MARGEN, y + 4f, ANCHO - MARGEN, y + 4f, linea)
         return y + 18f
     }

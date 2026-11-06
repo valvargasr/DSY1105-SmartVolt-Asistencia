@@ -332,8 +332,7 @@ private fun AdministrarSolicitudes(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "Autorizar horas extra no significa pagarlas. " +
-                            "Aquí solo se registra la decisión operativa.",
+                        text = "La autorización es solo operativa.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -45,7 +45,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cl.smartvolt.asistencia.modelo.MonthlyReport
 import cl.smartvolt.asistencia.modelo.ReportDay
 import cl.smartvolt.asistencia.modelo.ReportWorker
-import cl.smartvolt.asistencia.modelo.formatClp
 import cl.smartvolt.asistencia.modelo.formatDuration
 import cl.smartvolt.asistencia.ui.components.SmartVoltTopBar
 import cl.smartvolt.asistencia.util.Fechas
@@ -246,21 +245,18 @@ private fun ResumenMes(reporte: MonthlyReport) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Total del mes: ${formatClp(reporte.totalAmountClp)}",
+                text = "Total del mes: ${formatDuration(reporte.totalMinutes)}",
                 style = MaterialTheme.typography.titleLarge
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "${formatDuration(reporte.totalMinutes)} entre asistencia y horas extra.",
+                text = "Tiempo registrado entre asistencia y horas extra.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(12.dp))
             FilaResumen("Horas de asistencia", formatDuration(reporte.totalAttendanceMinutes))
-            FilaResumen("Monto asistencia", formatClp(reporte.totalAttendanceAmountClp))
             FilaResumen("Horas extra aprobadas", formatDuration(reporte.totalOvertimeMinutes))
-            FilaResumen("Monto horas extra", formatClp(reporte.totalOvertimeAmountClp))
-            FilaResumen("Monto total", formatClp(reporte.totalAmountClp))
             FilaResumen("Trabajadores", reporte.totalWorkers.toString())
             FilaResumen("Días con marcas", reporte.totalDays.toString())
             if (reporte.totalPending > 0) {
@@ -275,13 +271,6 @@ private fun ResumenMes(reporte: MonthlyReport) {
                     color = MaterialTheme.colorScheme.error
                 )
             }
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = "El monto es una estimación con la tarifa de la faena. " +
-                    "No incluye impuestos, bonos ni descuentos.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
@@ -329,11 +318,6 @@ private fun TarjetaTrabajador(trabajador: ReportWorker) {
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    Text(
-                        text = formatClp(trabajador.totalAmountClp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
             }
             Spacer(Modifier.height(8.dp))
@@ -341,12 +325,6 @@ private fun TarjetaTrabajador(trabajador: ReportWorker) {
                 text = "Asistencia ${formatDuration(trabajador.attendanceMinutes)} - " +
                     "Extra ${formatDuration(trabajador.overtimeMinutes)} - " +
                     "${trabajador.daysWorked} día(s)",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = "Monto asistencia ${formatClp(trabajador.attendanceAmountClp)} - " +
-                    "extra ${formatClp(trabajador.overtimeAmountClp)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -401,11 +379,6 @@ private fun FilaDia(dia: ReportDay) {
             Text(
                 text = formatDuration(dia.totalMinutes),
                 style = MaterialTheme.typography.bodySmall
-            )
-            Text(
-                text = formatClp(dia.totalAmountClp),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

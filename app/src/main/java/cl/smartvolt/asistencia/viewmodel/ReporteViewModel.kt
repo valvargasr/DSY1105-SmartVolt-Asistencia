@@ -64,8 +64,6 @@ class ReporteViewModel(application: Application) : AndroidViewModel(application)
                     events = asistencias,
                     approvals = solicitudes,
                     month = mes,
-                    hourlyRateClp = faena.hourlyRateClp.toLong(),
-                    overtimeSurchargePercent = faena.overtimeSurchargePercent,
                     nameOf = { workerId ->
                         DemoDirectory.byWorkerId(workerId)?.displayName ?: workerId
                     }

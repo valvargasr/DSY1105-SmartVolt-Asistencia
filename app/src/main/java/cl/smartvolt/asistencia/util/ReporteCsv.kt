@@ -18,8 +18,7 @@ object ReporteCsv {
         texto.append('\uFEFF')
         texto.append(
             "Fecha;Trabajador;Identificador;Entrada;Salida;" +
-                "Horas asistencia;Sin salida;Horas extra aprobadas;Horas totales;" +
-                "Monto asistencia CLP;Monto extra CLP;Monto total CLP\n"
+                "Horas asistencia;Sin salida;Horas extra aprobadas;Horas totales\n"
         )
 
         for (trabajador in report.workers) {
@@ -34,10 +33,7 @@ object ReporteCsv {
                 texto.append(formatDecimalHours(dia.attendanceMinutes)).append(';')
                 texto.append(if (dia.withoutCheckOut) "Sí" else "No").append(';')
                 texto.append(formatDecimalHours(dia.overtimeMinutes)).append(';')
-                texto.append(formatDecimalHours(dia.totalMinutes)).append(';')
-                texto.append(dia.attendanceAmountClp).append(';')
-                texto.append(dia.overtimeAmountClp).append(';')
-                texto.append(dia.totalAmountClp).append('\n')
+                texto.append(formatDecimalHours(dia.totalMinutes)).append('\n')
             }
         }
 
@@ -45,10 +41,7 @@ object ReporteCsv {
         texto.append(formatDecimalHours(report.totalAttendanceMinutes)).append(';')
         texto.append("").append(';')
         texto.append(formatDecimalHours(report.totalOvertimeMinutes)).append(';')
-        texto.append(formatDecimalHours(report.totalMinutes)).append(';')
-        texto.append(report.totalAttendanceAmountClp).append(';')
-        texto.append(report.totalOvertimeAmountClp).append(';')
-        texto.append(report.totalAmountClp).append('\n')
+        texto.append(formatDecimalHours(report.totalMinutes)).append('\n')
 
         return texto.toString()
     }

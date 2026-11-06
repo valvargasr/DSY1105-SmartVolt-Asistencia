@@ -13,7 +13,7 @@ import cl.smartvolt.asistencia.modelo.SolicitudHoraExtraDAO
 
 @Database(
     entities = [Asistencia::class, Faena::class, SolicitudHoraExtra::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -34,7 +34,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "smartvolt.db"
-                ).build().also { instancia = it }
+                ).fallbackToDestructiveMigration().build().also { instancia = it }
             }
     }
 }

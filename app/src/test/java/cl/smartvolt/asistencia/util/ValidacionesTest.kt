@@ -15,9 +15,7 @@ class ValidacionesTest {
             address = "Camino a Farellones km 12",
             radiusMeters = "300",
             latitude = "-33.35",
-            longitude = "-70.52",
-            hourlyRateClp = "7000",
-            overtimeSurchargePercent = "50"
+            longitude = "-70.52"
         )
 
         assertTrue(resultado is Validaciones.ResultadoFaena.Valida)
@@ -25,7 +23,6 @@ class ValidacionesTest {
         assertEquals("Faena Andes", datos.name)
         assertEquals(300, datos.radiusMeters)
         assertEquals(-33.35, datos.latitude, 0.0001)
-        assertEquals(7000, datos.hourlyRateClp)
     }
 
     @Test
@@ -35,18 +32,14 @@ class ValidacionesTest {
             address = "Camino a Farellones km 12",
             radiusMeters = "300",
             latitude = "-33.35",
-            longitude = "-70.52",
-            hourlyRateClp = "7000",
-            overtimeSurchargePercent = "50"
+            longitude = "-70.52"
         )
         val radioMalo = Validaciones.validarFaena(
             name = "Faena Andes",
             address = "Camino a Farellones km 12",
             radiusMeters = "10",
             latitude = "-33.35",
-            longitude = "-70.52",
-            hourlyRateClp = "7000",
-            overtimeSurchargePercent = "50"
+            longitude = "-70.52"
         )
 
         assertTrue(sinNombre is Validaciones.ResultadoFaena.Invalida)
@@ -62,40 +55,13 @@ class ValidacionesTest {
             address = "Camino a Farellones km 12",
             radiusMeters = "300",
             latitude = "-33,35",
-            longitude = "-70,52",
-            hourlyRateClp = "7000",
-            overtimeSurchargePercent = "50"
+            longitude = "-70,52"
         )
 
         assertTrue(resultado is Validaciones.ResultadoFaena.Valida)
         val datos = (resultado as Validaciones.ResultadoFaena.Valida).datos
         assertEquals(-33.35, datos.latitude, 0.0001)
         assertEquals(-70.52, datos.longitude, 0.0001)
-    }
-
-    @Test
-    fun `la faena rechaza tarifa y recargo fuera de rango`() {
-        val tarifaMala = Validaciones.validarFaena(
-            name = "Faena Andes",
-            address = "Camino a Farellones km 12",
-            radiusMeters = "300",
-            latitude = "-33.35",
-            longitude = "-70.52",
-            hourlyRateClp = "500",
-            overtimeSurchargePercent = "50"
-        )
-        val recargoMalo = Validaciones.validarFaena(
-            name = "Faena Andes",
-            address = "Camino a Farellones km 12",
-            radiusMeters = "300",
-            latitude = "-33.35",
-            longitude = "-70.52",
-            hourlyRateClp = "7000",
-            overtimeSurchargePercent = "250"
-        )
-
-        assertTrue(tarifaMala is Validaciones.ResultadoFaena.Invalida)
-        assertTrue(recargoMalo is Validaciones.ResultadoFaena.Invalida)
     }
 
     @Test

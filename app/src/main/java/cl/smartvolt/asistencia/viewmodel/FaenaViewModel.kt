@@ -22,8 +22,6 @@ data class FaenaUiState(
     val radio: String = "",
     val latitud: String = "",
     val longitud: String = "",
-    val tarifa: String = "",
-    val recargo: String = "",
     val errores: Validaciones.ErroresFaena = Validaciones.ErroresFaena(),
     val cargando: Boolean = true,
     val guardando: Boolean = false,
@@ -58,8 +56,6 @@ class FaenaViewModel(application: Application) : AndroidViewModel(application) {
                     radio = faena.radiusMeters.toString(),
                     latitud = formato(faena.latitude),
                     longitud = formato(faena.longitude),
-                    tarifa = faena.hourlyRateClp.toString(),
-                    recargo = faena.overtimeSurchargePercent.toString(),
                     cargando = false
                 )
             }
@@ -81,16 +77,6 @@ class FaenaViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onLongitud(valor: String) =
         actualizar { copy(longitud = valor, errores = errores.copy(longitude = "")) }
-
-    fun onTarifa(valor: String) {
-        if (!valor.all { it.isDigit() }) return
-        actualizar { copy(tarifa = valor, errores = errores.copy(hourlyRateClp = "")) }
-    }
-
-    fun onRecargo(valor: String) {
-        if (!valor.all { it.isDigit() }) return
-        actualizar { copy(recargo = valor, errores = errores.copy(overtimeSurchargePercent = "")) }
-    }
 
     fun usarUbicacionActual() {
         if (_uiState.value.ubicacionEnCurso) return
@@ -134,9 +120,7 @@ class FaenaViewModel(application: Application) : AndroidViewModel(application) {
             address = estado.direccion,
             radiusMeters = estado.radio,
             latitude = estado.latitud,
-            longitude = estado.longitud,
-            hourlyRateClp = estado.tarifa,
-            overtimeSurchargePercent = estado.recargo
+            longitude = estado.longitud
         )) {
             is Validaciones.ResultadoFaena.Invalida ->
                 _uiState.update { it.copy(errores = resultado.errores, mensaje = null) }
@@ -156,8 +140,6 @@ class FaenaViewModel(application: Application) : AndroidViewModel(application) {
                                 latitude = datos.latitude,
                                 longitude = datos.longitude,
                                 radiusMeters = datos.radiusMeters,
-                                hourlyRateClp = datos.hourlyRateClp,
-                                overtimeSurchargePercent = datos.overtimeSurchargePercent,
                                 perimeterVersion = anterior.perimeterVersion + 1
                             )
                         )

@@ -12,8 +12,6 @@ data class Faena(
     val latitude: Double,
     val longitude: Double,
     val radiusMeters: Int,
-    val hourlyRateClp: Int = 7000,
-    val overtimeSurchargePercent: Int = 50,
     val perimeterVersion: Int = 1,
     val active: Boolean = true
 )
@@ -24,7 +22,5 @@ fun faenaPorDefecto(): Faena = Faena(
     address = "Camino a Farellones km 12, Lo Barnechea",
     latitude = -33.3500,
     longitude = -70.5200,
-    radiusMeters = 300,
-    hourlyRateClp = 7000,
-    overtimeSurchargePercent = 50
+    radiusMeters = 300
 )

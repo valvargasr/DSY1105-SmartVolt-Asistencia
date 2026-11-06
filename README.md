@@ -67,11 +67,7 @@ y el panel.
 Ese mismo rol puede abrir el registro del mes, cambiar de mes con las flechas y guardar el
 detalle en un CSV o en un PDF. El total suma la asistencia y las horas extra aprobadas; las
 solicitudes pendientes se informan aparte y no suman horas. Las entradas sin salida quedan
-marcadas y tampoco se suman.
-
-La tarifa por hora y el recargo de las horas extra se configuran en la misma pantalla de la
-faena. Con esos valores el registro estima el monto de cada trabajador y el total del mes. Es
-una estimación para la demo: no incluye impuestos, bonos, descuentos ni reglas legales.
+marcadas y tampoco se suman. El registro es solo de horas.
 
 La pantalla de marcación pide ubicación y una baliza BLE cercana antes de habilitar el botón.
 Además compara la lectura del GPS con el centro de la faena y no registra si el trabajador
@@ -90,16 +86,16 @@ servidor que la valide.
 ## Almacenamiento y datos
 
 La asistencia, las solicitudes y la faena viven en Room, base `smartvolt.db`, y sobreviven al
-cierre de la aplicación. La base está en la versión 1 y se crea desde cero, sin migraciones.
-Tiene tres tablas:
+cierre de la aplicación. La base está en la versión 2 y usa migración destructiva: al
+actualizar desde una versión anterior se pierden los datos guardados, algo aceptable para esta
+demo. Tiene tres tablas:
 
 - `asistencias`: marcas de entrada y salida con GPS, baliza y estado de sincronización.
-- `faenas`: nombre, dirección, centro, radio, tarifa por hora y recargo de horas extra.
+- `faenas`: nombre, dirección, centro y radio de marcación.
 - `solicitudes_horas_extra`: solicitudes y decisiones del administrador.
 
 Cada ViewModel abre la base con `AppDatabase.obtener(getApplication())` y usa directamente los
-DAO. La faena parte con 7.000 pesos por hora y 50 por ciento de recargo, y esos valores se
-escriben recién en el primer guardado.
+DAO. La faena por defecto se escribe recién en el primer guardado.
 
 Las cuentas son ficticias. La autenticación de demostración no representa un sistema real y
 no se deben cargar datos personales, credenciales ni llaves privadas.
@@ -110,9 +106,8 @@ El administrador puede guardar el mes en dos formatos, ambos con el selector de 
 Android y sin permisos de almacenamiento:
 
 - CSV con nombre `registro-smartvolt-AAAA-MM.csv`, en UTF-8 con BOM, separador punto y coma
-  y coma decimal. Tiene una fila por trabajador y día, con 12 columnas que incluyen horas de
-  asistencia, horas extra, montos por separado y monto total. La última fila es el total del
-  mes.
+  y coma decimal. Tiene una fila por trabajador y día, con 9 columnas que incluyen horas de
+  asistencia, horas extra y horas totales. La última fila es el total del mes.
 - PDF con nombre `registro-smartvolt-AAAA-MM.pdf`, en hoja A4 vertical. Lleva el resumen del
   mes, la tabla por trabajador y día, y el total. Si la tabla no cabe, agrega páginas con el
   encabezado repetido y el número de página al pie.
@@ -128,7 +123,7 @@ Desde PowerShell:
 
 ```powershell
 .\gradlew.bat assembleDebug        # compilar
-.\gradlew.bat testDebugUnitTest    # 23 pruebas unitarias
+.\gradlew.bat testDebugUnitTest    # 19 pruebas unitarias
 .\gradlew.bat lintDebug            # análisis estático
 ```
 
@@ -143,7 +138,7 @@ pendiente. La ubicación simulada se advierte, pero no bloquea el registro, y no
 revisión.
 
 No existe sincronización con backend: todo queda en el teléfono. Retrofit, Hilt y un servicio
-REST pertenecen a una etapa posterior. Tampoco se calculan remuneraciones ni liquidaciones.
+REST pertenecen a una etapa posterior.
 
 ## Documentación
 
@@ -151,7 +146,7 @@ REST pertenecen a una etapa posterior. Tampoco se calculan remuneraciones ni liq
   y BLE, umbrales y casos PT.
 - [docs/faena-configuracion.md](docs/faena-configuracion.md): campos de la faena, cálculo del
   radio y alcance.
-- [docs/registro-mensual.md](docs/registro-mensual.md): cálculo de horas y montos, formato del
-  CSV y estructura del PDF.
+- [docs/registro-mensual.md](docs/registro-mensual.md): cálculo de horas, formato del CSV y
+  estructura del PDF.
 - [docs/DISENO_VISUAL_SMARTVOLT.md](docs/DISENO_VISUAL_SMARTVOLT.md): paleta, tipografía y
   criterios visuales.

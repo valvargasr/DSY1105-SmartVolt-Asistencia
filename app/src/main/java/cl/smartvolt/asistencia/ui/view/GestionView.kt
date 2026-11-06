@@ -103,13 +103,13 @@ fun GestionView(
                         TarjetaAccion(
                             icon = Icons.Outlined.Edit,
                             titulo = "Faena",
-                            detalle = "Nombre, centro, radio, tarifa y recargo.",
+                            detalle = "Nombre, centro y radio.",
                             onClick = onAbrirFaena
                         )
                         TarjetaAccion(
                             icon = Icons.Outlined.Description,
                             titulo = "Registro del mes",
-                            detalle = "Horas, montos, CSV y PDF.",
+                            detalle = "Horas, CSV y PDF.",
                             onClick = onAbrirReporte
                         )
                         TarjetaAccion(

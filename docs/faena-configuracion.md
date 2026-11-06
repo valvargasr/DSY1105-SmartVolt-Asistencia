@@ -36,7 +36,8 @@ distancia al centro y el radio permitido.
 ## Almacenamiento
 
 La faena se guarda en la tabla `faenas` de la base `smartvolt.db`. La base está en la versión
-1 y se crea desde cero, sin migraciones. Cada guardado sube el campo `perimeterVersion`, que
+2 y usa migración destructiva: al actualizar desde una versión anterior se pierden los datos
+guardados, algo aceptable para esta demo. Cada guardado sube el campo `perimeterVersion`, que
 sirve para distinguir una configuración de otra.
 
 Mientras la tabla está vacía se usa la faena por defecto de la demo:
