@@ -199,6 +199,37 @@ fun AsistenciaView(
                     }
                 )
 
+                Spacer(Modifier.height(10.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        SectionLabel(text = "Faena")
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = estado.faena.name,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = estado.faena.address,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "Radio ${estado.faena.radiusMeters} m - " +
+                                "Tarifa ${estado.faena.hourlyRateClp} CLP/h - " +
+                                "Recargo ${estado.faena.overtimeSurchargePercent} %",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
                 if (estado.ubicacion?.simulada == true) {
                     Spacer(Modifier.height(10.dp))
                     Card(

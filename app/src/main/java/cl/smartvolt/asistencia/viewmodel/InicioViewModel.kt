@@ -28,7 +28,6 @@ class InicioViewModel(application: Application) : AndroidViewModel(application) 
     private val faenaDao = AppDatabase.obtener(application).faenaDao()
 
     private val workerId = Sesion.cuenta?.workerId ?: Asistencia.WORKER_ID
-    private val siteId = Sesion.cuenta?.siteId ?: Asistencia.SITE_ID
 
     private val _uiState = MutableStateFlow(InicioUiState())
     val uiState: StateFlow<InicioUiState> = _uiState.asStateFlow()
