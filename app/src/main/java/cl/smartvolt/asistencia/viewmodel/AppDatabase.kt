@@ -16,14 +16,19 @@ import cl.smartvolt.asistencia.modelo.SolicitudHoraExtraDAO
     version = 2,
     exportSchema = false
 )
+// Base de datos local con Room
 abstract class AppDatabase : RoomDatabase() {
 
+    // Acceso a las marcas de asistencia
     abstract fun asistenciaDao(): AsistenciaDAO
 
+    // Acceso a la faena configurada
     abstract fun faenaDao(): FaenaDAO
 
+    // Acceso a las solicitudes de horas extra
     abstract fun solicitudHoraExtraDao(): SolicitudHoraExtraDAO
 
+    // Mantiene una sola instancia de la base para toda la app
     companion object {
         // una sola instancia para toda la app, si no Room se queja
         @Volatile

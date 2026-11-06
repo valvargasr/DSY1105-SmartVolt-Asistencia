@@ -17,6 +17,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 
+// Estados posibles de la lectura de ubicacion
 enum class EstadoUbicacion {
     LISTA,
     SIN_PERMISO,
@@ -26,6 +27,7 @@ enum class EstadoUbicacion {
     ERROR
 }
 
+// Datos que devuelve una lectura de GPS
 data class ResultadoUbicacion(
     val estado: EstadoUbicacion,
     val latitude: Double? = null,
@@ -35,13 +37,16 @@ data class ResultadoUbicacion(
     val simulada: Boolean = false
 )
 
+// Obtiene la ubicacion del telefono con un tiempo limite
 class Ubicacion(private val context: Context) {
 
     private val manager: LocationManager? =
         context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
 
+    // Revisa si la app puede leer la ubicacion
     fun tienePermiso(): Boolean = Permisos.ubicacionConcedida(context)
 
+    // Revisa si el GPS esta encendido
     fun estaActiva(): Boolean {
         val servicio = manager ?: return false
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -53,6 +58,7 @@ class Ubicacion(private val context: Context) {
     }
 
     @SuppressLint("MissingPermission")
+    // Devuelve una lectura lista o el motivo del fallo
     suspend fun obtener(): ResultadoUbicacion {
         // primero permisos y GPS, después esperamos una lectura de verdad
         val servicio = manager ?: return ResultadoUbicacion(EstadoUbicacion.NO_DISPONIBLE)
@@ -88,6 +94,7 @@ class Ubicacion(private val context: Context) {
     }
 
     @SuppressLint("MissingPermission")
+    // Busca la ultima ubicacion guardada por el telefono
     private fun ultimaConocida(
         servicio: LocationManager,
         proveedores: List<String>
@@ -96,6 +103,7 @@ class Ubicacion(private val context: Context) {
         .maxByOrNull { it.time }
 
     @SuppressLint("MissingPermission")
+    // Espera una lectura nueva con un maximo de 15 segundos
     private suspend fun esperarLectura(
         servicio: LocationManager,
         proveedores: List<String>
@@ -137,11 +145,13 @@ class Ubicacion(private val context: Context) {
         }
     }
 
+    // Revisa si la ultima ubicacion no es muy vieja
     private fun esReciente(location: Location): Boolean {
         val edad = System.currentTimeMillis() - location.time
         return edad in 0..EDAD_MAXIMA_MILLIS
     }
 
+    // Detecta si la ubicacion viene de una app falsa
     private fun esSimulada(location: Location): Boolean =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             location.isMock
@@ -150,6 +160,7 @@ class Ubicacion(private val context: Context) {
             location.isFromMockProvider
         }
 
+    // Tiempos usados al esperar la ubicacion
     private companion object {
         const val TIEMPO_ESPERA_MILLIS = 15_000L
         const val EDAD_MAXIMA_MILLIS = 120_000L

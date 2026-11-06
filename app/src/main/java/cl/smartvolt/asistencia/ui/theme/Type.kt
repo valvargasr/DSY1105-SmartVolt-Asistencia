@@ -7,7 +7,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 /* Tipografía sans serif de lectura sencilla, tamaños cómodos y jerarquía clara. */
+// Tamaño y peso del texto de toda la app
 val Typography = Typography(
+    // Titulos grandes de portada
     displaySmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Bold,
@@ -46,6 +48,7 @@ val Typography = Typography(
         fontSize = 16.sp,
         lineHeight = 23.sp
     ),
+    // Texto normal de parrafos
     bodyLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
@@ -66,6 +69,7 @@ val Typography = Typography(
         fontSize = 13.sp,
         lineHeight = 19.sp
     ),
+    // Etiquetas y textos de botones
     labelLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.SemiBold,

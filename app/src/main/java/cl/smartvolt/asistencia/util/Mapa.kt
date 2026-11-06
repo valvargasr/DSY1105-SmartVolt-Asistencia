@@ -4,12 +4,15 @@ import java.util.Locale
 
 object Mapa {
 
+    // Token publico de Mapbox para pedir la imagen del mapa
     private const val TOKEN =
         "pk.eyJ1IjoiZnJlZGNhbXBvczEyMzAiLCJhIjoiY2xudTl2d2VrMDlpbzJrcWpnYnJkc3JqbCJ9" +
             ".hjid1kkpkU37wvVJrj2pQg"
 
+    // Estilo oscuro del mapa
     private const val ESTILO = "mapbox/dark-v11"
 
+    // Arma la URL de un mapa estatico con el pin en la ubicacion
     fun urlEstatica(
         latitude: Double,
         longitude: Double,

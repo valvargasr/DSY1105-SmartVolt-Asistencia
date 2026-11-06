@@ -18,12 +18,14 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+// Errores y mensajes del formulario de horas extra
 data class HorasExtraUiState(
     val errores: Validaciones.ErroresHoraExtra = Validaciones.ErroresHoraExtra(),
     val mensaje: String? = null,
     val guardando: Boolean = false
 )
 
+// Crea, aprueba y rechaza solicitudes de horas extra
 class HorasExtraViewModel(application: Application) : AndroidViewModel(application) {
 
     private val dao = AppDatabase.obtener(application).solicitudHoraExtraDao()
@@ -35,6 +37,7 @@ class HorasExtraViewModel(application: Application) : AndroidViewModel(applicati
     private val _uiState = MutableStateFlow(HorasExtraUiState())
     val uiState: StateFlow<HorasExtraUiState> = _uiState.asStateFlow()
 
+    // El admin ve toda la faena, el obrero solo lo suyo
     val solicitudes: StateFlow<List<SolicitudHoraExtra>> =
         if (cuenta?.role == WorkerRole.ADMIN) {
             dao.observarPorFaena(siteId)
@@ -46,6 +49,7 @@ class HorasExtraViewModel(application: Application) : AndroidViewModel(applicati
             initialValue = emptyList()
         )
 
+    // Valida y guarda una solicitud nueva
     fun solicitar(fecha: LocalDate?, desde: String, hasta: String, motivo: String) {
         // el obrero es el único que puede crear solicitudes
         if (cuenta?.role != WorkerRole.WORKER) {
@@ -97,11 +101,13 @@ class HorasExtraViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    // Aprueba una solicitud pendiente
     fun aprobar(approvalId: String) {
         if (cuenta?.role != WorkerRole.ADMIN) return
         decidir(approvalId, SolicitudHoraExtra.APROBADA, null, "Solicitud aprobada.")
     }
 
+    // Rechaza una solicitud con un motivo
     fun rechazar(approvalId: String, motivo: String) {
         if (cuenta?.role != WorkerRole.ADMIN || motivo.isBlank()) return
         decidir(approvalId, SolicitudHoraExtra.RECHAZADA, motivo.trim(), "Solicitud rechazada.")
@@ -124,6 +130,7 @@ class HorasExtraViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    // Limpia el mensaje para no repetirlo
     fun limpiarMensaje() {
         _uiState.update { it.copy(mensaje = null) }
     }

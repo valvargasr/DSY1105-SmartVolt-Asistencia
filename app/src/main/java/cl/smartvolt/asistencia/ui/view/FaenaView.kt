@@ -39,11 +39,13 @@ import cl.smartvolt.asistencia.ui.components.SmartVoltTopBar
 import cl.smartvolt.asistencia.viewmodel.FaenaViewModel
 
 @Composable
+// Pantalla para editar el nombre, el radio y el centro de la faena
 fun FaenaView(
     onVolver: () -> Unit,
     onGuardado: () -> Unit,
     viewModel: FaenaViewModel = viewModel()
 ) {
+    // Estado del formulario
     val estado by viewModel.uiState.collectAsState()
 
     LaunchedEffect(estado.guardado) {
@@ -59,6 +61,7 @@ fun FaenaView(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         ) {
+            // ENCABEZADO
             SmartVoltTopBar(
                 title = "Faena",
                 subtitle = "Administración del lugar de marcación",
@@ -73,6 +76,7 @@ fun FaenaView(
             )
             Spacer(Modifier.height(16.dp))
 
+            // CARGANDO
             if (estado.cargando) {
                 Row(
                     modifier = Modifier
@@ -83,12 +87,14 @@ fun FaenaView(
                     CircularProgressIndicator()
                 }
             } else {
+                // CAMPOS
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
+                        // NOMBRE
                         OutlinedTextField(
                             value = estado.nombre,
                             onValueChange = viewModel::onNombre,
@@ -101,6 +107,7 @@ fun FaenaView(
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(Modifier.height(12.dp))
+                        // DIRECCION
                         OutlinedTextField(
                             value = estado.direccion,
                             onValueChange = viewModel::onDireccion,
@@ -113,6 +120,7 @@ fun FaenaView(
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(Modifier.height(12.dp))
+                        // RADIO
                         OutlinedTextField(
                             value = estado.radio,
                             onValueChange = viewModel::onRadio,
@@ -128,6 +136,7 @@ fun FaenaView(
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(Modifier.height(12.dp))
+                        // COORDENADAS
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             OutlinedTextField(
                                 value = estado.latitud,
@@ -175,6 +184,7 @@ fun FaenaView(
                             )
                         }
                         Spacer(Modifier.height(12.dp))
+                        // MAPA
                         MapaUbicacion(
                             latitude = estado.latitudPreview,
                             longitude = estado.longitudPreview,
@@ -183,6 +193,7 @@ fun FaenaView(
                     }
                 }
 
+                // MENSAJE
                 estado.mensaje?.let { texto ->
                     Spacer(Modifier.height(12.dp))
                     Text(
@@ -193,6 +204,7 @@ fun FaenaView(
                 }
 
                 Spacer(Modifier.height(20.dp))
+                // BOTON GUARDAR
                 Button(
                     onClick = viewModel::guardar,
                     enabled = !estado.guardando,

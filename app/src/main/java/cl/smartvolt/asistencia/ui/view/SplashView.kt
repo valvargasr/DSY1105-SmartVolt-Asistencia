@@ -46,15 +46,19 @@ import cl.smartvolt.asistencia.ui.components.SmartVoltMark
 import kotlinx.coroutines.delay
 
 @Composable
+// Pantalla de bienvenida que espera un momento y sigue
 fun SplashView(onContinuar: () -> Unit) {
+    // Controla la animacion de entrada
     var visible by remember { mutableStateOf(false) }
 
+    // Espera dos segundos y pasa al login
     LaunchedEffect(Unit) {
         visible = true
         delay(2_000)
         onContinuar()
     }
 
+    // FONDO CON GRADIENTE
     Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF0A2A52)) {
         Box(
             modifier = Modifier
@@ -101,6 +105,7 @@ fun SplashView(onContinuar: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+                // BLOQUE CENTRAL
                 AnimatedVisibility(
                     visible = visible,
                     enter = fadeIn(tween(520)) + slideInVertically(tween(520)) { it / 8 }
@@ -111,8 +116,10 @@ fun SplashView(onContinuar: () -> Unit) {
                             .widthIn(max = 480.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        // LOGO
                         SmartVoltMark(size = 78.dp)
                         Spacer(Modifier.height(22.dp))
+                        // TEXTO DE BIENVENIDA
                         SectionLabel(
                             text = "Control de asistencia en faena",
                             color = Color.White.copy(alpha = 0.82f)
@@ -148,6 +155,7 @@ fun SplashView(onContinuar: () -> Unit) {
                             description = "Las marcas se guardan y quedan pendientes."
                         )
                         Spacer(Modifier.height(32.dp))
+                        // PIE
                         Text(
                             text = "Demo académica - Datos ficticios",
                             style = MaterialTheme.typography.labelMedium,
@@ -161,6 +169,7 @@ fun SplashView(onContinuar: () -> Unit) {
 }
 
 @Composable
+// Fila con icono, titulo y descripcion corta
 private fun FeatureRow(icon: ImageVector, title: String, description: String) {
     Row(
         modifier = Modifier

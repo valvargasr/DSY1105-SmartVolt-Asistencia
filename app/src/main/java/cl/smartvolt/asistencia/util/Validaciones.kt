@@ -2,8 +2,10 @@ package cl.smartvolt.asistencia.util
 
 import java.time.LocalTime
 
+// Reglas de validacion de faena y horas extra
 object Validaciones {
 
+    // Datos ya validados de una faena
     data class DatosFaena(
         val name: String,
         val address: String,
@@ -12,6 +14,7 @@ object Validaciones {
         val longitude: Double
     )
 
+    // Errores del formulario de faena
     data class ErroresFaena(
         val name: String = "",
         val address: String = "",
@@ -25,11 +28,13 @@ object Validaciones {
                 longitude.isNotBlank()
     }
 
+    // Resultado de validar una faena
     sealed interface ResultadoFaena {
         data class Valida(val datos: DatosFaena) : ResultadoFaena
         data class Invalida(val errores: ErroresFaena) : ResultadoFaena
     }
 
+    // Datos ya validados de una solicitud
     data class DatosHoraExtra(
         val date: java.time.LocalDate,
         val startMillis: Long,
@@ -37,6 +42,7 @@ object Validaciones {
         val reason: String
     )
 
+    // Errores del formulario de horas extra
     data class ErroresHoraExtra(
         val desde: String = "",
         val hasta: String = "",
@@ -48,6 +54,7 @@ object Validaciones {
                 motivo.isNotBlank() || fecha.isNotBlank()
     }
 
+    // Resultado de validar una solicitud
     sealed interface ResultadoHoraExtra {
         data class Valida(val datos: DatosHoraExtra) : ResultadoHoraExtra
         data class Invalida(val errores: ErroresHoraExtra) : ResultadoHoraExtra
@@ -61,8 +68,10 @@ object Validaciones {
     const val RADIO_MAXIMO = 1000
     const val MOTIVO_MINIMO = 5
 
+    // Formato de hora aceptado, de 00:00 a 23:59
     private val formatoHora = Regex("^(?:[01]\\d|2[0-3]):[0-5]\\d$")
 
+    // Revisa nombre, direccion, radio y coordenadas
     fun validarFaena(
         name: String,
         address: String,
@@ -125,6 +134,7 @@ object Validaciones {
         )
     }
 
+    // Revisa fecha, horario y motivo de la solicitud
     fun validarHoraExtra(
         fecha: java.time.LocalDate?,
         desde: String,

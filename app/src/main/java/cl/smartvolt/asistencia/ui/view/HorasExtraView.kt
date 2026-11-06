@@ -74,6 +74,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
+// Pantalla de horas extra para obreros y administradores
 fun HorasExtraView(
     cuenta: DemoAccount,
     onVolver: () -> Unit,
@@ -82,6 +83,7 @@ fun HorasExtraView(
     val solicitudes by viewModel.solicitudes.collectAsState()
     val estado by viewModel.uiState.collectAsState()
 
+    // Limpia el mensaje al cambiar de usuario
     LaunchedEffect(cuenta.workerId) { viewModel.limpiarMensaje() }
 
     // el obrero ve el formulario, el admin ve la bandeja para aprobar o rechazar
@@ -108,6 +110,7 @@ fun HorasExtraView(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+// Formulario donde el obrero pide horas extra
 private fun FormularioObrero(
     cuenta: DemoAccount,
     solicitudes: List<SolicitudHoraExtra>,
@@ -129,6 +132,7 @@ private fun FormularioObrero(
     val fecha = Instant.ofEpochMilli(fechaMillis).atZone(ZoneOffset.UTC).toLocalDate()
     val formatter = remember { DateTimeFormatter.ofPattern("dd/MM/yyyy") }
 
+    // Limpia el motivo despues de enviar
     LaunchedEffect(mensaje) {
         if (mensaje?.startsWith("Solicitud enviada") == true) motivo = ""
     }
@@ -143,6 +147,7 @@ private fun FormularioObrero(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
+                // ENCABEZADO
                 SmartVoltTopBar(
                     title = "Solicitar horas extra",
                     subtitle = "Trabajador - ${cuenta.siteName}",
@@ -156,12 +161,14 @@ private fun FormularioObrero(
                 )
                 Spacer(Modifier.height(16.dp))
 
+                // CAMPOS DE LA SOLICITUD
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
+                        // FECHA
                         OutlinedTextField(
                             value = fecha.format(formatter),
                             onValueChange = {},
@@ -182,6 +189,7 @@ private fun FormularioObrero(
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(Modifier.height(12.dp))
+                        // HORARIO
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             OutlinedTextField(
                                 value = desde,
@@ -209,6 +217,7 @@ private fun FormularioObrero(
                             )
                         }
                         Spacer(Modifier.height(12.dp))
+                        // MOTIVO
                         OutlinedTextField(
                             value = motivo,
                             onValueChange = { motivo = it },
@@ -222,6 +231,7 @@ private fun FormularioObrero(
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(Modifier.height(16.dp))
+                        // BOTON ENVIAR
                         Button(
                             onClick = { onSolicitar(fecha, desde, hasta, motivo) },
                             enabled = !guardando,
@@ -250,6 +260,7 @@ private fun FormularioObrero(
 
                 Spacer(Modifier.height(24.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    // MIS SOLICITUDES
                     SectionLabel("Mis solicitudes")
                     Spacer(Modifier.weight(1f))
                     StatusPill(
@@ -258,6 +269,7 @@ private fun FormularioObrero(
                     )
                 }
                 Spacer(Modifier.height(8.dp))
+                // ESTADO VACIO
                 AnimatedVisibility(visible = solicitudes.isEmpty(), enter = fadeIn(), exit = fadeOut()) {
                     EmptyState(
                         icon = Icons.Outlined.Schedule,
@@ -281,6 +293,7 @@ private fun FormularioObrero(
         }
     }
 
+    // DIALOGO DE FECHA
     if (mostrarCalendario) {
         val pickerState = rememberDatePickerState(initialSelectedDateMillis = fechaMillis)
         DatePickerDialog(
@@ -299,6 +312,7 @@ private fun FormularioObrero(
 }
 
 @Composable
+// Bandeja del admin para aprobar o rechazar solicitudes
 private fun AdministrarSolicitudes(
     solicitudes: List<SolicitudHoraExtra>,
     mensaje: String?,
@@ -320,6 +334,7 @@ private fun AdministrarSolicitudes(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
+                // ENCABEZADO
                 SmartVoltTopBar(
                     title = "Horas extra",
                     subtitle = "Administración",
@@ -346,6 +361,7 @@ private fun AdministrarSolicitudes(
 
                 Spacer(Modifier.height(18.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    // PENDIENTES
                     SectionLabel("Solicitudes pendientes")
                     Spacer(Modifier.weight(1f))
                     StatusPill(
@@ -412,6 +428,7 @@ private fun AdministrarSolicitudes(
 
                 if (decididas.isNotEmpty()) {
                     Spacer(Modifier.height(20.dp))
+                    // RESUELTAS
                     SectionLabel("Solicitudes resueltas")
                     Spacer(Modifier.height(8.dp))
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -432,6 +449,7 @@ private fun AdministrarSolicitudes(
         }
     }
 
+    // DIALOGO DE RECHAZO
     rechazoDe?.let { solicitud ->
         DialogoRechazo(
             solicitud = solicitud,
@@ -445,6 +463,7 @@ private fun AdministrarSolicitudes(
 }
 
 @Composable
+// Tarjeta con los datos de una solicitud
 private fun TarjetaSolicitud(
     solicitud: SolicitudHoraExtra,
     mostrarTrabajador: Boolean,
@@ -510,6 +529,7 @@ private fun TarjetaSolicitud(
 }
 
 @Composable
+// Pide el motivo antes de rechazar
 private fun DialogoRechazo(
     solicitud: SolicitudHoraExtra,
     onCancelar: () -> Unit,

@@ -70,6 +70,7 @@ import cl.smartvolt.asistencia.viewmodel.InicioUiState
 import cl.smartvolt.asistencia.viewmodel.InicioViewModel
 
 @Composable
+// Pantalla de inicio con el resumen del dia y los accesos
 fun InicioView(
     cuenta: DemoAccount,
     onIrAsistencia: () -> Unit,
@@ -80,11 +81,13 @@ fun InicioView(
     onAbrirHorasExtra: () -> Unit,
     viewModel: InicioViewModel = viewModel()
 ) {
+    // Estado que viene del ViewModel
     val estado by viewModel.uiState.collectAsState()
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { visible = true }
 
+    // Roles para decidir que accesos mostrar
     val esObrero = cuenta.role == WorkerRole.WORKER
     val esAdmin = cuenta.role == WorkerRole.ADMIN
 
@@ -105,6 +108,7 @@ fun InicioView(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // ENCABEZADO
                     SmartVoltMark(size = 40.dp)
                     Spacer(Modifier.width(10.dp))
                     Column(modifier = Modifier.weight(1f)) {
@@ -119,6 +123,7 @@ fun InicioView(
                     visible = visible,
                     enter = fadeIn() + slideInVertically { it / 10 }
                 ) {
+                    // SALUDO Y FECHA
                     Column {
                         Text(
                             text = "Hola, ${cuenta.displayName.substringBefore(" ")}",
@@ -131,6 +136,7 @@ fun InicioView(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(Modifier.height(16.dp))
+                        // TARJETA DE JORNADA
                         TarjetaJornada(
                             estado = estado,
                             esObrero = esObrero,
@@ -144,6 +150,7 @@ fun InicioView(
                 }
 
                 Spacer(Modifier.height(16.dp))
+                // TARJETA DE SINCRONIZACION
                 ResourceStatusCard(
                     icon = Icons.Outlined.CloudOff,
                     eyebrow = "Sincronización",
@@ -162,6 +169,7 @@ fun InicioView(
                 )
 
                 Spacer(Modifier.height(16.dp))
+                // LISTA DE ACCESOS
                 SectionLabel(text = "Accesos")
                 Spacer(Modifier.height(8.dp))
 
@@ -221,6 +229,7 @@ fun InicioView(
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Column(modifier = Modifier.padding(17.dp)) {
+                        // DATOS DE LA SESION
                         SectionLabel(text = "Sesión de demostración")
                         Spacer(Modifier.height(10.dp))
                         FilaDato(Icons.Outlined.Badge, cuenta.email)
@@ -236,6 +245,7 @@ fun InicioView(
 }
 
 @Composable
+// Tarjeta con el estado de la jornada y los botones de marca
 private fun TarjetaJornada(
     estado: InicioUiState,
     esObrero: Boolean,
@@ -297,6 +307,7 @@ private fun TarjetaJornada(
             )
 
             Spacer(Modifier.height(12.dp))
+            // FAENA ACTUAL
             Surface(
                 shape = RoundedCornerShape(13.dp),
                 color = MaterialTheme.colorScheme.primaryContainer
@@ -339,6 +350,7 @@ private fun TarjetaJornada(
             }
 
             Spacer(Modifier.height(15.dp))
+            // PROGRESO DE LA JORNADA
             LinearProgressIndicator(
                 progress = { progreso },
                 modifier = Modifier
@@ -354,6 +366,7 @@ private fun TarjetaJornada(
             )
 
             Spacer(Modifier.height(14.dp))
+            // MARCAS DE ENTRADA Y SALIDA
             Row(modifier = Modifier.fillMaxWidth()) {
                 MarcaDelDia(
                     icon = Icons.Outlined.Login,
@@ -370,6 +383,7 @@ private fun TarjetaJornada(
             }
 
             Spacer(Modifier.height(16.dp))
+            // BOTON PRINCIPAL
             Button(
                 onClick = onRegistrarAsistencia,
                 colors = if (esObrero) {
@@ -401,6 +415,7 @@ private fun TarjetaJornada(
             }
 
             Spacer(Modifier.height(8.dp))
+            // BOTON DE HISTORIAL
             OutlinedButton(
                 onClick = onVerHistorial,
                 modifier = Modifier
@@ -416,6 +431,7 @@ private fun TarjetaJornada(
 }
 
 @Composable
+// Muestra una marca del dia con su hora
 private fun MarcaDelDia(
     icon: ImageVector,
     label: String,
@@ -448,6 +464,7 @@ private fun MarcaDelDia(
 }
 
 @Composable
+// Tarjeta de acceso a otra seccion
 private fun AccesoCard(
     icon: ImageVector,
     titulo: String,
@@ -501,6 +518,7 @@ private fun AccesoCard(
 }
 
 @Composable
+// Fila con icono y un dato corto
 private fun FilaDato(icon: ImageVector, texto: String) {
     Row(
         modifier = Modifier.padding(vertical = 3.dp),

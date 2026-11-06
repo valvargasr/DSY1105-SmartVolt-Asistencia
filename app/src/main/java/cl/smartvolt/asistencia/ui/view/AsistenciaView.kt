@@ -77,13 +77,16 @@ import cl.smartvolt.asistencia.viewmodel.AsistenciaViewModel
 import java.util.Locale
 
 @Composable
+// Pantalla para verificar presencia y marcar entrada o salida
 fun AsistenciaView(
     viewModel: AsistenciaViewModel = viewModel()
 ) {
+    // Estado de permisos, ubicacion y baliza
     val estado by viewModel.uiState.collectAsState()
     val contexto = LocalContext.current
     val actividad = contexto as? Activity
 
+    // Pide permiso de notificaciones
     val lanzadorNotificaciones = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { }
@@ -96,6 +99,7 @@ fun AsistenciaView(
         }
     }
 
+    // Pide permisos de ubicacion y Bluetooth
     val lanzadorPermisos = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { resultados ->
@@ -124,12 +128,14 @@ fun AsistenciaView(
                     .fillMaxWidth()
                     .widthIn(max = 520.dp)
             ) {
+                // ENCABEZADO
                 SmartVoltTopBar(
                     title = "Asistencia",
                     subtitle = "${Sesion.cuenta?.roleLabel ?: "Demo"} - ${estado.faena.name}"
                 )
 
                 Spacer(Modifier.height(16.dp))
+                // RESUMEN DE PRESENCIA
                 ResumenPresencia(estado)
 
                 if (estado.verificando) {
@@ -144,6 +150,7 @@ fun AsistenciaView(
                 }
 
                 Spacer(Modifier.height(16.dp))
+                // PERMISOS
                 ResourceStatusCard(
                     icon = Icons.Outlined.Security,
                     eyebrow = "Paso 1",
@@ -154,6 +161,7 @@ fun AsistenciaView(
                 )
 
                 Spacer(Modifier.height(10.dp))
+                // UBICACION
                 ResourceStatusCard(
                     icon = Icons.Outlined.LocationOn,
                     eyebrow = "Paso 2",
@@ -175,6 +183,7 @@ fun AsistenciaView(
                 if (estado.ubicacion?.estado == EstadoUbicacion.LISTA) {
                     Spacer(Modifier.height(10.dp))
                     AnimatedVisibility(visible = true, enter = fadeIn() + scaleIn(initialScale = 0.96f)) {
+                        // MAPA
                         MapaUbicacion(
                             latitude = estado.ubicacion?.latitude,
                             longitude = estado.ubicacion?.longitude,
@@ -184,6 +193,7 @@ fun AsistenciaView(
                 }
 
                 Spacer(Modifier.height(10.dp))
+                // BALIZA
                 ResourceStatusCard(
                     icon = Icons.Outlined.Bluetooth,
                     eyebrow = "Paso 3",
@@ -209,6 +219,7 @@ fun AsistenciaView(
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
+                        // DATOS DE LA FAENA
                         SectionLabel(text = "Faena")
                         Spacer(Modifier.height(4.dp))
                         Text(
@@ -229,6 +240,7 @@ fun AsistenciaView(
                     }
                 }
 
+                // AVISO DE UBICACION SIMULADA
                 if (estado.ubicacion?.simulada == true) {
                     Spacer(Modifier.height(10.dp))
                     Card(
@@ -259,6 +271,7 @@ fun AsistenciaView(
                 }
 
                 Spacer(Modifier.height(18.dp))
+                // BOTON VERIFICAR
                 Button(
                     onClick = {
                         // un solo botón: pide los permisos que falten y si ya están verifica
@@ -321,6 +334,7 @@ fun AsistenciaView(
                 }
 
                 Spacer(Modifier.height(16.dp))
+                // BOTON ENTRADA
                 Button(
                     onClick = viewModel::registrarEntrada,
                     enabled = !estado.guardando,
@@ -344,6 +358,7 @@ fun AsistenciaView(
                 }
 
                 Spacer(Modifier.height(8.dp))
+                // BOTON SALIDA
                 OutlinedButton(
                     onClick = viewModel::registrarSalida,
                     enabled = !estado.guardando,
@@ -398,6 +413,7 @@ fun AsistenciaView(
                 }
 
                 Spacer(Modifier.height(18.dp))
+                // TARJETA DE SINCRONIZACION
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
@@ -443,6 +459,7 @@ fun AsistenciaView(
                     }
                 }
 
+                // MENSAJE DE RESULTADO
                 AnimatedVisibility(visible = estado.mensaje != null) {
                     Column {
                         Spacer(Modifier.height(14.dp))
@@ -494,6 +511,7 @@ fun AsistenciaView(
 }
 
 @Composable
+// Tarjeta con el resumen de la verificacion
 private fun ResumenPresencia(estado: AsistenciaUiState) {
     val listo = estado.puedeRegistrar
     val fondo = if (listo) {
@@ -560,6 +578,7 @@ private fun ResumenPresencia(estado: AsistenciaUiState) {
     }
 }
 
+// Texto que explica el estado del permiso
 private fun textoPermiso(estado: EstadoPermiso): String = when (estado) {
     EstadoPermiso.NO_SOLICITADO -> "Todavía no se solicitaron los permisos."
     EstadoPermiso.CONCEDIDO -> "Permiso de ubicación concedido."
@@ -567,6 +586,7 @@ private fun textoPermiso(estado: EstadoPermiso): String = when (estado) {
     EstadoPermiso.BLOQUEADO -> "Permisos bloqueados. Habilítalos en los ajustes."
 }
 
+// Etiqueta corta del permiso
 private fun etiquetaPermiso(estado: EstadoPermiso): String = when (estado) {
     EstadoPermiso.CONCEDIDO -> "OK"
     EstadoPermiso.NO_SOLICITADO -> "Pendiente"
@@ -574,6 +594,7 @@ private fun etiquetaPermiso(estado: EstadoPermiso): String = when (estado) {
     EstadoPermiso.BLOQUEADO -> "Bloqueados"
 }
 
+// Color del permiso segun su estado
 private fun tonoPermiso(estado: EstadoPermiso): StatusTone = when (estado) {
     EstadoPermiso.CONCEDIDO -> StatusTone.OK
     EstadoPermiso.NO_SOLICITADO -> StatusTone.NEUTRAL
@@ -581,6 +602,7 @@ private fun tonoPermiso(estado: EstadoPermiso): StatusTone = when (estado) {
     EstadoPermiso.BLOQUEADO -> StatusTone.DANGER
 }
 
+// Etiqueta corta de la ubicacion
 private fun etiquetaUbicacion(estado: EstadoUbicacion?): String = when (estado) {
     EstadoUbicacion.LISTA -> "Listo"
     null -> "Sin datos"
@@ -591,6 +613,7 @@ private fun etiquetaUbicacion(estado: EstadoUbicacion?): String = when (estado) 
     EstadoUbicacion.ERROR -> "Error"
 }
 
+// Color de la ubicacion segun su estado
 private fun tonoUbicacion(estado: EstadoUbicacion?): StatusTone = when (estado) {
     EstadoUbicacion.LISTA -> StatusTone.OK
     null -> StatusTone.NEUTRAL
@@ -601,6 +624,7 @@ private fun tonoUbicacion(estado: EstadoUbicacion?): StatusTone = when (estado) 
     EstadoUbicacion.ERROR -> StatusTone.DANGER
 }
 
+// Etiqueta corta de la baliza
 private fun etiquetaBaliza(estado: EstadoBaliza?): String = when (estado) {
     EstadoBaliza.ENCONTRADA -> "Detectada"
     null -> "Sin datos"
@@ -612,6 +636,7 @@ private fun etiquetaBaliza(estado: EstadoBaliza?): String = when (estado) {
     EstadoBaliza.ERROR -> "Error"
 }
 
+// Color de la baliza segun su estado
 private fun tonoBaliza(estado: EstadoBaliza?): StatusTone = when (estado) {
     EstadoBaliza.ENCONTRADA -> StatusTone.OK
     null -> StatusTone.NEUTRAL

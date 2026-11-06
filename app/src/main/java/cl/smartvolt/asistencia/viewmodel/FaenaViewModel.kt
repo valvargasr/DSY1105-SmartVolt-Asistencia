@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+// Datos del formulario de la faena
 data class FaenaUiState(
     val nombre: String = "",
     val direccion: String = "",
@@ -47,6 +48,7 @@ class FaenaViewModel(application: Application) : AndroidViewModel(application) {
         cargar()
     }
 
+    // Trae la faena guardada o usa la de ejemplo
     fun cargar() {
         viewModelScope.launch {
             val faena = dao.obtener(siteId) ?: faenaPorDefecto()
@@ -63,22 +65,28 @@ class FaenaViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Actualiza el nombre y limpia su error
     fun onNombre(valor: String) = actualizar { copy(nombre = valor, errores = errores.copy(name = "")) }
 
+    // Actualiza la direccion y limpia su error
     fun onDireccion(valor: String) =
         actualizar { copy(direccion = valor, errores = errores.copy(address = "")) }
 
+    // Solo acepta numeros en el radio
     fun onRadio(valor: String) {
         if (!valor.all { it.isDigit() }) return
         actualizar { copy(radio = valor, errores = errores.copy(radiusMeters = "")) }
     }
 
+    // Actualiza la latitud
     fun onLatitud(valor: String) =
         actualizar { copy(latitud = valor, errores = errores.copy(latitude = "")) }
 
+    // Actualiza la longitud
     fun onLongitud(valor: String) =
         actualizar { copy(longitud = valor, errores = errores.copy(longitude = "")) }
 
+    // Rellena las coordenadas con el GPS del telefono
     fun usarUbicacionActual() {
         if (_uiState.value.ubicacionEnCurso) return
 
@@ -113,6 +121,7 @@ class FaenaViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Valida y guarda la faena en Room
     fun guardar() {
         val estado = _uiState.value
         if (estado.guardando) return
@@ -168,9 +177,11 @@ class FaenaViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Aplica un cambio y limpia el mensaje anterior
     private fun actualizar(cambio: FaenaUiState.() -> FaenaUiState) {
         _uiState.update { it.cambio().copy(mensaje = null) }
     }
 
+    // Formatea las coordenadas con seis decimales
     private fun formato(valor: Double): String = String.format(Locale.US, "%.6f", valor)
 }

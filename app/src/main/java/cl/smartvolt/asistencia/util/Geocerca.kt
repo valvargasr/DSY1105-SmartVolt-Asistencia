@@ -11,6 +11,7 @@ object Geocerca {
 
     private const val RADIO_TIERRA_METROS = 6_371_000.0
 
+    // Calcula la distancia en metros entre dos coordenadas
     fun distanciaMetros(
         latitudA: Double,
         longitudA: Double,

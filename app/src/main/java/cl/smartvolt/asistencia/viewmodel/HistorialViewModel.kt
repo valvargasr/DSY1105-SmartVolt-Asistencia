@@ -12,12 +12,14 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
+// Entrega las marcas segun el rol de la sesion
 class HistorialViewModel(application: Application) : AndroidViewModel(application) {
 
     private val dao = AppDatabase.obtener(application).asistenciaDao()
     private val faenaDao = AppDatabase.obtener(application).faenaDao()
     private val cuenta = Sesion.cuenta
 
+    // Identificadores de la sesion
     private val workerId = cuenta?.workerId ?: Asistencia.WORKER_ID
     private val siteId = cuenta?.siteId ?: Asistencia.SITE_ID
 
@@ -32,6 +34,7 @@ class HistorialViewModel(application: Application) : AndroidViewModel(applicatio
         initialValue = emptyList()
     )
 
+    // Texto del encabezado segun el rol
     val encabezado: StateFlow<String> = if (cuenta?.role == WorkerRole.WORKER) {
         flowOf("Trabajador $workerId")
     } else {

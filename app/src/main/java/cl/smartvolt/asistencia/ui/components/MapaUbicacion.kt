@@ -55,14 +55,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
+// Muestra el mapa con el punto de marcaje
 fun MapaUbicacion(
     latitude: Double?,
     longitude: Double?,
     accuracyMeters: Float?,
     modifier: Modifier = Modifier
 ) {
+    // Contador para reintentar la carga
     var intento by remember { mutableIntStateOf(0) }
 
+    // Carga la imagen del mapa en segundo plano
     val resultado by produceState<CargaMapa>(
         initialValue = CargaMapa.Cargando,
         latitude,
@@ -77,6 +80,7 @@ fun MapaUbicacion(
         value = withContext(Dispatchers.IO) { cargarMapa(latitude, longitude) }
     }
 
+    // Animacion suave mientras carga
     val pulso = rememberInfiniteTransition(label = "cargaMapa")
     val alphaCarga by pulso.animateFloat(
         initialValue = 0.35f,
@@ -88,19 +92,23 @@ fun MapaUbicacion(
         label = "alphaCarga"
     )
 
+    // TARJETA DEL MAPA
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column {
+            // IMAGEN DEL MAPA
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(190.dp)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
+                // ESTADOS DE CARGA
                 when (val estado = resultado) {
+                    // MAPA LISTO
                     is CargaMapa.Listo -> {
                         Image(
                             bitmap = estado.bitmap.asImageBitmap(),
@@ -110,6 +118,7 @@ fun MapaUbicacion(
                         )
                     }
 
+                    // CARGANDO
                     CargaMapa.Cargando -> {
                         Box(
                             modifier = Modifier
@@ -141,6 +150,7 @@ fun MapaUbicacion(
                         }
                     }
 
+                    // ERROR
                     is CargaMapa.Error -> {
                         Column(
                             modifier = Modifier
@@ -172,6 +182,7 @@ fun MapaUbicacion(
                         }
                     }
 
+                    // SIN UBICACION
                     CargaMapa.SinUbicacion -> {
                         Column(
                             modifier = Modifier
@@ -195,6 +206,7 @@ fun MapaUbicacion(
                     }
                 }
 
+                // COORDENADAS SOBRE EL MAPA
                 if (resultado is CargaMapa.Listo && latitude != null && longitude != null) {
                     Box(
                         modifier = Modifier
@@ -240,6 +252,7 @@ fun MapaUbicacion(
                 }
             }
 
+            // PIE DEL MAPA
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -271,6 +284,7 @@ fun MapaUbicacion(
     }
 }
 
+// Estados posibles de la carga del mapa
 private sealed interface CargaMapa {
     data class Listo(val bitmap: Bitmap) : CargaMapa
     data class Error(val mensaje: String) : CargaMapa
@@ -278,10 +292,12 @@ private sealed interface CargaMapa {
     data object SinUbicacion : CargaMapa
 }
 
+// Guarda los ultimos mapas para no pedirlos de nuevo
 private val cacheMapas = object : LruCache<String, Bitmap>(6) {
     override fun sizeOf(key: String, value: Bitmap): Int = 1
 }
 
+// Descarga la imagen del mapa y la deja en cache
 private fun cargarMapa(latitude: Double, longitude: Double): CargaMapa {
     val key = String.format(Locale.ROOT, "%.4f,%.4f", latitude, longitude)
     cacheMapas.get(key)?.let { return CargaMapa.Listo(it) }

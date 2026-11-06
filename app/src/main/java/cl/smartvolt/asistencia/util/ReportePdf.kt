@@ -16,6 +16,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+// Dibuja el PDF del reporte mensual
 object ReportePdf {
 
     private const val ANCHO = 595
@@ -23,8 +24,10 @@ object ReportePdf {
     private const val MARGEN = 40f
     private const val LIMITE_INFERIOR = 790f
 
+    // Nombre del archivo PDF
     fun nombreArchivo(month: YearMonth): String = "registro-smartvolt-$month.pdf"
 
+    // Arma el PDF completo con resumen y detalle
     fun construir(
         report: MonthlyReport,
         siteName: String,
@@ -166,6 +169,7 @@ object ReportePdf {
         }
     }
 
+    // Dibuja el encabezado de cada pagina
     private fun encabezadoPagina(
         lienzo: Canvas,
         titulo: Paint,
@@ -184,6 +188,7 @@ object ReportePdf {
         return 124f
     }
 
+    // Dibuja los titulos de las columnas
     private fun filaEncabezado(
         lienzo: Canvas,
         encabezado: Paint,
@@ -199,9 +204,11 @@ object ReportePdf {
         return y + 18f
     }
 
+    // Pasa un instante a la hora local
     private fun hora(millis: Long, zone: ZoneId, formato: DateTimeFormatter): String =
         Instant.ofEpochMilli(millis).atZone(zone).toLocalTime().format(formato)
 
+    // Crea un pincel con tamano, color y peso
     private fun pincel(tamano: Float, color: Int, negrita: Boolean = false): Paint =
         Paint().apply {
             this.color = color

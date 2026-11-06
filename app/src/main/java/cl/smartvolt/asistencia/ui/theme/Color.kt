@@ -35,21 +35,25 @@ val ErrorRed = Color(0xFFB42318)
 val ErrorContainerSoft = Color(0xFFFEE4E2)
 
 // Esquema oscuro (se conserva disponible para futuras preferencias)
+// Azul de accion en modo oscuro
 val VoltAmberNight = Color(0xFF8DBBFF)
 val VoltAmberNightInk = Color(0xFF082B57)
 val VoltAmberNightContainer = Color(0xFF164B88)
 val OnVoltAmberNightContainer = Color(0xFFDCEBFF)
 
+// Verde de confirmacion en modo oscuro
 val SteelTealNight = Color(0xFF7DDAA8)
 val OnSteelTealNight = Color(0xFF063A22)
 val SteelTealNightContainer = Color(0xFF145B37)
 val OnSteelTealNightContainer = Color(0xFFDDF5E8)
 
+// Ambar de atencion en modo oscuro
 val SafetyRustNight = Color(0xFFFFC46B)
 val OnSafetyRustNight = Color(0xFF4A2A00)
 val SafetyRustNightContainer = Color(0xFF704500)
 val OnSafetyRustNightContainer = Color(0xFFFFEFCF)
 
+// Fondos y textos en modo oscuro
 val CarbonNight = Color(0xFF0C1728)
 val CarbonNightSurface = Color(0xFF14243A)
 val CarbonNightMuted = Color(0xFFE4ECF7)

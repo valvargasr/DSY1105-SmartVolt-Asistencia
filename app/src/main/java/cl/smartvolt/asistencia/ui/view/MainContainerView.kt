@@ -33,6 +33,7 @@ import cl.smartvolt.asistencia.modelo.DemoAccount
 import cl.smartvolt.asistencia.modelo.WorkerRole
 import cl.smartvolt.asistencia.ui.components.SmartVoltTopBar
 
+// Rutas internas de las pestanas y pantallas
 private const val RUTA_INICIO = "inicio"
 private const val RUTA_ASISTENCIA = "asistencia"
 private const val RUTA_HISTORIAL = "historial"
@@ -42,8 +43,10 @@ private const val RUTA_FAENA = "faena"
 private const val RUTA_REPORTE = "reporte"
 private const val RUTA_HORAS_EXTRA = "horas_extra"
 
+// Una pestana de la barra inferior
 private data class Pestana(val ruta: String, val etiqueta: String, val icono: ImageVector)
 
+// Pestanas visibles en la barra inferior
 private val pestanas = listOf(
     Pestana(RUTA_INICIO, "Inicio", Icons.Outlined.Home),
     Pestana(RUTA_ASISTENCIA, "Asistencia", Icons.Outlined.MyLocation),
@@ -52,10 +55,12 @@ private val pestanas = listOf(
 )
 
 @Composable
+// Contenedor con barra inferior y navegacion interna
 fun MainContainerView(
     cuenta: DemoAccount,
     onCerrarSesion: () -> Unit
 ) {
+    // Controlador de navegacion de las pestanas
     val nav = rememberNavController()
     val entrada by nav.currentBackStackEntryAsState()
     val rutaActual = entrada?.destination?.route ?: RUTA_INICIO
@@ -90,6 +95,7 @@ fun MainContainerView(
             }
         }
     ) { padding ->
+        // PANTALLAS INTERNAS
         NavHost(
             navController = nav,
             startDestination = RUTA_INICIO,
@@ -183,6 +189,7 @@ fun MainContainerView(
     }
 }
 
+// Cambia de pestana guardando el estado
 private fun NavHostController.irAPestana(ruta: String) {
     navigate(ruta) {
         popUpTo(RUTA_INICIO) { saveState = true }
@@ -192,6 +199,7 @@ private fun NavHostController.irAPestana(ruta: String) {
 }
 
 @Composable
+// Pantalla que se muestra si el rol no tiene permiso
 private fun AccesoDenegado(
     titulo: String,
     detalle: String,

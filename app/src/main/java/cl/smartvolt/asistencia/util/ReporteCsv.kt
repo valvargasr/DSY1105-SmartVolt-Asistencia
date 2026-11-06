@@ -7,10 +7,13 @@ import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+// Arma el CSV del reporte mensual
 object ReporteCsv {
 
+    // Nombre del archivo CSV
     fun nombreArchivo(month: YearMonth): String = "registro-smartvolt-$month.csv"
 
+    // Genera el contenido del CSV fila por fila
     fun contenido(report: MonthlyReport, zone: ZoneId = ZoneId.systemDefault()): String {
         // armamos el csv a mano porque son pocas columnas, el BOM es para que Excel no rompa
         val formatoHora = DateTimeFormatter.ofPattern("HH:mm")
@@ -47,9 +50,11 @@ object ReporteCsv {
         return texto.toString()
     }
 
+    // Pasa un instante a la hora local
     private fun hora(millis: Long, zone: ZoneId, formato: DateTimeFormatter): String =
         Instant.ofEpochMilli(millis).atZone(zone).toLocalTime().format(formato)
 
+    // Quita puntos y comas que rompen el CSV
     private fun limpiar(valor: String): String =
         valor.replace(';', ',').replace('\n', ' ').replace('\r', ' ')
 }

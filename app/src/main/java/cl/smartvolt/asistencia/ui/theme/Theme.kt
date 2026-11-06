@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
+// Esquema claro que usa la app por defecto
 private val LightColorScheme = lightColorScheme(
     primary = VoltAmber,
     onPrimary = VoltAmberInk,
@@ -39,6 +40,7 @@ private val LightColorScheme = lightColorScheme(
     onErrorContainer = ColorTokens.OnErrorContainerLight
 )
 
+// Esquema oscuro listo para futuras preferencias
 private val DarkColorScheme = darkColorScheme(
     primary = VoltAmberNight,
     onPrimary = VoltAmberNightInk,
@@ -66,6 +68,7 @@ private val DarkColorScheme = darkColorScheme(
     onErrorContainer = OnErrorNightContainer
 )
 
+// Esquinas redondeadas de botones, tarjetas y campos
 private val SmartVoltShapes = Shapes(
     extraSmall = RoundedCornerShape(8.dp),
     small = RoundedCornerShape(12.dp),
@@ -75,6 +78,7 @@ private val SmartVoltShapes = Shapes(
 )
 
 @Composable
+// Aplica colores, tipografia y formas a toda la interfaz
 fun SmartVoltAsistenciaTheme(
     // La interfaz clara se mantiene constante para que los colores de estado
     // sean siempre reconocibles durante una demostración en terreno.
@@ -99,6 +103,7 @@ fun SmartVoltAsistenciaTheme(
     )
 }
 
+// Colores sueltos que no estan en la paleta principal
 private object ColorTokens {
     val OutlineVariantLight = androidx.compose.ui.graphics.Color(0xFFD5DFEC)
     val OutlineVariantDark = androidx.compose.ui.graphics.Color(0xFF40536C)

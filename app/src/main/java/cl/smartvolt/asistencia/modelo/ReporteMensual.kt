@@ -6,6 +6,7 @@ import java.time.YearMonth
 import java.time.ZoneId
 import java.util.Locale
 
+// Resumen de un dia trabajado
 data class ReportDay(
     val date: LocalDate,
     val firstCheckInMillis: Long?,
@@ -18,6 +19,7 @@ data class ReportDay(
     val totalMinutes: Long get() = attendanceMinutes + overtimeMinutes
 }
 
+// Resumen de un trabajador en el mes
 data class ReportWorker(
     val workerId: String,
     val workerName: String,
@@ -31,6 +33,7 @@ data class ReportWorker(
     val daysWithoutCheckOut: Int get() = days.count { it.withoutCheckOut }
 }
 
+// Reporte completo de un mes
 data class MonthlyReport(
     val month: YearMonth,
     val workers: List<ReportWorker>
@@ -48,6 +51,7 @@ data class MonthlyReport(
 // acá se arma todo el reporte del mes, es la parte más pesada de la app
 object MonthlyReportCalculator {
 
+    // Junta marcas y solicitudes aprobadas del mes
     fun build(
         events: List<Asistencia>,
         approvals: List<SolicitudHoraExtra>,
@@ -90,6 +94,7 @@ object MonthlyReportCalculator {
         )
     }
 
+    // Arma los dias del trabajador y empareja entradas con salidas
     private fun diasDelTrabajador(
         eventos: List<Asistencia>,
         aprobadas: List<SolicitudHoraExtra>,
@@ -147,6 +152,7 @@ object MonthlyReportCalculator {
     }
 }
 
+// Muestra los minutos como horas y minutos
 fun formatDuration(minutes: Long): String {
     val horas = minutes / 60
     val resto = minutes % 60
@@ -157,5 +163,6 @@ fun formatDuration(minutes: Long): String {
     }
 }
 
+// Muestra las horas con dos decimales y coma
 fun formatDecimalHours(minutes: Long): String =
     String.format(Locale.US, "%.2f", minutes / 60.0).replace('.', ',')

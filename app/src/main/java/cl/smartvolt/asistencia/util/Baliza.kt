@@ -18,6 +18,7 @@ import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 
+// Estados posibles del escaneo de balizas
 enum class EstadoBaliza {
     ENCONTRADA,
     NO_ENCONTRADA,
@@ -28,6 +29,7 @@ enum class EstadoBaliza {
     ERROR
 }
 
+// Datos que devuelve el escaneo
 data class ResultadoBaliza(
     val estado: EstadoBaliza,
     val beaconId: String? = null,
@@ -44,17 +46,21 @@ data class ResultadoBaliza(
         }
 }
 
+// Busca balizas Bluetooth cerca del telefono
 class Baliza(private val context: Context) {
 
     private val bluetoothManager: BluetoothManager? =
         context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
 
+    // Revisa si el Bluetooth esta encendido
     fun activa(): Boolean = bluetoothManager?.adapter?.isEnabled == true
 
+    // Revisa si el equipo soporta Bluetooth de baja energia
     fun soportada(): Boolean =
         context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
 
     @SuppressLint("MissingPermission")
+    // Escanea unos segundos y devuelve la primera baliza conocida
     suspend fun escanear(): ResultadoBaliza {
         // escaneamos BLE un rato buscando iBeacon, Eddystone o el UUID del lab
         if (!soportada()) return ResultadoBaliza(EstadoBaliza.NO_SOPORTADA)
@@ -123,6 +129,7 @@ class Baliza(private val context: Context) {
         }
     }
 
+    // Detiene el escaneo cuando ya hay resultado
     private fun detener(
         scanner: android.bluetooth.le.BluetoothLeScanner,
         callback: ScanCallback
@@ -130,6 +137,7 @@ class Baliza(private val context: Context) {
         runCatching { scanner.stopScan(callback) }
     }
 
+    // Reconoce iBeacon, Eddystone o la baliza del laboratorio
     private fun interpretar(result: ScanResult): BalizaEncontrada? {
         // acá se decide si el anuncio es de una baliza conocida o de cualquier cosa
         val record = result.scanRecord ?: return null
@@ -164,14 +172,17 @@ class Baliza(private val context: Context) {
         return null
     }
 
+    // Convierte 16 bytes en un UUID legible
     private fun uuidDesde(bytes: ByteArray, offset: Int): String {
         val buffer = ByteBuffer.wrap(bytes, offset, 16)
         return UUID(buffer.long, buffer.long).toString()
     }
 
+    // Convierte bytes en texto hexadecimal
     private fun ByteArray.aHex(): String =
         joinToString("") { byte -> String.format(Locale.ROOT, "%02x", byte) }
 
+    // Revisa el permiso de Bluetooth segun la version de Android
     private fun tienePermiso(): Boolean {
         val permiso = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Manifest.permission.BLUETOOTH_SCAN
@@ -189,6 +200,7 @@ class Baliza(private val context: Context) {
         val minor: Int?
     )
 
+    // Identificadores fijos de las balizas
     companion object {
         const val UUID_LABORATORIO = "6f1b2c3d-4e5f-4a6b-8c9d-0e1f2a3b4c5d"
         const val IBEACON_COMPANY_ID = 0x004C

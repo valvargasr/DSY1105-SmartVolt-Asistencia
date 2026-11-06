@@ -47,6 +47,7 @@ import cl.smartvolt.asistencia.ui.components.SectionLabel
 import cl.smartvolt.asistencia.ui.components.SmartVoltTopBar
 
 @Composable
+// Pantalla de gestion con las acciones segun el rol
 fun GestionView(
     cuenta: DemoAccount,
     onAbrirPanel: () -> Unit,
@@ -68,13 +69,16 @@ fun GestionView(
                     .fillMaxWidth()
                     .widthIn(max = 540.dp)
             ) {
+                // ENCABEZADO
                 SmartVoltTopBar(
                     title = "Gestión",
                     subtitle = "Acciones para ${cuenta.roleLabel}"
                 )
 
                 Spacer(Modifier.height(16.dp))
+                // ACCIONES POR ROL
                 when (cuenta.role) {
+                    // OBRERO
                     WorkerRole.WORKER -> {
                         TarjetaAccion(
                             icon = Icons.Outlined.Timer,
@@ -84,6 +88,7 @@ fun GestionView(
                         )
                     }
 
+                    // SUPERVISOR
                     WorkerRole.SUPERVISOR -> {
                         TarjetaAccion(
                             icon = Icons.Outlined.Groups,
@@ -93,6 +98,7 @@ fun GestionView(
                         )
                     }
 
+                    // ADMINISTRADOR
                     WorkerRole.ADMIN -> {
                         TarjetaAccion(
                             icon = Icons.Outlined.Groups,
@@ -134,6 +140,7 @@ fun GestionView(
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Column(modifier = Modifier.padding(17.dp)) {
+                        // DATOS DE LA SESION
                         SectionLabel(text = "Sesión de demostración")
                         Spacer(Modifier.height(10.dp))
                         FilaDato(Icons.Outlined.Person, cuenta.displayName)
@@ -154,6 +161,7 @@ fun GestionView(
                 }
 
                 Spacer(Modifier.height(16.dp))
+                // CERRAR SESION
                 OutlinedButton(
                     onClick = onCerrarSesion,
                     modifier = Modifier
@@ -171,6 +179,7 @@ fun GestionView(
 }
 
 @Composable
+// Tarjeta con una accion de gestion
 private fun TarjetaAccion(
     icon: ImageVector,
     titulo: String,
@@ -224,6 +233,7 @@ private fun TarjetaAccion(
 }
 
 @Composable
+// Fila con icono y un dato corto
 private fun FilaDato(icon: ImageVector, texto: String) {
     Row(
         modifier = Modifier.padding(vertical = 3.dp),

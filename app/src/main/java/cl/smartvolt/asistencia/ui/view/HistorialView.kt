@@ -58,6 +58,7 @@ import cl.smartvolt.asistencia.util.Fechas.fechaHora
 import cl.smartvolt.asistencia.viewmodel.HistorialViewModel
 import java.util.Locale
 
+// Filtros de la lista de marcas
 private enum class FiltroHistorial(val etiqueta: String) {
     TODAS("Todas"),
     ENTRADAS("Entradas"),
@@ -65,6 +66,7 @@ private enum class FiltroHistorial(val etiqueta: String) {
 }
 
 @Composable
+// Lista las marcas guardadas en el telefono
 fun HistorialView(viewModel: HistorialViewModel = viewModel()) {
     val marcas by viewModel.marcas.collectAsState()
     val encabezado by viewModel.encabezado.collectAsState()
@@ -83,12 +85,14 @@ fun HistorialView(viewModel: HistorialViewModel = viewModel()) {
             .fillMaxSize()
             .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
+        // ENCABEZADO
         SmartVoltTopBar(
             title = "Historial",
             subtitle = encabezado
         )
 
         Spacer(Modifier.height(14.dp))
+        // TARJETA DE RESUMEN
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(14.dp),
@@ -119,6 +123,7 @@ fun HistorialView(viewModel: HistorialViewModel = viewModel()) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // FILTROS
             FiltroHistorial.entries.forEach { opcion ->
                 FilterChip(
                     selected = filtro == opcion,
@@ -145,6 +150,7 @@ fun HistorialView(viewModel: HistorialViewModel = viewModel()) {
                 .fillMaxWidth()
                 .weight(1f)
         ) {
+            // ESTADO VACIO
             if (filtradas.isEmpty()) {
                 EmptyState(
                     icon = Icons.Outlined.History,
@@ -156,6 +162,7 @@ fun HistorialView(viewModel: HistorialViewModel = viewModel()) {
                     }
                 )
             } else {
+                // LISTA DE MARCAS
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -171,6 +178,7 @@ fun HistorialView(viewModel: HistorialViewModel = viewModel()) {
 }
 
 @Composable
+// Tarjeta con los datos de una marca
 private fun TarjetaMarca(marca: Asistencia) {
     // cada tarjeta muestra dónde y con qué baliza se marcó, por si hay que revisar
     val esEntrada = marca.type == Asistencia.TYPE_CHECK_IN
@@ -277,6 +285,7 @@ private fun TarjetaMarca(marca: Asistencia) {
 }
 
 @Composable
+// Fila con icono, etiqueta y valor
 private fun FilaDetalle(icon: ImageVector, label: String, value: String) {
     Row(
         modifier = Modifier

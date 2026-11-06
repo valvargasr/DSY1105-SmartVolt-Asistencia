@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+// Mes y reporte que se muestra en pantalla
 data class ReporteUiState(
     val mes: YearMonth = YearMonth.now(),
     val reporte: MonthlyReport? = null,
@@ -25,6 +26,7 @@ data class ReporteUiState(
     val siteName: String = ""
 )
 
+// Arma el reporte mensual de la faena
 class ReporteViewModel(application: Application) : AndroidViewModel(application) {
 
     private val asistenciaDao = AppDatabase.obtener(application).asistenciaDao()
@@ -40,17 +42,20 @@ class ReporteViewModel(application: Application) : AndroidViewModel(application)
         cargar()
     }
 
+    // Cambia al mes anterior y recalcula
     fun mesAnterior() {
         _uiState.update { it.copy(mes = it.mes.minusMonths(1)) }
         cargar()
     }
 
+    // Avanza un mes solo si no pasa del mes actual
     fun mesSiguiente() {
         if (_uiState.value.mes >= YearMonth.now()) return
         _uiState.update { it.copy(mes = it.mes.plusMonths(1)) }
         cargar()
     }
 
+    // Junta marcas y solicitudes y arma el reporte
     private fun cargar() {
         val mes = _uiState.value.mes
         // el reporte se arma al vuelo juntando marcas y solicitudes del mes

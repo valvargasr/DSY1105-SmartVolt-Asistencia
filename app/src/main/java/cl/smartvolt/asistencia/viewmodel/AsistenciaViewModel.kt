@@ -98,6 +98,7 @@ data class AsistenciaUiState(
         }
 }
 
+// Controla permisos, ubicacion, baliza y registro de marcas
 class AsistenciaViewModel(application: Application) : AndroidViewModel(application) {
 
     private val asistenciaDao = AppDatabase.obtener(application).asistenciaDao()
@@ -134,6 +135,7 @@ class AsistenciaViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    // Guarda el estado del permiso de ubicacion
     fun actualizarPermiso(concedido: Boolean, bloqueado: Boolean) {
         _uiState.update {
             it.copy(
@@ -146,6 +148,7 @@ class AsistenciaViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    // Pide ubicacion y baliza al mismo tiempo y calcula la distancia
     fun verificar() {
         if (_uiState.value.verificando) return
 
@@ -205,10 +208,13 @@ class AsistenciaViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    // Registra la entrada del dia
     fun registrarEntrada() = registrar(Asistencia.TYPE_CHECK_IN)
 
+    // Registra la salida del dia
     fun registrarSalida() = registrar(Asistencia.TYPE_CHECK_OUT)
 
+    // Revisa la jornada y guarda la marca en Room
     private fun registrar(tipo: String) {
         val estado = _uiState.value
         if (estado.guardando) return
@@ -278,6 +284,7 @@ class AsistenciaViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    // Explica por que todavia no se puede marcar
     private fun motivoParaNoRegistrar(estado: AsistenciaUiState): String {
         if (estado.ubicacion?.estado != EstadoUbicacion.LISTA) {
             return "Primero verifica la presencia: se necesita una lectura de ubicación."
@@ -293,6 +300,7 @@ class AsistenciaViewModel(application: Application) : AndroidViewModel(applicati
         return "No se puede registrar la marca en este momento."
     }
 
+    // Esconde el mensaje de la pantalla
     fun descartarMensaje() {
         _uiState.update { it.copy(mensaje = null) }
     }

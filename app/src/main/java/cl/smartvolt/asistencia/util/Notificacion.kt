@@ -8,15 +8,19 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 
+// Muestra avisos locales cuando se guarda una marca
 class Notificacion(private val context: Context) {
 
     @SuppressLint("MissingPermission")
+    // Avisa que se registro la entrada
     fun avisarEntrada() = avisar("Entrada registrada")
 
     @SuppressLint("MissingPermission")
+    // Avisa que se registro la salida
     fun avisarSalida() = avisar("Salida registrada")
 
     @SuppressLint("MissingPermission")
+    // Arma y muestra la notificacion
     private fun avisar(titulo: String) {
         // un aviso simple cuando se guarda una marca, sin robar la pantalla
         val permiso = Permisos.permisoNotificaciones()
@@ -37,6 +41,7 @@ class Notificacion(private val context: Context) {
         }
     }
 
+    // Crea el canal de notificaciones en Android 8 o superior
     private fun crearCanal() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val canal = NotificationChannel(
@@ -51,6 +56,7 @@ class Notificacion(private val context: Context) {
         manager.createNotificationChannel(canal)
     }
 
+    // Datos fijos del canal y del aviso
     private companion object {
         const val CANAL = "asistencia"
         const val ID = 1001

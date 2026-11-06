@@ -66,12 +66,15 @@ import cl.smartvolt.asistencia.viewmodel.LoginViewModel
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
+// Pantalla para entrar con correo y contrasena
 fun LoginView(
     onSesionIniciada: () -> Unit,
     loginViewModel: LoginViewModel = viewModel()
 ) {
+    // Estado del formulario
     val estado by loginViewModel.uiState.collectAsState()
 
+    // Guarda la sesion y avisa a la navegacion
     fun entrar(cuenta: DemoAccount) {
         Sesion.cuenta = cuenta
         onSesionIniciada()
@@ -92,6 +95,7 @@ fun LoginView(
                     .widthIn(max = 460.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // LOGO Y ENCABEZADO
                 SmartVoltMark(size = 62.dp)
                 Spacer(Modifier.height(18.dp))
                 Text(
@@ -108,12 +112,14 @@ fun LoginView(
                 )
                 Spacer(Modifier.height(20.dp))
 
+                // CAMPOS
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Column(modifier = Modifier.padding(18.dp)) {
+                        // CORREO
                         OutlinedTextField(
                             value = estado.correo,
                             onValueChange = loginViewModel::actualizarCorreo,
@@ -139,6 +145,7 @@ fun LoginView(
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(Modifier.height(12.dp))
+                        // CONTRASENA
                         OutlinedTextField(
                             value = estado.contrasena,
                             onValueChange = loginViewModel::actualizarContrasena,
@@ -178,6 +185,7 @@ fun LoginView(
                     }
                 }
 
+                // MENSAJE DE ESTADO
                 AnimatedVisibility(
                     visible = estado.mensaje.isNotEmpty(),
                     enter = fadeIn() + expandVertically(),
@@ -213,6 +221,7 @@ fun LoginView(
                 }
 
                 Spacer(Modifier.height(16.dp))
+                // BOTON DE INGRESO
                 Button(
                     onClick = {
                         loginViewModel.ingresar()?.let { entrar(it) }
@@ -241,6 +250,7 @@ fun LoginView(
                     HorizontalDivider(modifier = Modifier.weight(1f))
                 }
                 Spacer(Modifier.height(12.dp))
+                // BOTONES DE CUENTAS DEMO
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -272,6 +282,7 @@ fun LoginView(
                 }
 
                 Spacer(Modifier.height(14.dp))
+                // CREDENCIALES DE LA DEMO
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(

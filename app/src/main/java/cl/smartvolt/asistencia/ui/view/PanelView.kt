@@ -58,11 +58,14 @@ import cl.smartvolt.asistencia.viewmodel.PanelUiState
 import cl.smartvolt.asistencia.viewmodel.PanelViewModel
 
 @Composable
+// Panel del supervisor con el estado de la faena
 fun PanelView(
     onVolver: () -> Unit,
     viewModel: PanelViewModel = viewModel()
 ) {
+    // Estado del panel
     val estado by viewModel.uiState.collectAsState()
+    // Agrupa las marcas del dia por trabajador
     val porTrabajador = estado.marcasHoy
         .groupBy { it.workerId }
         .toList()
@@ -81,6 +84,7 @@ fun PanelView(
                     .fillMaxWidth()
                     .widthIn(max = 560.dp)
             ) {
+                // ENCABEZADO
                 SmartVoltTopBar(
                     title = "Panel de faena",
                     subtitle = estado.faena.name,
@@ -88,6 +92,7 @@ fun PanelView(
                 )
 
                 Spacer(Modifier.height(16.dp))
+                // ESTADO OPERATIVO
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -128,6 +133,7 @@ fun PanelView(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
+                    // PRESENTES
                     Metrica(
                         valor = estado.presentes.toString(),
                         etiqueta = "Presentes",
@@ -136,6 +142,7 @@ fun PanelView(
                         tone = StatusTone.OK,
                         modifier = Modifier.weight(1f)
                     )
+                    // CON SALIDA
                     Metrica(
                         valor = estado.conSalida.toString(),
                         etiqueta = "Con salida",
@@ -151,6 +158,7 @@ fun PanelView(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
+                    // MARCAS
                     Metrica(
                         valor = estado.marcasHoy.size.toString(),
                         etiqueta = "Marcas",
@@ -159,6 +167,7 @@ fun PanelView(
                         tone = StatusTone.WARNING,
                         modifier = Modifier.weight(1f)
                     )
+                    // PENDIENTES
                     Metrica(
                         valor = estado.pendientes.toString(),
                         etiqueta = "Pendientes",
@@ -173,6 +182,7 @@ fun PanelView(
                 SectionLabel(text = "Detalle por trabajador")
                 Spacer(Modifier.height(8.dp))
 
+                // ESTADO VACIO
                 AnimatedVisibility(
                     visible = porTrabajador.isEmpty(),
                     enter = fadeIn(),
@@ -185,6 +195,7 @@ fun PanelView(
                     )
                 }
 
+                // LISTA DE TRABAJADORES
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     porTrabajador.forEach { (workerId, marcas) ->
                         FilaTrabajador(workerId, marcas)
@@ -192,6 +203,7 @@ fun PanelView(
                 }
 
                 Spacer(Modifier.height(18.dp))
+                // BOTON VOLVER
                 OutlinedButton(
                     onClick = onVolver,
                     modifier = Modifier
@@ -207,6 +219,7 @@ fun PanelView(
 }
 
 @Composable
+// Tarjeta pequena con un numero y su etiqueta
 private fun Metrica(
     valor: String,
     etiqueta: String,
@@ -250,6 +263,7 @@ private fun Metrica(
 }
 
 @Composable
+// Resumen de las marcas de un trabajador
 private fun FilaTrabajador(workerId: String, marcas: List<Asistencia>) {
     val entrada = marcas.firstOrNull { it.type == Asistencia.TYPE_CHECK_IN }
     val salida = marcas.lastOrNull { it.type == Asistencia.TYPE_CHECK_OUT }
@@ -330,6 +344,7 @@ private fun FilaTrabajador(workerId: String, marcas: List<Asistencia>) {
 }
 
 @Composable
+// Muestra la hora de una marca
 private fun Marca(
     icon: ImageVector,
     etiqueta: String,

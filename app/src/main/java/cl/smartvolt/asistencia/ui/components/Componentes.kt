@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+// Tonos de estado que usan las tarjetas y pildoras
 enum class StatusTone {
     OK,
     WARNING,
@@ -42,6 +43,7 @@ enum class StatusTone {
 }
 
 @Composable
+// Color de texto para cada tono de estado
 fun statusColor(tone: StatusTone): Color = when (tone) {
     StatusTone.OK -> MaterialTheme.colorScheme.secondary
     StatusTone.WARNING -> MaterialTheme.colorScheme.tertiary
@@ -50,6 +52,7 @@ fun statusColor(tone: StatusTone): Color = when (tone) {
 }
 
 @Composable
+// Color de fondo para cada tono de estado
 fun statusContainer(tone: StatusTone): Color = when (tone) {
     StatusTone.OK -> MaterialTheme.colorScheme.secondaryContainer
     StatusTone.WARNING -> MaterialTheme.colorScheme.tertiaryContainer
@@ -58,6 +61,7 @@ fun statusContainer(tone: StatusTone): Color = when (tone) {
 }
 
 @Composable
+// Dibuja el logo redondo de SmartVolt
 fun SmartVoltMark(modifier: Modifier = Modifier, size: Dp = 56.dp) {
     Box(
         modifier = modifier
@@ -75,6 +79,7 @@ fun SmartVoltMark(modifier: Modifier = Modifier, size: Dp = 56.dp) {
 }
 
 @Composable
+// Texto pequeno en mayusculas para separar secciones
 fun SectionLabel(
     text: String,
     modifier: Modifier = Modifier,
@@ -89,6 +94,7 @@ fun SectionLabel(
 }
 
 @Composable
+// Pildora con punto de color y un texto corto
 fun StatusPill(text: String, tone: StatusTone, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier,
@@ -115,6 +121,7 @@ fun StatusPill(text: String, tone: StatusTone, modifier: Modifier = Modifier) {
 }
 
 @Composable
+// Tarjeta con icono, titulo, detalle y estado
 fun ResourceStatusCard(
     icon: ImageVector,
     eyebrow: String,
@@ -180,6 +187,7 @@ fun ResourceStatusCard(
 }
 
 @Composable
+// Barra superior con titulo, subtitulo y boton de volver
 fun SmartVoltTopBar(
     title: String,
     subtitle: String,
@@ -213,6 +221,7 @@ fun SmartVoltTopBar(
 }
 
 @Composable
+// Bloque que se muestra cuando no hay datos
 fun EmptyState(
     icon: ImageVector,
     title: String,

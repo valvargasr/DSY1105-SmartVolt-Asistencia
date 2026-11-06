@@ -9,7 +9,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import cl.smartvolt.asistencia.ui.theme.SmartVoltAsistenciaTheme
 
+// Punto de entrada de la app Android
 class MainActivity : ComponentActivity() {
+    // Prepara la ventana y carga la interfaz
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

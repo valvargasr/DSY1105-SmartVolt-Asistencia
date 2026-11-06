@@ -10,16 +10,19 @@ import cl.smartvolt.asistencia.ui.view.MainContainerView
 import cl.smartvolt.asistencia.ui.view.SplashView
 import cl.smartvolt.asistencia.util.Sesion
 
+// Nombres de las tres pantallas principales
 private const val RUTA_SPLASH = "splash"
 private const val RUTA_LOGIN = "login"
 private const val RUTA_PRINCIPAL = "principal"
 
 @Composable
+// Controla el paso de splash a login y luego a la app
 fun AppNavHost() {
     val nav = rememberNavController()
 
     // son tres pantallas nomás: splash, login y el contenedor con las pestañas
     NavHost(navController = nav, startDestination = RUTA_SPLASH) {
+        // SPLASH
         composable(RUTA_SPLASH) {
             SplashView(
                 onContinuar = {
@@ -31,6 +34,7 @@ fun AppNavHost() {
             )
         }
 
+        // LOGIN
         composable(RUTA_LOGIN) {
             LoginView(
                 onSesionIniciada = {
@@ -42,6 +46,7 @@ fun AppNavHost() {
             )
         }
 
+        // CONTENEDOR CON PESTANAS
         composable(RUTA_PRINCIPAL) {
             // si no hay sesión guardada lo devolvemos al login
             val cuenta = Sesion.cuenta

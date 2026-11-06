@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+// Datos del formulario de login
 data class LoginUiState(
     val correo: String = "",
     val contrasena: String = "",
@@ -19,23 +20,28 @@ data class LoginUiState(
     val mostrarClave: Boolean = false
 )
 
+// Valida el correo y la contrasena contra las cuentas demo
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
+    // Guarda el correo y limpia el error anterior
     fun actualizarCorreo(valor: String) {
         _uiState.value = _uiState.value.copy(correo = valor, errorCorreo = "", mensaje = "")
     }
 
+    // Guarda la contrasena y limpia el error anterior
     fun actualizarContrasena(valor: String) {
         _uiState.value = _uiState.value.copy(contrasena = valor, errorContrasena = "", mensaje = "")
     }
 
+    // Muestra u oculta la contrasena
     fun cambiarClaveVisible() {
         _uiState.value = _uiState.value.copy(mostrarClave = !_uiState.value.mostrarClave)
     }
 
+    // Revisa los datos y devuelve la cuenta si existe
     fun ingresar(): DemoAccount? {
         val estado = _uiState.value
         // login contra las cuentas demo, todavía no hay backend
@@ -79,6 +85,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         return cuenta
     }
 
+    // Entra directo con una cuenta de demostracion
     fun accesoDemo(cuenta: DemoAccount): DemoAccount {
         // los botones demo rellenan el formulario y entran directo
         _uiState.value = _uiState.value.copy(

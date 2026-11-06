@@ -57,6 +57,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
+// Muestra el reporte mensual y permite exportarlo
 fun ReporteView(
     siteName: String,
     onVolver: () -> Unit,
@@ -67,6 +68,7 @@ fun ReporteView(
     val context = LocalContext.current
     var csvPendiente by remember { mutableStateOf<String?>(null) }
 
+    // Selector de archivo para guardar el CSV
     val guardarCsv = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv")
     ) { uri ->
@@ -88,6 +90,7 @@ fun ReporteView(
 
     var pdfPendiente by remember { mutableStateOf<ByteArray?>(null) }
 
+    // Selector de archivo para guardar el PDF
     val guardarPdf = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/pdf")
     ) { uri ->
@@ -113,6 +116,7 @@ fun ReporteView(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         ) {
+            // ENCABEZADO
             SmartVoltTopBar(
                 title = "Registro del mes",
                 subtitle = "Administración - $nombreFaena",
@@ -120,6 +124,7 @@ fun ReporteView(
             )
             Spacer(Modifier.height(12.dp))
 
+            // SELECTOR DE MES
             SelectorMes(
                 mes = estado.mes,
                 onAnterior = viewModel::mesAnterior,
@@ -128,6 +133,7 @@ fun ReporteView(
 
             Spacer(Modifier.height(16.dp))
             val reporte = estado.reporte
+            // CARGANDO
             if (estado.cargando && reporte == null) {
                 Row(
                     modifier = Modifier
@@ -137,6 +143,7 @@ fun ReporteView(
                 ) {
                     CircularProgressIndicator()
                 }
+            // ESTADO VACIO
             } else if (reporte == null || reporte.isEmpty) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -152,9 +159,11 @@ fun ReporteView(
                     }
                 }
             } else {
+                // RESUMEN DEL MES
                 ResumenMes(reporte)
 
                 Spacer(Modifier.height(12.dp))
+                // BOTON CSV
                 Button(
                     onClick = {
                         csvPendiente = ReporteCsv.contenido(reporte)
@@ -169,6 +178,7 @@ fun ReporteView(
                     Text("Guardar registro en CSV")
                 }
                 Spacer(Modifier.height(8.dp))
+                // BOTON PDF
                 OutlinedButton(
                     onClick = {
                         pdfPendiente = ReportePdf.construir(
@@ -192,6 +202,7 @@ fun ReporteView(
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(Modifier.height(8.dp))
+                // LISTA POR TRABAJADOR
                 reporte.workers.forEach { trabajador ->
                     TarjetaTrabajador(trabajador)
                     Spacer(Modifier.height(12.dp))
@@ -202,6 +213,7 @@ fun ReporteView(
 }
 
 @Composable
+// Flechas para cambiar de mes
 private fun SelectorMes(
     mes: YearMonth,
     onAnterior: () -> Unit,
@@ -238,6 +250,7 @@ private fun SelectorMes(
 }
 
 @Composable
+// Totales del mes en una tarjeta
 private fun ResumenMes(reporte: MonthlyReport) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -277,6 +290,7 @@ private fun ResumenMes(reporte: MonthlyReport) {
 }
 
 @Composable
+// Fila con una etiqueta y su valor
 private fun FilaResumen(etiqueta: String, valor: String) {
     Row(
         modifier = Modifier
@@ -294,6 +308,7 @@ private fun FilaResumen(etiqueta: String, valor: String) {
 }
 
 @Composable
+// Detalle de horas de un trabajador
 private fun TarjetaTrabajador(trabajador: ReportWorker) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -343,6 +358,7 @@ private fun TarjetaTrabajador(trabajador: ReportWorker) {
 }
 
 @Composable
+// Detalle de un dia trabajado
 private fun FilaDia(dia: ReportDay) {
     val formato = remember { DateTimeFormatter.ofPattern("EEE dd/MM", Locale.forLanguageTag("es-CL")) }
     val fecha = remember(dia.date) { formato.format(dia.date) }

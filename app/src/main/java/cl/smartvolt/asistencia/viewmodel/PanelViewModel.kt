@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
+// Datos del panel de faena
 data class PanelUiState(
     val faena: Faena = faenaPorDefecto(),
     val marcasHoy: List<Asistencia> = emptyList(),
@@ -23,11 +24,13 @@ data class PanelUiState(
     val pendientes: Int = 0
 )
 
+// Calcula presentes, salidas y pendientes del dia
 class PanelViewModel(application: Application) : AndroidViewModel(application) {
 
     private val asistenciaDao = AppDatabase.obtener(application).asistenciaDao()
     private val faenaDao = AppDatabase.obtener(application).faenaDao()
 
+    // Faena de la sesion actual
     private val siteId = Sesion.cuenta?.siteId ?: Asistencia.SITE_ID
 
     private val _uiState = MutableStateFlow(PanelUiState())
