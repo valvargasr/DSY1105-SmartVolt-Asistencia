@@ -1,0 +1,54 @@
+package cl.smartvolt.asistencia.viewmodel
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import cl.smartvolt.asistencia.modelo.Asistencia
+import cl.smartvolt.asistencia.modelo.Faena
+import cl.smartvolt.asistencia.modelo.faenaPorDefecto
+import cl.smartvolt.asistencia.util.Fechas
+import cl.smartvolt.asistencia.util.Jornada
+import cl.smartvolt.asistencia.util.Sesion
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
+
+data class InicioUiState(
+    val cargando: Boolean = true,
+    val faena: Faena = faenaPorDefecto(),
+    val jornada: Jornada = Jornada(),
+    val pendientes: Int = 0
+)
+
+class InicioViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val asistenciaDao = AppDatabase.obtener(application).asistenciaDao()
+    private val faenaDao = AppDatabase.obtener(application).faenaDao()
+
+    private val workerId = Sesion.cuenta?.workerId ?: Asistencia.WORKER_ID
+    private val siteId = Sesion.cuenta?.siteId ?: Asistencia.SITE_ID
+
+    private val _uiState = MutableStateFlow(InicioUiState())
+    val uiState: StateFlow<InicioUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            combine(
+                asistenciaDao.observarPorTrabajador(workerId),
+                asistenciaDao.observarPendientes(),
+                faenaDao.observarActiva()
+            ) { marcas, pendientes, faenaGuardada ->
+                InicioUiState(
+                    cargando = false,
+                    faena = faenaGuardada ?: faenaPorDefecto(),
+                    jornada = Fechas.estadoJornada(marcas),
+                    pendientes = pendientes.size
+                )
+            }.collect { estado ->
+                _uiState.value = estado
+            }
+        }
+    }
+}
