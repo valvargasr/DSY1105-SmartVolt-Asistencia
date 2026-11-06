@@ -45,10 +45,12 @@ object Validaciones {
     data class ErroresHoraExtra(
         val desde: String = "",
         val hasta: String = "",
-        val motivo: String = ""
+        val motivo: String = "",
+        val fecha: String = ""
     ) {
         val hayErrores: Boolean
-            get() = desde.isNotBlank() || hasta.isNotBlank() || motivo.isNotBlank()
+            get() = desde.isNotBlank() || hasta.isNotBlank() ||
+                motivo.isNotBlank() || fecha.isNotBlank()
     }
 
     sealed interface ResultadoHoraExtra {
@@ -185,9 +187,10 @@ object Validaciones {
         ) {
             return ResultadoHoraExtra.Invalida(
                 ErroresHoraExtra(
-                    desde = if (errorFecha.isNotEmpty()) errorFecha else errorDesde,
+                    desde = errorDesde,
                     hasta = errorHasta,
-                    motivo = errorMotivo
+                    motivo = errorMotivo,
+                    fecha = errorFecha
                 )
             )
         }

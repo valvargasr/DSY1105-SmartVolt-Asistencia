@@ -8,36 +8,33 @@ confidenciales ni coordenadas de faenas reales.
 
 | Recurso | Implementación | Archivo |
 |---|---|---|
-| Ubicación GPS | `LocationManager`, lectura única con timeout de 15 s | `native/location/AndroidLocationProvider.kt` |
-| Bluetooth LE | `BluetoothLeScanner` sin filtro de servicio; acepta iBeacon, Eddystone-UID y UUID de laboratorio | `native/bluetooth/AndroidBeaconScanner.kt` |
-| Permisos | Solicitud en contexto, rechazo y bloqueo permanente | `native/permissions/PermissionChecker.kt` |
-| Notificaciones | Canal `asistencia`, aviso de entrada guardada | `native/notifications/AttendanceNotifier.kt` |
+| Ubicación GPS | `LocationManager`, lectura única con timeout de 15 s | `util/Ubicacion.kt` |
+| Bluetooth LE | `BluetoothLeScanner` sin filtro de servicio; acepta iBeacon, Eddystone-UID y UUID de laboratorio | `util/Baliza.kt` |
+| Permisos | Solicitud en contexto, rechazo y bloqueo permanente | `util/Permisos.kt` |
+| Notificaciones | Canal `asistencia`, aviso de entrada guardada | `util/Notificacion.kt` |
 
-La pantalla que los integra es `feature/attendance/PresenciaScreen.kt`, con su
-`PresenciaViewModel` y las reglas de presentación en `PresenceEvaluator.kt`.
+La pantalla que los integra es `ui/view/AsistenciaView.kt`, con su
+`AsistenciaViewModel` y las reglas de presentación dentro del mismo ViewModel.
 
 ### Contratos que se entregan al resto del equipo
 
 ```kotlin
-data class LocationResult(
-    val status: LocationStatus,          // READY, PERMISSION_DENIED, LOCATION_DISABLED,
-                                         // TIMEOUT, INSUFFICIENT_ACCURACY, UNAVAILABLE, ERROR
+data class ResultadoUbicacion(
+    val estado: EstadoUbicacion,          // LISTA, SIN_PERMISO, UBICACION_APAGADA,
+                                          // TIEMPO_AGOTADO, NO_DISPONIBLE, ERROR
     val latitude: Double? = null,
     val longitude: Double? = null,
     val accuracyMeters: Float? = null,
-    val capturedAtMillis: Long? = null,
-    val mockSignal: MockSignal = MockSignal.UNKNOWN,   // DETECTED, NOT_DETECTED, UNKNOWN
-    val errorCode: String? = null
+    val capturadaMillis: Long? = null,
+    val simulada: Boolean = false
 )
 
-data class BeaconScanResult(
-    val status: BeaconScanStatus,        // FOUND, NOT_FOUND, PERMISSION_DENIED, BLUETOOTH_OFF,
-                                         // NOT_SUPPORTED, TIMEOUT, ERROR
-    val beaconId: String? = null,        // UUID iBeacon, UID Eddystone o UUID de laboratorio
+data class ResultadoBaliza(
+    val estado: EstadoBaliza,            // ENCONTRADA, NO_ENCONTRADA, SIN_PERMISO,
+                                         // BLUETOOTH_APAGADO, NO_SOPORTADA, TIEMPO_AGOTADO, ERROR
+    val beaconId: String? = null,
     val rssi: Int? = null,
-    val capturedAtMillis: Long? = null,
-    val errorCode: String? = null,
-    val format: String? = null,          // "iBeacon", "Eddystone-UID" o "GATT"
+    val formato: String? = null,         // "iBeacon", "Eddystone-UID" o "GATT"
     val major: Int? = null,
     val minor: Int? = null
 )
@@ -48,17 +45,12 @@ que el ViewModel y la interfaz no necesitan `try/catch`.
 
 ## Pruebas automatizadas
 
-`app/src/test/java/cl/smartvolt/asistencia/feature/attendance/PresenceEvaluatorTest.kt`
+`app/src/test/java/cl/smartvolt/asistencia/util/GeocercaTest.kt`
 
-Son 15 pruebas y las 15 pasan. El proyecto completo tiene 70 pruebas, también sin fallos
+Son 5 pruebas de geocerca y las 5 pasan. El proyecto completo tiene 23 pruebas, también sin fallos
 (`.\gradlew.bat testDebugUnitTest`).
 
-Las pruebas cubren la lógica de decisión, no el hardware:
-
-- no se puede registrar sin GPS y baliza;
-- cada error tiene su propio mensaje;
-- una ubicación simulada genera una advertencia de revisión, no una acusación de fraude;
-- el resultado dice "pendiente de sincronización" y nunca "validada".
+Las pruebas cubren la distancia de la geocerca, el cálculo mensual y las validaciones de formularios.
 
 El hardware se prueba a mano con la matriz de más abajo.
 
@@ -220,14 +212,14 @@ verificadas después de los cambios.
 
 | Corrección | Motivo |
 |---|---|
-| `AndroidBeaconScanner`: captura de cualquier excepción de `startScan`, no solo `SecurityException`, y `stopScan` siempre al terminar | Un fallo del adaptador ya no cierra la aplicación ni deja la radio encendida |
-| `AndroidBeaconScanner`: al vencer la ventana se comprueba el adaptador | Si apagan el Bluetooth a mitad del escaneo se informa BLUETOOTH_OFF, no "baliza no detectada" |
-| `AndroidLocationProvider`: la cancelación se vuelve a lanzar | `CancellationException` no se trata como un error de ubicación |
-| `AndroidLocationProvider`: limpieza del listener antes de registrar proveedores y al fallar el registro | Evita dejar el GPS escuchando si `requestLocationUpdates` lanza una excepción |
-| `AndroidLocationProvider`: la última ubicación conocida se descarta si tiene más de 2 minutos | Una lectura vieja ya no se presenta como actual. Límite técnico provisional, no regla de negocio aprobada |
+| `Baliza`: captura de cualquier excepción de `startScan`, no solo `SecurityException`, y `stopScan` siempre al terminar | Un fallo del adaptador ya no cierra la aplicación ni deja la radio encendida |
+| `Baliza`: al vencer la ventana se comprueba el adaptador | Si apagan el Bluetooth a mitad del escaneo se informa BLUETOOTH_OFF, no "baliza no detectada" |
+| `Ubicacion`: la cancelación se vuelve a lanzar | `CancellationException` no se trata como un error de ubicación |
+| `Ubicacion`: limpieza del listener antes de registrar proveedores y al fallar el registro | Evita dejar el GPS escuchando si `requestLocationUpdates` lanza una excepción |
+| `Ubicacion`: la última ubicación conocida se descarta si tiene más de 2 minutos | Una lectura vieja ya no se presenta como actual. Límite técnico provisional, no regla de negocio aprobada |
 | `PresenciaViewModel`: el contador se carga en `Dispatchers.IO` | La lectura de disco ya no se hace en el hilo principal al crear la pantalla |
 | `PresenciaViewModel`: `try/catch/finally` en verificación y guardado | `isChecking` e `isSaving` siempre vuelven a `false` y el usuario recibe un mensaje si algo falla |
-| `PresenciaScreen`: se solicita `POST_NOTIFICATIONS` en un lanzador independiente | En Android 13+ la notificación puede aparecer, y negarla no bloquea el registro |
+| `AsistenciaView`: se solicita `POST_NOTIFICATIONS` en un lanzador independiente | En Android 13+ la notificación puede aparecer, y negarla no bloquea el registro |
 | Manifest: se eliminó `neverForLocation` de `BLUETOOTH_SCAN` | La baliza sí se usa para acreditar presencia física y ese flag filtra anuncios BLE |
 | Manifest: `allowBackup="false"` y exclusión de `smartvolt` en las reglas de respaldo | Las coordenadas guardadas no salen del teléfono en respaldos ni transferencias |
 | `MainActivity`: `popUpTo("login")` al entrar a la marcación | Volver atrás ya no regresa al formulario con la contraseña escrita |
@@ -277,5 +269,5 @@ motivo que escribió el trabajador.
 
 ### Build
 
-`testDebugUnitTest assembleDebug lintDebug` terminó con 70 pruebas y 0 fallos. Lint no
+`testDebugUnitTest assembleDebug lintDebug` terminó con 23 pruebas y 0 fallos. Lint no
 reportó errores y dejó 20 advertencias de dependencias y `UseKtx`, sin impacto funcional.

@@ -1,8 +1,8 @@
 # Registro mensual
 
 El administrador puede consultar las horas trabajadas en el mes, ver cuánto representa en
-dinero y guardar el detalle en CSV o PDF. La entrada está en la tarjeta "Registro del mes"
-del inicio, visible solo para ese rol.
+dinero y guardar el detalle en CSV o PDF. La entrada está en Gestión, en la tarjeta
+"Registro del mes", y también en el acceso del inicio. Solo la ve ese rol.
 
 ## Tarifa de la faena
 

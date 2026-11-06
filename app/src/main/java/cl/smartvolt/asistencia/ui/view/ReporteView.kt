@@ -64,6 +64,7 @@ fun ReporteView(
     viewModel: ReporteViewModel = viewModel()
 ) {
     val estado by viewModel.uiState.collectAsState()
+    val nombreFaena = estado.siteName.ifBlank { siteName }
     val context = LocalContext.current
     var csvPendiente by remember { mutableStateOf<String?>(null) }
 
@@ -114,7 +115,7 @@ fun ReporteView(
         ) {
             SmartVoltTopBar(
                 title = "Registro del mes",
-                subtitle = "Administración - $siteName",
+                subtitle = "Administración - $nombreFaena",
                 onBack = onVolver
             )
             Spacer(Modifier.height(12.dp))
@@ -172,7 +173,7 @@ fun ReporteView(
                     onClick = {
                         pdfPendiente = ReportePdf.construir(
                             report = reporte,
-                            siteName = siteName
+                            siteName = nombreFaena
                         )
                         guardarPdf.launch(ReportePdf.nombreArchivo(reporte.month))
                     },

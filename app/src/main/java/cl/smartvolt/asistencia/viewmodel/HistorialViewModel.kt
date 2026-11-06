@@ -8,11 +8,14 @@ import cl.smartvolt.asistencia.modelo.WorkerRole
 import cl.smartvolt.asistencia.util.Sesion
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 class HistorialViewModel(application: Application) : AndroidViewModel(application) {
 
     private val dao = AppDatabase.obtener(application).asistenciaDao()
+    private val faenaDao = AppDatabase.obtener(application).faenaDao()
     private val cuenta = Sesion.cuenta
 
     private val workerId = cuenta?.workerId ?: Asistencia.WORKER_ID
@@ -28,9 +31,19 @@ class HistorialViewModel(application: Application) : AndroidViewModel(applicatio
         initialValue = emptyList()
     )
 
-    val etiqueta: String = if (cuenta?.role == WorkerRole.WORKER) {
-        "Trabajador $workerId"
+    val encabezado: StateFlow<String> = if (cuenta?.role == WorkerRole.WORKER) {
+        flowOf("Trabajador $workerId")
     } else {
-        "${cuenta?.roleLabel ?: "Faena"} - $siteId"
-    }
+        faenaDao.observarActiva().map { faena ->
+            "${cuenta?.roleLabel ?: "Faena"} - ${faena?.name ?: siteId}"
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = if (cuenta?.role == WorkerRole.WORKER) {
+            "Trabajador $workerId"
+        } else {
+            "${cuenta?.roleLabel ?: "Faena"} - $siteId"
+        }
+    )
 }

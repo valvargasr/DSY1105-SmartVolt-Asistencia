@@ -21,7 +21,8 @@ import kotlinx.coroutines.launch
 data class ReporteUiState(
     val mes: YearMonth = YearMonth.now(),
     val reporte: MonthlyReport? = null,
-    val cargando: Boolean = true
+    val cargando: Boolean = true,
+    val siteName: String = ""
 )
 
 class ReporteViewModel(application: Application) : AndroidViewModel(application) {
@@ -71,7 +72,9 @@ class ReporteViewModel(application: Application) : AndroidViewModel(application)
                 )
 
                 if (_uiState.value.mes == mes) {
-                    _uiState.update { it.copy(reporte = reporte, cargando = false) }
+                    _uiState.update {
+                        it.copy(reporte = reporte, cargando = false, siteName = faena.name)
+                    }
                 }
             } catch (cancelado: CancellationException) {
                 throw cancelado

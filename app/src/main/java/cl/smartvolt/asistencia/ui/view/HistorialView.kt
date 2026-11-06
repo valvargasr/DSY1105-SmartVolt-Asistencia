@@ -67,6 +67,7 @@ private enum class FiltroHistorial(val etiqueta: String) {
 @Composable
 fun HistorialView(viewModel: HistorialViewModel = viewModel()) {
     val marcas by viewModel.marcas.collectAsState()
+    val encabezado by viewModel.encabezado.collectAsState()
     var filtro by rememberSaveable { mutableStateOf(FiltroHistorial.TODAS) }
 
     val filtradas = when (filtro) {
@@ -83,7 +84,7 @@ fun HistorialView(viewModel: HistorialViewModel = viewModel()) {
     ) {
         SmartVoltTopBar(
             title = "Historial",
-            subtitle = viewModel.etiqueta
+            subtitle = encabezado
         )
 
         Spacer(Modifier.height(14.dp))

@@ -8,6 +8,8 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -62,6 +64,7 @@ import cl.smartvolt.asistencia.ui.components.SmartVoltMark
 import cl.smartvolt.asistencia.util.Sesion
 import cl.smartvolt.asistencia.viewmodel.LoginViewModel
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun LoginView(
     onSesionIniciada: () -> Unit,
@@ -238,9 +241,10 @@ fun LoginView(
                     HorizontalDivider(modifier = Modifier.weight(1f))
                 }
                 Spacer(Modifier.height(12.dp))
-                Row(
+                FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     DemoDirectory.accounts.forEach { cuenta ->
                         FilterChip(
@@ -262,8 +266,7 @@ fun LoginView(
                             },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
-                            ),
-                            modifier = Modifier.weight(1f)
+                            )
                         )
                     }
                 }

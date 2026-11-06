@@ -21,6 +21,7 @@ import cl.smartvolt.asistencia.util.Ubicacion
 import java.util.UUID
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -158,8 +159,10 @@ class AsistenciaViewModel(application: Application) : AndroidViewModel(applicati
             }
 
             try {
-                val lectura = ubicacion.obtener()
-                val escaneo = baliza.escanear()
+                val lecturaPendiente = async { ubicacion.obtener() }
+                val escaneoPendiente = async { baliza.escanear() }
+                val lectura = lecturaPendiente.await()
+                val escaneo = escaneoPendiente.await()
                 val faena = faenaDao.obtener(siteId) ?: faenaPorDefecto()
                 val distancia = if (lectura.estado == EstadoUbicacion.LISTA &&
                     lectura.latitude != null && lectura.longitude != null

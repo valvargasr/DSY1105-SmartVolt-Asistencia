@@ -2,8 +2,8 @@
 
 La aplicación trabaja con una faena editable: un nombre, una dirección de referencia, un
 centro geográfico y un radio en metros. El administrador los cambia desde el inicio, con el
-botón de edición de la tarjeta "Faena actual". Los demás roles ven el nombre actualizado,
-pero no pueden modificarlo.
+botón de edición de la tarjeta "Faena actual", o desde Gestión, en la tarjeta "Faena". Los
+demás roles ven el nombre actualizado, pero no pueden modificarlo.
 
 ## Campos y reglas
 

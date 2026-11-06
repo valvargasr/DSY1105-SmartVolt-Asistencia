@@ -166,6 +166,10 @@ private fun FormularioObrero(
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Fecha") },
+                            isError = errores.fecha.isNotEmpty(),
+                            supportingText = {
+                                if (errores.fecha.isNotEmpty()) Text(errores.fecha)
+                            },
                             trailingIcon = {
                                 IconButton(onClick = { mostrarCalendario = true }) {
                                     Icon(
