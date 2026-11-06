@@ -61,14 +61,40 @@ está fuera del radio configurado. Si falta algo, explica qué pasa y no guarda 
 nace como pendiente de sincronización y la interfaz lo dice así, porque todavía no hay
 servidor que la valide.
 
+## Cuentas de demostración
+
+| Rol | Correo | Contraseña |
+|---|---|---|
+| Obrero | `obrero@smartvolt.cl` | `demo1234` |
+| Capataz | `capataz@smartvolt.cl` | `demo1234` |
+| Administrador | `admin@smartvolt.cl` | `demo1234` |
+
 ## Almacenamiento y datos
 
 La asistencia, las solicitudes y la faena viven en Room, base `smartvolt_attendance.db`, y
 sobreviven al cierre de la aplicación. La interfaz `AttendanceLocalStore` separa el resto del
 código de la implementación concreta.
 
+La base está en la versión 5. La tabla `worksites` guarda nombre, dirección, centro, radio,
+tarifa por hora y recargo de horas extra; las migraciones 3 a 4 y 4 a 5 la agregan sin tocar
+las marcas ni las solicitudes existentes. La faena parte con 7.000 pesos por hora y 50 por
+ciento de recargo, y esos valores se escriben recién en el primer guardado.
+
 Las cuentas son ficticias. La autenticación de demostración no representa un sistema real y
 no se deben cargar datos personales, credenciales ni llaves privadas.
+
+## Exportación del registro
+
+El administrador puede guardar el mes en dos formatos, ambos con el selector de archivos de
+Android y sin permisos de almacenamiento:
+
+- CSV con nombre `registro-smartvolt-AAAA-MM.csv`, en UTF-8 con BOM, separador punto y coma
+  y coma decimal. Tiene una fila por trabajador y día, con 12 columnas que incluyen horas de
+  asistencia, horas extra, montos por separado y monto total. La última fila es el total del
+  mes.
+- PDF con nombre `registro-smartvolt-AAAA-MM.pdf`, en hoja A4 vertical. Lleva el resumen del
+  mes, la tabla por trabajador y día, y el total. Si la tabla no cabe, agrega páginas con el
+  encabezado repetido y el número de página al pie.
 
 ## Cómo ejecutar
 
@@ -98,8 +124,13 @@ revisión.
 No existe sincronización con backend: todo queda en el teléfono. Retrofit, Hilt y un servicio
 REST pertenecen a una etapa posterior. Tampoco se calculan remuneraciones ni liquidaciones.
 
-El detalle de las pruebas de campo, los contratos de ubicación y BLE, y las decisiones sobre
-umbrales están en [docs/pruebas-area-c.md](docs/pruebas-area-c.md). La configuración de la
-faena y el cálculo del radio se explican en
-[docs/faena-configuracion.md](docs/faena-configuracion.md), y el registro mensual con los
-montos, el CSV y el PDF en [docs/registro-mensual.md](docs/registro-mensual.md).
+## Documentación
+
+- [docs/pruebas-area-c.md](docs/pruebas-area-c.md): pruebas de campo, contratos de ubicación
+  y BLE, umbrales y casos PT.
+- [docs/faena-configuracion.md](docs/faena-configuracion.md): campos de la faena, cálculo del
+  radio y alcance.
+- [docs/registro-mensual.md](docs/registro-mensual.md): cálculo de horas y montos, formato del
+  CSV y estructura del PDF.
+- [docs/DISENO_VISUAL_SMARTVOLT.md](docs/DISENO_VISUAL_SMARTVOLT.md): paleta, tipografía y
+  criterios visuales.
